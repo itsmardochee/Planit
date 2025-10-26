@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const errorHandler = require('./middlewares/errorHandler');
 
 // Load environment variables
 dotenv.config();
@@ -42,22 +43,16 @@ app.get('/api/health', (req, res) => {
 // app.use('/api/lists', require('./routes/listRoutes'));
 // app.use('/api/cards', require('./routes/cardRoutes'));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: err.message || 'Internal Server Error',
-    });
-});
-
-// 404 handler
+// 404 handler - must be before error handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: 'Route not found',
     });
 });
+
+// Global error handling middleware - must be last
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
