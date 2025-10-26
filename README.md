@@ -126,6 +126,7 @@ Create a `.env` file in both `client/` and `server/` directories.
 PORT=5000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_secret
+NODE_ENV=development
 ```
 
 **Frontend `.env` example:**
