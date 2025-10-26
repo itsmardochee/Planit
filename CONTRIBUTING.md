@@ -23,6 +23,22 @@ Please be respectful and professional in all interactions. We aim to create a we
 
 ---
 
+## 🌍 Documentation Language
+
+**All contributions MUST be written in English.**
+
+This includes:
+- Code comments and documentation
+- Commit messages
+- Pull request titles and descriptions
+- Issue titles and descriptions
+- README files and markdown documentation
+- Variable names, function names, and class names
+
+**Why?** English is the universal language for software development, ensuring accessibility for international contributors and maintaining consistency across the codebase.
+
+---
+
 ## 🚀 Getting Started
 
 1. **Fork the repository** on GitHub
