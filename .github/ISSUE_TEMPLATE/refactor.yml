@@ -1,0 +1,93 @@
+name: Refactor Request
+description: Improve code structure, readability, or maintainability without changing behavior
+title: "refactor: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Refactor Request
+        Describe what needs to be refactored and why. Focus on debt removal, clarity, and maintainability.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of the application does this affect?
+      options:
+        - Backend
+        - Frontend
+        - DevOps
+        - Documentation
+        - Testing
+        - Full Stack
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this refactor?
+      options:
+        - 🔴 Critical
+        - 🟠 High
+        - 🟡 Medium
+        - 🟢 Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: Estimated effort required
+      options:
+        - XS (1-2 hours)
+        - S (2-4 hours)
+        - M (1-2 days)
+        - L (3-5 days)
+        - XL (1+ week)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior / code
+      description: Describe the current code, pain points, or smells (duplication, complexity, naming, etc.)
+      placeholder: What is hard to understand or modify?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed refactor
+      description: Explain the approach (extraction, renaming, splitting modules, introducing patterns, etc.)
+      placeholder: How will the code be improved?
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks & impact
+      description: List potential risks, affected modules, and mitigation strategy
+      placeholder: What could break and how will you reduce risk?
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      options:
+        - label: Behavior remains unchanged (no functional differences)
+        - label: Tests pass (existing and new if needed)
+        - label: Complexity reduced (functions/components smaller, clearer)
+        - label: Naming and structure follow conventions
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical Notes
+      description: Any additional details, dependencies, or references
+      placeholder: Links, patterns, or examples
