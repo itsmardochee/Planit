@@ -318,7 +318,7 @@ describe('Workspace API', () => {
       .post('/api/workspaces')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Test Workspace' });
-    
+
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Test Workspace');
   });
@@ -337,7 +337,7 @@ describe('Workspace API', () => {
 test('renders workspace card with name', () => {
   const workspace = { id: '1', name: 'My Workspace' };
   render(<WorkspaceCard workspace={workspace} />);
-  
+
   expect(screen.getByText('My Workspace')).toBeInTheDocument();
 });
 ```
