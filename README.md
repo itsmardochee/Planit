@@ -110,31 +110,38 @@ server/ (Express)
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/planit.git
-cd planit
+git clone https://github.com/itsmardochee/Planit.git
+cd Planit
 ```
 
 ### 2. Setup environment variables
 
 Create a `.env` file in both `client/` and `server/` directories.
-Example for backend:
+
+**Backend `.env` example:**
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_secret
+NODE_ENV=development
+```
+
+**Frontend `.env` example:**
+
+```env
+REACT_APP_API_URL=http://localhost:5000/api
 ```
 
 ### 3. Install dependencies
 
 ```bash
-# Frontend
-yarn install
-# or
-npm install
-
 # Backend
 cd server
+npm install
+
+# Frontend
+cd ../client
 npm install
 ```
 
@@ -189,4 +196,3 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 * **Backend:** deployed on Render or Railway.
 * **Database:** hosted on MongoDB Atlas.
 * **CI/CD:** handled by GitHub Actions.
-
