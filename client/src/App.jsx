@@ -3,7 +3,6 @@ import { AppBar, Toolbar, Typography, Button, Container, Stack } from '@mui/mate
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import './App.css';
 
 function App() {
   return (
