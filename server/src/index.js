@@ -26,7 +26,9 @@ if (process.env.MONGO_URI && process.env.MONGO_URI !== 'mongodb+srv://username:p
 } else {
     console.warn('⚠️  MongoDB URI not configured - running without database');
     console.log('💡 Update MONGO_URI in .env file to connect to MongoDB');
-}// Basic route
+}
+
+// Basic route
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Planit API' });
 });
