@@ -135,6 +135,71 @@ const options = {
             },
           },
         },
+        Workspace: {
+          type: 'object',
+          required: ['name', 'userId'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Workspace ID (auto-generated)',
+              example: '507f1f77bcf86cd799439011',
+            },
+            name: {
+              type: 'string',
+              maxLength: 100,
+              description: 'Workspace name',
+              example: 'My Workspace',
+            },
+            description: {
+              type: 'string',
+              maxLength: 500,
+              description: 'Workspace description (optional)',
+              example: 'A workspace for managing projects',
+            },
+            userId: {
+              type: 'string',
+              description: 'ID of the user who owns this workspace',
+              example: '507f1f77bcf86cd799439011',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Workspace creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+          },
+        },
+        WorkspaceResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              $ref: '#/components/schemas/Workspace',
+            },
+          },
+        },
+        WorkspacesResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Workspace',
+              },
+            },
+          },
+        },
       },
     },
     tags: [
