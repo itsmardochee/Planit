@@ -2,6 +2,7 @@
   "name": "planit-server",
   "version": "1.0.0",
   "description": "Planit backend server - Trello-like application",
+  "type": "module",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -19,7 +20,6 @@
   ],
   "author": "Planit Team",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -30,6 +30,7 @@
     "mongoose": "^8.19.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^10.2.3",
     "nodemon": "^3.1.10",

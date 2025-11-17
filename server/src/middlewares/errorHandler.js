@@ -1,9 +1,9 @@
 /**
  * Global error handling middleware
  * Must be placed after all routes
- * Signature: (err, req, res, next)
+ * Signature: (err, req, res, _next)
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   console.error('Error:', err.stack);
 
   const statusCode = err.statusCode || 500;
@@ -16,4 +16,4 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-module.exports = errorHandler;
+export default errorHandler;

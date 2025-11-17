@@ -1,8 +1,8 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const errorHandler = require('./middlewares/errorHandler');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import errorHandler from './middlewares/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -39,11 +39,16 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes (to be added)
-// app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/workspaces', require('./routes/workspaceRoutes'));
-// app.use('/api/boards', require('./routes/boardRoutes'));
-// app.use('/api/lists', require('./routes/listRoutes'));
-// app.use('/api/cards', require('./routes/cardRoutes'));
+// import authRoutes from './routes/authRoutes.js';
+// import workspaceRoutes from './routes/workspaceRoutes.js';
+// import boardRoutes from './routes/boardRoutes.js';
+// import listRoutes from './routes/listRoutes.js';
+// import cardRoutes from './routes/cardRoutes.js';
+// app.use('/api/auth', authRoutes);
+// app.use('/api/workspaces', workspaceRoutes);
+// app.use('/api/boards', boardRoutes);
+// app.use('/api/lists', listRoutes);
+// app.use('/api/cards', cardRoutes);
 
 // 404 handler - must be before error handler
 app.use((req, res) => {
@@ -63,4 +68,4 @@ app.listen(PORT, () => {
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-module.exports = app;
+export default app;
