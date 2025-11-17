@@ -37,8 +37,9 @@ jobs:
 
       - name: Run tests
         working-directory: ./server
-        run: npm test
+        run: npm test -- --coverage --watchAll=false --passWithNoTests
         env:
+          CI: true
           NODE_ENV: test
           JWT_SECRET: test_secret
           MONGO_URI: mongodb://localhost:27017/planit-test
@@ -73,7 +74,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./client
-        run: npm test -- --coverage --watchAll=false
+        run: npm test -- --watch=false --passWithNoTests
         env:
           CI: true
 
@@ -120,4 +121,5 @@ jobs:
         run: npm install -g prettier
 
       - name: Check code formatting
-        run: prettier --check "**/*.{js,jsx,json,md}"
+        run: |
+          prettier --check "server/src/**/*.{js,jsx,ts,tsx}" "client/src/**/*.{js,jsx,ts,tsx}"

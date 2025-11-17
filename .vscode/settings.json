@@ -44,10 +44,7 @@
     "typescript",
     "typescriptreact"
   ],
-  "eslint.workingDirectories": [
-    "./client",
-    "./server"
-  ],
+  "eslint.workingDirectories": ["./client", "./server"],
 
   // Prettier Configuration
   "prettier.requireConfig": true,
@@ -103,7 +100,7 @@
   "git.enableSmartCommit": true,
 
   // Terminal Configuration
-  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.defaultProfile.linux": "fish",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
 
   // Search Configuration

@@ -14,6 +14,7 @@ Thank you for considering contributing to **Planit**! We welcome contributions f
 - [Pull Request Process](#pull-request-process)
 - [Coding Standards](#coding-standards)
 - [Testing Guidelines](#testing-guidelines)
+- [Pre-commit Checklist](#pre-commit-checklist)
 
 ---
 
@@ -28,6 +29,7 @@ Please be respectful and professional in all interactions. We aim to create a we
 **All contributions MUST be written in English.**
 
 This includes:
+
 - Code comments and documentation
 - Commit messages
 - Pull request titles and descriptions
@@ -59,26 +61,50 @@ This includes:
 ## 🔄 Development Workflow
 
 1. **Sync with upstream** before starting work:
+
    ```bash
    git checkout main
    git pull upstream main
    ```
 
 2. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 3. **Make your changes** and test thoroughly
 
-4. **Commit your changes** following our [commit conventions](#commit-message-convention)
+4. **Run tests BEFORE committing (mandatory)**
 
-5. **Push to your fork:**
+```bash
+# Backend
+cd server
+npx eslint src/
+npm test -- --watchAll=false --passWithNoTests
+
+# Frontend
+cd ../client
+npx eslint src/
+npm test -- --watch=false --passWithNoTests
+```
+
+5. **Commit your changes** only after tests pass, following our [commit conventions](#commit-message-convention)
+
+6. **Push to your fork:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
 
-6. **Open a Pull Request** on GitHub
+7. **Open a Pull Request** on GitHub
+
+> Tip: You can simulate the CI locally with `act`:
+>
+> ```bash
+> act push -j backend-test --container-architecture linux/amd64
+> act push -j frontend-test --container-architecture linux/amd64
+> ```
 
 ---
 
@@ -88,15 +114,15 @@ We follow a simplified **Git Flow** approach:
 
 ### Branch Types
 
-| Branch Type | Naming Convention | Purpose |
-|------------|-------------------|---------|
-| **main** | `main` | Production-ready code |
-| **feature** | `feature/description` | New features |
-| **bugfix** | `bugfix/description` | Bug fixes |
-| **hotfix** | `hotfix/description` | Urgent production fixes |
-| **refactor** | `refactor/description` | Code refactoring |
-| **docs** | `docs/description` | Documentation updates |
-| **test** | `test/description` | Test additions/updates |
+| Branch Type  | Naming Convention      | Purpose                 |
+| ------------ | ---------------------- | ----------------------- |
+| **main**     | `main`                 | Production-ready code   |
+| **feature**  | `feature/description`  | New features            |
+| **bugfix**   | `bugfix/description`   | Bug fixes               |
+| **hotfix**   | `hotfix/description`   | Urgent production fixes |
+| **refactor** | `refactor/description` | Code refactoring        |
+| **docs**     | `docs/description`     | Documentation updates   |
+| **test**     | `test/description`     | Test additions/updates  |
 
 ### Examples
 
@@ -127,20 +153,21 @@ We follow the **Conventional Commits** specification for clear and consistent co
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| **feat** | A new feature |
-| **fix** | A bug fix |
-| **docs** | Documentation changes |
-| **style** | Code style changes (formatting, no logic change) |
-| **refactor** | Code refactoring (no feature or bug fix) |
-| **test** | Adding or updating tests |
-| **chore** | Build process, dependencies, tooling |
-| **perf** | Performance improvements |
+| Type         | Description                                      |
+| ------------ | ------------------------------------------------ |
+| **feat**     | A new feature                                    |
+| **fix**      | A bug fix                                        |
+| **docs**     | Documentation changes                            |
+| **style**    | Code style changes (formatting, no logic change) |
+| **refactor** | Code refactoring (no feature or bug fix)         |
+| **test**     | Adding or updating tests                         |
+| **chore**    | Build process, dependencies, tooling             |
+| **perf**     | Performance improvements                         |
 
 ### Scope (optional)
 
 The scope specifies the area of the codebase affected:
+
 - `auth` - Authentication
 - `workspace` - Workspaces
 - `board` - Boards
@@ -177,6 +204,7 @@ chore(deps): update Material UI to v5.15.0
 1. **Ensure your branch is up to date** with `main`
 
 2. **Run all tests** and ensure they pass:
+
    ```bash
    # Backend tests
    cd server
@@ -190,6 +218,7 @@ chore(deps): update Material UI to v5.15.0
 3. **Update documentation** if needed
 
 4. **Fill out the PR template** with:
+
    - Clear description of changes
    - Related issue number (if applicable)
    - Screenshots (for UI changes)
@@ -204,6 +233,7 @@ chore(deps): update Material UI to v5.15.0
 ### PR Title Format
 
 Follow the same convention as commit messages:
+
 ```
 feat(workspace): add member invitation feature
 fix(ui): resolve responsive layout on mobile
@@ -231,6 +261,7 @@ fix(ui): resolve responsive layout on mobile
 - Use **environment variables** for configuration
 
 **Example:**
+
 ```javascript
 // ✅ Good
 const getWorkspaces = async (req, res) => {
@@ -244,7 +275,7 @@ const getWorkspaces = async (req, res) => {
 
 // ❌ Bad
 function getWorkspaces(req, res) {
-  Workspace.find({ userId: req.user.id }, function(err, workspaces) {
+  Workspace.find({ userId: req.user.id }, function (err, workspaces) {
     if (err) return res.send(err);
     res.send(workspaces);
   });
@@ -262,6 +293,7 @@ function getWorkspaces(req, res) {
 - Use **meaningful component names**
 
 **Example:**
+
 ```javascript
 // ✅ Good
 const WorkspaceCard = ({ workspace, onDelete }) => {
@@ -311,6 +343,7 @@ function WorkspaceCard(props) {
 - Use **Jest + Supertest**
 
 **Example:**
+
 ```javascript
 describe('Workspace API', () => {
   it('should create a new workspace', async () => {
@@ -333,6 +366,7 @@ describe('Workspace API', () => {
 - Use **Jest + React Testing Library**
 
 **Example:**
+
 ```javascript
 test('renders workspace card with name', () => {
   const workspace = { id: '1', name: 'My Workspace' };
@@ -350,9 +384,28 @@ test('renders workspace card with name', () => {
 
 ---
 
+## ✅ Pre-commit Checklist
+
+Before every commit, you MUST verify locally:
+
+- **Backend lint**: `cd server && npx eslint src/`
+- **Backend tests**: `npm test -- --watchAll=false --passWithNoTests`
+- **Frontend lint**: `cd ../client && npx eslint src/`
+- **Frontend tests**: `npm test -- --watch=false --passWithNoTests`
+
+Optional (recommended): run CI jobs locally with `act` to mirror GitHub Actions:
+
+```bash
+act push -j backend-test --container-architecture linux/amd64
+act push -j frontend-test --container-architecture linux/amd64
+```
+
+---
+
 ## 🤝 Questions?
 
 If you have any questions, feel free to:
+
 - Open an **issue** on GitHub
 <!-- - Contact the team via **Discord** -->
 - Check existing **documentation**
