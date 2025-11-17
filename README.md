@@ -1,7 +1,9 @@
 # Planit
 
-[![CI/CD Pipeline](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml)
-[![CI/CD Pipeline (dev)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml)
+[![Backend CI](https://github.com/itsmardochee/Planit/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/itsmardochee/Planit/actions/workflows/frontend.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/frontend.yml)
+[![Docker Build](https://github.com/itsmardochee/Planit/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/docker.yml)
+[![Code Quality](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml)
 
 > "Plan your success, one board at a time." — *The Planit Team*
 
