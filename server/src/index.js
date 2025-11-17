@@ -2,6 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
+import authRoutes from './routes/authRoutes.js';
 import errorHandler from './middlewares/errorHandler.js';
 
 // Load environment variables
@@ -42,13 +45,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Routes (to be added)
-// import authRoutes from './routes/authRoutes.js';
+// Swagger documentation
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Planit API Documentation',
+  })
+);
+
+// API Routes
+app.use('/api/auth', authRoutes);
+
+// Routes to be added
 // import workspaceRoutes from './routes/workspaceRoutes.js';
 // import boardRoutes from './routes/boardRoutes.js';
 // import listRoutes from './routes/listRoutes.js';
 // import cardRoutes from './routes/cardRoutes.js';
-// app.use('/api/auth', authRoutes);
 // app.use('/api/workspaces', workspaceRoutes);
 // app.use('/api/boards', boardRoutes);
 // app.use('/api/lists', listRoutes);
