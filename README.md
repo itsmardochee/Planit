@@ -130,7 +130,7 @@ NODE_ENV=development
 **Frontend `.env` example:**
 
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ### 3. Install dependencies
@@ -160,10 +160,10 @@ npm run dev
 
 ```bash
 cd client
-npm start
+npm run dev
 ```
 
-(Default: [http://localhost:3000](http://localhost:3000))
+(Default: [http://localhost:5173](http://localhost:5173))
 
 ### 5. Run with Docker (Development Mode)
 
