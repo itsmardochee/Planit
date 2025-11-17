@@ -197,6 +197,52 @@ describe('Auth Middleware', () => {
       expect(res.statusCode).toBeNull();
       expect(res.body).toBeNull();
     });
+
+    it('should fail when JWT_SECRET is missing', async () => {
+      const user = await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+
+      const validToken = jwt.sign({ id: user._id.toString() }, 'temp_secret', {
+        expiresIn: '7d',
+      });
+      req.headers.Authorization = `Bearer ${validToken}`;
+
+      // Temporarily remove JWT_SECRET
+      const originalSecret = process.env.JWT_SECRET;
+      delete process.env.JWT_SECRET;
+
+      await auth(req, res, next);
+
+      // jwt.verify() throws error when secret is missing, caught as invalid token
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Token is not valid');
+      expect(next.called).toBe(false);
+
+      // Restore JWT_SECRET
+      process.env.JWT_SECRET = originalSecret;
+    });
+
+    it('should fail with invalid ObjectId format in token', async () => {
+      const invalidToken = jwt.sign(
+        { id: 'invalid-objectid-format' },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      req.headers.Authorization = `Bearer ${invalidToken}`;
+
+      await auth(req, res, next);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Token is not valid',
+      });
+      expect(next.called).toBe(false);
+    });
   });
 
   describe('User Lookup', () => {
@@ -236,6 +282,7 @@ describe('Auth Middleware', () => {
       await auth(req, res, next);
 
       expect(req.user).toBeDefined();
+      expect(req.user.id).toBe(user._id.toString());
       expect(req.user._id.toString()).toBe(user._id.toString());
       expect(req.user.username).toBe('testuser');
       expect(req.user.email).toBe('test@example.com');
@@ -260,6 +307,28 @@ describe('Auth Middleware', () => {
 
       expect(req.user).toBeDefined();
       expect(req.user.password).toBeUndefined();
+      expect(next.called).toBe(true);
+    });
+
+    it('should include id field for API consistency', async () => {
+      const user = await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+
+      const validToken = jwt.sign(
+        { id: user._id.toString() },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      req.headers.Authorization = `Bearer ${validToken}`;
+
+      await auth(req, res, next);
+
+      expect(req.user).toBeDefined();
+      expect(req.user.id).toBe(user._id.toString());
+      expect(typeof req.user.id).toBe('string');
       expect(next.called).toBe(true);
     });
   });

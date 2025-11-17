@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 
 /**
@@ -32,6 +33,14 @@ const auth = async (req, res, next) => {
       });
     }
 
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(decoded.id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token is not valid',
+      });
+    }
+
     // Find user by id from token and exclude password
     const user = await User.findById(decoded.id).select('-password');
 
@@ -42,8 +51,10 @@ const auth = async (req, res, next) => {
       });
     }
 
-    // Attach user to request object
-    req.user = user;
+    // Attach user to request object with explicit id field for API consistency
+    const userObj = user.toObject();
+    userObj.id = user._id.toString();
+    req.user = userObj;
     next();
   } catch (error) {
     // Handle JWT verification errors
