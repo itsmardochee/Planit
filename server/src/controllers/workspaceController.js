@@ -61,22 +61,25 @@ export const createWorkspace = async (req, res) => {
   try {
     const { name, description } = req.body;
 
-    // Validation
-    if (!name) {
+    // Trim and validate name
+    const trimmedName = name?.trim();
+    if (!trimmedName) {
       return res.status(400).json({
         success: false,
         message: 'Please provide workspace name',
       });
     }
 
-    if (name.length > 100) {
+    if (trimmedName.length > 100) {
       return res.status(400).json({
         success: false,
         message: 'Workspace name cannot exceed 100 characters',
       });
     }
 
-    if (description && description.length > 500) {
+    // Trim and validate description
+    const trimmedDescription = description?.trim();
+    if (trimmedDescription && trimmedDescription.length > 500) {
       return res.status(400).json({
         success: false,
         message: 'Description cannot exceed 500 characters',
@@ -85,8 +88,8 @@ export const createWorkspace = async (req, res) => {
 
     // Create workspace
     const workspace = await Workspace.create({
-      name,
-      description,
+      name: trimmedName,
+      description: trimmedDescription,
       userId: req.user._id,
     });
 
@@ -319,25 +322,43 @@ export const updateWorkspace = async (req, res) => {
       });
     }
 
-    // Validation
-    if (name && name.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Workspace name cannot exceed 100 characters',
-      });
+    // Prepare update data with trimmed values
+    const updateData = {};
+
+    // Trim and validate name if provided
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Workspace name cannot be empty',
+        });
+      }
+      if (trimmedName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Workspace name cannot exceed 100 characters',
+        });
+      }
+      updateData.name = trimmedName;
     }
 
-    if (description && description.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Description cannot exceed 500 characters',
-      });
+    // Trim and validate description if provided
+    if (description !== undefined) {
+      const trimmedDescription = description.trim();
+      if (trimmedDescription.length > 500) {
+        return res.status(400).json({
+          success: false,
+          message: 'Description cannot exceed 500 characters',
+        });
+      }
+      updateData.description = trimmedDescription;
     }
 
     // Find and update workspace
     const workspace = await Workspace.findOneAndUpdate(
       { _id: id, userId: req.user._id },
-      { $set: { name, description } },
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
@@ -431,6 +452,10 @@ export const deleteWorkspace = async (req, res) => {
       });
     }
 
+    // TODO: When Board model is implemented, add cascade delete logic:
+    // - Delete all boards associated with this workspace
+    // - Delete all lists associated with those boards
+    // - Delete all cards associated with those lists
     const workspace = await Workspace.findOneAndDelete({
       _id: id,
       userId: req.user._id,

@@ -3,35 +3,34 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import Workspace from '../Workspace.js';
 import User from '../User.js';
 
+let mongoServer;
+let testUser;
+
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+}, 30000);
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
+beforeEach(async () => {
+  testUser = await User.create({
+    username: 'testuser',
+    email: 'test@example.com',
+    password: 'password123',
+  });
+});
+
+afterEach(async () => {
+  await Workspace.deleteMany({});
+  await User.deleteMany({});
+});
+
 describe('Workspace Model - Schema Validation', () => {
-  let mongoServer;
-  let testUser;
-
-  beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-  });
-
-  beforeEach(async () => {
-    // Create a test user for workspace relationships
-    testUser = await User.create({
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'password123',
-    });
-  });
-
-  afterEach(async () => {
-    await Workspace.deleteMany({});
-    await User.deleteMany({});
-  });
-
   it('should create a valid workspace with all required fields', async () => {
     const workspace = await Workspace.create({
       name: 'My Workspace',
@@ -114,33 +113,6 @@ describe('Workspace Model - Schema Validation', () => {
 });
 
 describe('Workspace Model - User Relationship', () => {
-  let mongoServer;
-  let testUser;
-
-  beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-  });
-
-  beforeEach(async () => {
-    testUser = await User.create({
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'password123',
-    });
-  });
-
-  afterEach(async () => {
-    await Workspace.deleteMany({});
-    await User.deleteMany({});
-  });
-
   it('should reference a valid user', async () => {
     const workspace = await Workspace.create({
       name: 'My Workspace',
@@ -181,33 +153,6 @@ describe('Workspace Model - User Relationship', () => {
 });
 
 describe('Workspace Model - Timestamps', () => {
-  let mongoServer;
-  let testUser;
-
-  beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-  });
-
-  beforeEach(async () => {
-    testUser = await User.create({
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'password123',
-    });
-  });
-
-  afterEach(async () => {
-    await Workspace.deleteMany({});
-    await User.deleteMany({});
-  });
-
   it('should automatically add createdAt and updatedAt timestamps', async () => {
     const workspace = await Workspace.create({
       name: 'My Workspace',
