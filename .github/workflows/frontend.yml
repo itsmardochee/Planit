@@ -1,0 +1,63 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'client/src/**'
+      - 'client/public/**'
+      - 'client/package*.json'
+      - 'client/vite.config.js'
+      - 'client/vitest.config.js'
+      - 'client/eslint.config.js'
+      - 'client/index.html'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'client/src/**'
+      - 'client/public/**'
+      - 'client/package*.json'
+      - 'client/vite.config.js'
+      - 'client/vitest.config.js'
+      - 'client/eslint.config.js'
+      - 'client/index.html'
+      - '.github/workflows/frontend.yml'
+
+jobs:
+  test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./client
+        run: npx eslint src/
+
+      - name: Run tests
+        working-directory: ./client
+        run: npm test -- --watch=false --passWithNoTests
+        env:
+          CI: true
+
+      - name: Build
+        working-directory: ./client
+        run: npm run build
