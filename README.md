@@ -1,5 +1,8 @@
 # Planit
 
+[![CI/CD Pipeline](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml)
+[![CI/CD Pipeline (dev)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/itsmardochee/Planit/actions/workflows/ci.yml)
+
 > "Plan your success, one board at a time." — *The Planit Team*
 
 **A Trello-like Web Application built with React, Node.js, and MongoDB**
