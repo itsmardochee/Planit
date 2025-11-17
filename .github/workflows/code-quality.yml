@@ -1,0 +1,40 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'server/src/**'
+      - 'client/src/**'
+      - '.prettierrc.js'
+      - '.prettierignore'
+      - '.github/workflows/code-quality.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'server/src/**'
+      - 'client/src/**'
+      - '.prettierrc.js'
+      - '.prettierignore'
+      - '.github/workflows/code-quality.yml'
+
+jobs:
+  prettier:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install Prettier
+        run: npm install -g prettier
+
+      - name: Check code formatting
+        run: |
+          prettier --check "server/src/**/*.{js,jsx,ts,tsx}" "client/src/**/*.{js,jsx,ts,tsx}"
