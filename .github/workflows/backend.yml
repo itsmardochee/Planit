@@ -1,0 +1,56 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'server/src/**'
+      - 'server/package*.json'
+      - 'server/jest.config.js'
+      - 'server/eslint.config.js'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'server/src/**'
+      - 'server/package*.json'
+      - 'server/jest.config.js'
+      - 'server/eslint.config.js'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./server
+        run: npx eslint src/
+
+      - name: Run tests
+        working-directory: ./server
+        run: npm test -- --coverage --watchAll=false --passWithNoTests
+        env:
+          CI: true
+          NODE_ENV: test
+          JWT_SECRET: test_secret
+          MONGO_URI: mongodb://localhost:27017/planit-test

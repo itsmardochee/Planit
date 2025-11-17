@@ -1,0 +1,83 @@
+name: Chore
+description: Routine maintenance, upgrades, or repository hygiene tasks
+title: "chore: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Chore
+        Use this for maintenance tasks that don't change product behavior but improve the codebase or tooling.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which area does this chore affect?
+      options:
+        - Backend
+        - Frontend
+        - DevOps
+        - Documentation
+        - Testing
+        - Full Stack
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - 🔴 Critical
+        - 🟠 High
+        - 🟡 Medium
+        - 🟢 Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - XS (1-2 hours)
+        - S (2-4 hours)
+        - M (1-2 days)
+        - L (3-5 days)
+        - XL (1+ week)
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: Checklist of sub-tasks to complete
+      value: |
+        - [ ] Task 1
+        - [ ] Task 2
+        - [ ] Task 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact / Rationale
+      description: Why is this needed? What is the expected outcome?
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Related issues, PRs, or external dependencies
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      options:
+        - label: Tasks completed and documented
+        - label: No user-facing behavior change
+        - label: CI passes (tests and lint)
+        - label: Followed conventions and updated docs if needed

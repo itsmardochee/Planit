@@ -1,0 +1,37 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'server/Dockerfile*'
+      - 'client/Dockerfile*'
+      - 'docker-compose*.yml'
+      - '.github/workflows/docker.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'server/Dockerfile*'
+      - 'client/Dockerfile*'
+      - 'docker-compose*.yml'
+      - '.github/workflows/docker.yml'
+
+jobs:
+  build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        working-directory: ./server
+        run: docker build -f Dockerfile -t planit-server:test .
+
+      - name: Build frontend Docker image
+        working-directory: ./client
+        run: docker build -f Dockerfile -t planit-client:test .

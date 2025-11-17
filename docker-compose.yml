@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: planit-mongodb
+    restart: always
+    environment:
+      # IMPORTANT: Set MONGO_USERNAME and MONGO_PASSWORD environment variables before deployment.
+      # Never use default credentials in production!
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: planit
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - planit-network
+
+  # Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: planit-server
+    restart: always
+    ports:
+      - '5000:5000'
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/planit?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - planit-network
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: planit-client
+    restart: always
+    ports:
+      - '80:80'
+    environment:
+      # The API URL should be set based on your deployment configuration
+      # For local Docker network: http://server:5000/api
+      # For production: set to your actual backend URL
+      VITE_API_URL: ${VITE_API_URL:-http://server:5000/api}
+    depends_on:
+      - server
+    networks:
+      - planit-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  planit-network:
+    driver: bridge

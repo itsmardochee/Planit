@@ -1,0 +1,76 @@
+name: Performance Improvement
+description: Improve speed, memory, or efficiency with measurable targets
+title: "perf: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Performance Improvement
+        Define the current baseline, target goals, and measurement plan.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of the application does this affect?
+      options:
+        - Backend
+        - Frontend
+        - DevOps
+        - Database
+        - Full Stack
+    validations:
+      required: true
+
+  - type: textarea
+    id: baseline
+    attributes:
+      label: Baseline metrics
+      description: Provide current performance numbers (e.g., p95 latency, render time, memory, CPU)
+      placeholder: e.g., Endpoint /api/boards p95 = 1200ms, median = 400ms; FE board render = 800ms
+    validations:
+      required: true
+
+  - type: textarea
+    id: target
+    attributes:
+      label: Target metrics
+      description: Define measurable goals
+      placeholder: e.g., Reduce p95 latency to <600ms; first contentful paint -30%
+    validations:
+      required: true
+
+  - type: textarea
+    id: plan
+    attributes:
+      label: Measurement plan
+      description: How will you measure and validate (tools, sampling, test data)?
+      placeholder: k6, Lighthouse, React Profiler, MongoDB profiler, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed changes
+      description: Outline technical approach (indexes, caching, batch ops, memoization, virtualization, code-splitting)
+      placeholder: What will you change and where?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      options:
+        - label: Baseline captured before changes
+        - label: Targets achieved on the same environment
+        - label: Regressions prevented via tests/alerts
+        - label: Documented results with before/after metrics
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical Notes
+      description: Any additional details, dependencies, or references
+      placeholder: Links to dashboards, profiles, or benchmarks

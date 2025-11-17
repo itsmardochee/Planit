@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: planit-mongodb-dev
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    environment:
+      # WARNING: The following credentials are for local development only.
+      # DO NOT use these credentials in production or on any network-accessible environment.
+      # Change the username and password if exposing this environment to a network.
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: planit
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - planit-network
+
+  # Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: planit-server-dev
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      # WARNING: This JWT secret and MongoDB credentials are for development only.
+      # DO NOT use these values in production or any shared environment!
+      # You MUST set strong, unique secrets before deploying to production.
+      # Using these keys in production will compromise authentication security.
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017/planit?authSource=admin
+      JWT_SECRET: dev_jwt_secret_change_in_production
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - planit-network
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: planit-client-dev
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    networks:
+      - planit-network
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  planit-network:
+    driver: bridge
