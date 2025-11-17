@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:8.0
+    image: mongodb/mongodb-community-server:8.0-ubi8
     container_name: planit-mongodb-dev
     restart: unless-stopped
     ports:
@@ -14,7 +14,6 @@ services:
       # Change the username and password if exposing this environment to a network.
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
-      MONGO_INITDB_DATABASE: planit
     volumes:
       - mongodb_data:/data/db
     healthcheck:
