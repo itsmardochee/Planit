@@ -115,6 +115,145 @@ const WorkspaceCard = ({ workspace, onDelete }) => {
 - Implement reordering with `position` field in Lists/Cards models
 - Update positions on backend after D&D complete
 
+### Vite-Specific Conventions
+- **Environment variables**: Must be prefixed with `VITE_`
+  ```javascript
+  // ✅ Access env vars
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  // ❌ Wrong - process.env doesn't work in Vite
+  const apiUrl = process.env.REACT_APP_API_URL;
+  ```
+- **Dev server port**: 5173 (not 3000)
+- **Build output**: `dist/` (not `build/`)
+- **Import paths**: Use ES modules syntax only
+  ```javascript
+  // ✅ Correct
+  import React from 'react';
+  
+  // ❌ Wrong - CommonJS not supported
+  const React = require('react');
+  ```
+
+### Testing with Vitest
+- Use **Vitest** (not Jest) for frontend tests
+- Test files: `*.test.js` or `*.test.jsx` alongside components
+- Setup file: `src/test/setup.js`
+- Run tests: `npm test`
+- Imports use Vitest, not Jest:
+  ```javascript
+  import { describe, it, expect, vi } from 'vitest'; // not from 'jest'
+  ```
+
+Example test pattern:
+```javascript
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import WorkspaceCard from './WorkspaceCard';
+
+describe('WorkspaceCard', () => {
+  it('renders workspace name', () => {
+    const workspace = { name: 'My Workspace' };
+    render(<WorkspaceCard workspace={workspace} />);
+    expect(screen.getByText('My Workspace')).toBeInTheDocument();
+  });
+});
+```
+
+### Error Handling Patterns
+- **Backend**: Always use try-catch with standardized error responses
+  ```javascript
+  const createWorkspace = async (req, res) => {
+    try {
+      const workspace = await Workspace.create(req.body);
+      res.status(201).json({ success: true, data: workspace });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: error.message 
+      });
+    }
+  };
+  ```
+- **Frontend**: Use Axios interceptors for global error handling
+  ```javascript
+  axios.interceptors.response.use(
+    response => response,
+    error => {
+      // Handle errors globally
+      const message = error.response?.data?.message || 'An error occurred';
+      // Show toast notification
+      return Promise.reject(error);
+    }
+  );
+  ```
+
+### MongoDB Best Practices
+- **Always validate ObjectId** before queries:
+  ```javascript
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Invalid ID format' 
+    });
+  }
+  ```
+- Use `.lean()` for read-only queries (better performance):
+  ```javascript
+  const workspaces = await Workspace.find({ userId }).lean();
+  ```
+- **Always include userId filter** for user-specific data:
+  ```javascript
+  // ✅ Correct - prevents access to other users' data
+  const workspace = await Workspace.findOne({ _id: id, userId: req.user.id });
+  
+  // ❌ Wrong - security issue
+  const workspace = await Workspace.findById(id);
+  ```
+- **Implement cascade deletes** when deleting parent resources:
+  ```javascript
+  // When deleting workspace, also delete all boards, lists, cards
+  await Board.deleteMany({ workspaceId });
+  await List.deleteMany({ boardId: { $in: boardIds } });
+  await Card.deleteMany({ boardId: { $in: boardIds } });
+  ```
+
+### Material UI Conventions
+- **Import individually**: `import { Button, Card } from '@mui/material';`
+- **Use MUI theme** for colors (no hardcoded colors)
+- **Prefer MUI components** over custom CSS for layout
+- **Use sx prop** for styling:
+  ```jsx
+  <Box sx={{ 
+    padding: 2, 
+    backgroundColor: 'primary.main',
+    borderRadius: 1 
+  }}>
+    Content
+  </Box>
+  ```
+- **Icons**: Import from `@mui/icons-material`
+  ```jsx
+  import DeleteIcon from '@mui/icons-material/Delete';
+  <IconButton><DeleteIcon /></IconButton>
+  ```
+
+### File Naming Conventions
+- **Backend files**: camelCase.js
+  - Controllers: `userController.js`, `authController.js`
+  - Models: `User.js`, `Workspace.js` (PascalCase for models)
+  - Middleware: `auth.js`, `errorHandler.js`
+  - Routes: `authRoutes.js`, `workspaceRoutes.js`
+- **Frontend Components**: PascalCase.jsx
+  - Pages: `LoginPage.jsx`, `Dashboard.jsx`
+  - Components: `WorkspaceCard.jsx`, `Navbar.jsx`
+- **Frontend Utils**: camelCase.js
+  - `apiHelpers.js`, `formatDate.js`, `validators.js`
+- **Tests**: Same name as file with `.test.js` or `.test.jsx`
+  - `WorkspaceCard.test.jsx`, `authController.test.js`
+- **Constants**: UPPER_SNAKE_CASE.js
+  - `API_ENDPOINTS.js`, `COLORS.js`
+
 ### Testing Requirements
 - **Backend**: Jest + Supertest for API endpoints
   - Test auth flows, CRUD operations, error cases

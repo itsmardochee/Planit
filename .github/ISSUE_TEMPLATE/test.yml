@@ -1,0 +1,98 @@
+name: Test (TDD)
+description: Create a test issue for Test-Driven Development
+title: "test: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Test Issue (TDD)
+        Define the test requirements for a feature following TDD principles.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of the application does this test cover?
+      options:
+        - Backend
+        - Frontend
+        - Full Stack
+        - Integration
+    validations:
+      required: true
+
+  - type: dropdown
+    id: test_type
+    attributes:
+      label: Test Type
+      description: What kind of test is this?
+      options:
+        - Unit Test
+        - Integration Test
+        - E2E Test
+        - API Test
+        - Component Test
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: Estimated effort required
+      options:
+        - XS (1-2 hours)
+        - S (2-4 hours)
+        - M (1-2 days)
+        - L (3-5 days)
+        - XL (1+ week)
+    validations:
+      required: true
+
+  - type: textarea
+    id: related_feature
+    attributes:
+      label: Related Feature
+      description: Link to the feature issue this test is for
+      placeholder: "Blocks #XX or Tests #XX"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What functionality should this test verify?
+      placeholder: Describe what behavior is being tested
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenarios
+    attributes:
+      label: Test Scenarios
+      description: List the test cases to implement
+      placeholder: |
+        - [ ] Test scenario 1: Happy path
+        - [ ] Test scenario 2: Error handling
+        - [ ] Test scenario 3: Edge case
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      options:
+        - label: All test scenarios pass
+        - label: Code coverage meets threshold
+        - label: Tests follow naming conventions
+        - label: Tests are independent and repeatable
+        - label: Tests run in CI pipeline
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical Notes
+      description: Testing framework, mocking strategy, or special considerations
+      placeholder: Jest, Supertest, React Testing Library, etc.
