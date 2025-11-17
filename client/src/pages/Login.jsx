@@ -13,11 +13,24 @@ const Login = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h5" gutterBottom>Login</Typography>
+      <Typography variant="h5" gutterBottom>
+        Login
+      </Typography>
       <Stack component="form" gap={2} onSubmit={handleSubmit}>
-        <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <TextField label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        <Button type="submit" variant="contained">Sign in</Button>
+        <TextField
+          label="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+        <Button type="submit" variant="contained">
+          Sign in
+        </Button>
       </Stack>
     </Container>
   );
