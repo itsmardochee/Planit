@@ -88,6 +88,100 @@ test(board): add controller unit tests
 
 Branch naming: `feature/description`, `bugfix/description`, `hotfix/description`
 
+### Test-Driven Development (TDD)
+
+**Mandatory TDD approach for all features:**
+
+Planit follows strict **Test-Driven Development** (TDD) for all backend and frontend implementations. This ensures code quality, prevents regressions, and documents expected behavior.
+
+**Red-Green-Refactor Cycle:**
+
+1. **Red**: Write a failing test first that describes the desired behavior
+2. **Green**: Write minimal code to make the test pass
+3. **Refactor**: Improve code structure while keeping tests green
+
+**Backend TDD Workflow:**
+
+```bash
+# 1. Create test file (e.g., cardController.test.js)
+# 2. Write failing test
+describe('Card Controller', () => {
+  it('should create a card with valid data', async () => {
+    const res = await request(app)
+      .post('/api/lists/123/cards')
+      .send({ title: 'Test Card' });
+    expect(res.status).toBe(201);
+  });
+});
+
+# 3. Run test (should fail)
+npm test -- cardController.test.js
+
+# 4. Implement controller logic to pass test
+# 5. Run test again (should pass)
+# 6. Refactor if needed
+```
+
+**Frontend TDD Workflow:**
+
+```bash
+# 1. Create test file (e.g., CardModal.test.jsx)
+# 2. Write failing test
+describe('CardModal', () => {
+  it('renders card title input', () => {
+    render(<CardModal />);
+    expect(screen.getByLabelText('Card Title')).toBeInTheDocument();
+  });
+});
+
+# 3. Run test (should fail)
+npm test -- CardModal.test.jsx
+
+# 4. Implement component to pass test
+# 5. Run test again (should pass)
+# 6. Refactor if needed
+```
+
+**TDD Best Practices:**
+
+- **Never write production code without a failing test first**
+- **Write the simplest test first**, then add edge cases
+- **One test failure at a time** - fix before moving to next test
+- **Test behavior, not implementation** - tests should survive refactoring
+- **Mock external dependencies** (database, API calls) in unit tests
+- **Integration tests** verify full request/response cycle
+
+**Example TDD Session (Card Model):**
+
+```bash
+# Step 1: Write model test
+it('should require title field', async () => {
+  const card = new Card({ listId: '123' });
+  await expect(card.save()).rejects.toThrow();
+});
+
+# Step 2: Run test → FAILS (model doesn't exist yet)
+
+# Step 3: Create minimal Card model
+const cardSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  listId: { type: mongoose.Schema.Types.ObjectId, required: true }
+});
+
+# Step 4: Run test → PASSES
+
+# Step 5: Add more tests (position, description, etc.)
+# Step 6: Implement features to pass new tests
+```
+
+**CI Enforcement:**
+
+All PRs must have:
+
+- 100% test coverage for new code (enforced in reviews)
+- All tests passing (automated CI check)
+- No skipped/pending tests without justification
+
 ### Git Workflow
 
 **Branch Strategy (GitFlow):**

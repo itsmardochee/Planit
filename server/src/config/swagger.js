@@ -351,6 +351,87 @@ const options = {
             },
           },
         },
+        Card: {
+          type: 'object',
+          required: ['title', 'listId', 'boardId', 'userId'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Card ID (auto-generated)',
+              example: '507f1f77bcf86cd799439011',
+            },
+            title: {
+              type: 'string',
+              maxLength: 200,
+              description: 'Card title',
+              example: 'Implement authentication',
+            },
+            description: {
+              type: 'string',
+              maxLength: 2000,
+              description: 'Card description (optional)',
+              example: 'Create JWT-based authentication system',
+            },
+            position: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Position of card in list (for ordering)',
+              example: 0,
+            },
+            listId: {
+              type: 'string',
+              description: 'ID of the list this card belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            boardId: {
+              type: 'string',
+              description: 'ID of the board this card belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            userId: {
+              type: 'string',
+              description: 'ID of the user who owns this card',
+              example: '507f1f77bcf86cd799439011',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Card creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+          },
+        },
+        CardResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              $ref: '#/components/schemas/Card',
+            },
+          },
+        },
+        CardsResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Card',
+              },
+            },
+          },
+        },
       },
     },
     tags: [
@@ -372,7 +453,7 @@ const options = {
       },
       {
         name: 'Cards',
-        description: 'Card management (coming soon)',
+        description: 'Card management endpoints',
       },
     ],
   },
