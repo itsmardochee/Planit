@@ -7,15 +7,16 @@ import {
   deleteBoard,
 } from '../controllers/boardController.js';
 
-const router = express.Router({ mergeParams: true });
+const workspaceBoardRouter = express.Router({ mergeParams: true });
+const boardRouter = express.Router();
 
 // Routes for /api/workspaces/:workspaceId/boards
-router.post('/', createBoard);
-router.get('/', getBoards);
+workspaceBoardRouter.post('/', createBoard);
+workspaceBoardRouter.get('/', getBoards);
 
 // Routes for /api/boards/:id
-router.get('/:id', getBoard);
-router.put('/:id', updateBoard);
-router.delete('/:id', deleteBoard);
+boardRouter.get('/:id', getBoard);
+boardRouter.put('/:id', updateBoard);
+boardRouter.delete('/:id', deleteBoard);
 
-export default router;
+export { workspaceBoardRouter, boardRouter };

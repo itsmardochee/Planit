@@ -71,19 +71,16 @@ export const createBoard = async (req, res) => {
     }
 
     // Check if workspace exists and belongs to user
-    const workspace = await Workspace.findOne({
-      _id: workspaceId,
-      userId: req.user._id,
-    });
+    const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
-      const workspaceExists = await Workspace.findById(workspaceId);
-      if (!workspaceExists) {
-        return res.status(404).json({
-          success: false,
-          message: 'Workspace not found',
-        });
-      }
+      return res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+    }
+
+    if (workspace.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this workspace',
@@ -107,7 +104,7 @@ export const createBoard = async (req, res) => {
     }
 
     // Trim and validate description
-    const trimmedDescription = description?.trim();
+    const trimmedDescription = description?.trim() || undefined;
     if (trimmedDescription && trimmedDescription.length > 500) {
       return res.status(400).json({
         success: false,
@@ -186,19 +183,16 @@ export const getBoards = async (req, res) => {
     }
 
     // Check if workspace exists and belongs to user
-    const workspace = await Workspace.findOne({
-      _id: workspaceId,
-      userId: req.user._id,
-    });
+    const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
-      const workspaceExists = await Workspace.findById(workspaceId);
-      if (!workspaceExists) {
-        return res.status(404).json({
-          success: false,
-          message: 'Workspace not found',
-        });
-      }
+      return res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+    }
+
+    if (workspace.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this workspace',
@@ -273,19 +267,16 @@ export const getBoard = async (req, res) => {
     }
 
     // Find board
-    const board = await Board.findOne({
-      _id: id,
-      userId: req.user._id,
-    });
+    const board = await Board.findById(id);
 
     if (!board) {
-      const boardExists = await Board.findById(id);
-      if (!boardExists) {
-        return res.status(404).json({
-          success: false,
-          message: 'Board not found',
-        });
-      }
+      return res.status(404).json({
+        success: false,
+        message: 'Board not found',
+      });
+    }
+
+    if (board.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this board',
@@ -393,7 +384,7 @@ export const updateBoard = async (req, res) => {
 
     // Trim and validate description if provided
     if (description !== undefined) {
-      const trimmedDescription = description?.trim();
+      const trimmedDescription = description?.trim() || undefined;
       if (trimmedDescription && trimmedDescription.length > 500) {
         return res.status(400).json({
           success: false,
@@ -403,32 +394,28 @@ export const updateBoard = async (req, res) => {
       updateData.description = trimmedDescription;
     }
 
-    // Find and update board
-    const board = await Board.findOneAndUpdate(
-      {
-        _id: id,
-        userId: req.user._id,
-      },
-      updateData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    // Find board first to check authorization
+    const existingBoard = await Board.findById(id);
 
-    if (!board) {
-      const boardExists = await Board.findById(id);
-      if (!boardExists) {
-        return res.status(404).json({
-          success: false,
-          message: 'Board not found',
-        });
-      }
+    if (!existingBoard) {
+      return res.status(404).json({
+        success: false,
+        message: 'Board not found',
+      });
+    }
+
+    if (existingBoard.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this board',
       });
     }
+
+    // Update board
+    const board = await Board.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -499,25 +486,25 @@ export const deleteBoard = async (req, res) => {
       });
     }
 
-    // Find and delete board
-    const board = await Board.findOneAndDelete({
-      _id: id,
-      userId: req.user._id,
-    });
+    // Find board first to check authorization
+    const board = await Board.findById(id);
 
     if (!board) {
-      const boardExists = await Board.findById(id);
-      if (!boardExists) {
-        return res.status(404).json({
-          success: false,
-          message: 'Board not found',
-        });
-      }
+      return res.status(404).json({
+        success: false,
+        message: 'Board not found',
+      });
+    }
+
+    if (board.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this board',
       });
     }
+
+    // Delete board
+    await Board.findByIdAndDelete(id);
 
     // TODO: When List and Card models are implemented, add cascade delete logic:
     // - Delete all lists associated with this board

@@ -3,7 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import jwt from 'jsonwebtoken';
-import boardRoutes from '../../routes/boardRoutes.js';
+import { workspaceBoardRouter, boardRouter } from '../../routes/boardRoutes.js';
 import auth from '../../middlewares/auth.js';
 import User from '../../models/User.js';
 import Workspace from '../../models/Workspace.js';
@@ -11,8 +11,8 @@ import Board from '../../models/Board.js';
 
 const app = express();
 app.use(express.json());
-app.use('/api/workspaces/:workspaceId/boards', auth, boardRoutes);
-app.use('/api/boards', auth, boardRoutes);
+app.use('/api/workspaces/:workspaceId/boards', auth, workspaceBoardRouter);
+app.use('/api/boards', auth, boardRouter);
 
 describe('POST /api/workspaces/:workspaceId/boards', () => {
   let mongoServer;

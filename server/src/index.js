@@ -6,7 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
-import boardRoutes from './routes/boardRoutes.js';
+import { workspaceBoardRouter, boardRouter } from './routes/boardRoutes.js';
 import auth from './middlewares/auth.js';
 import errorHandler from './middlewares/errorHandler.js';
 
@@ -61,8 +61,8 @@ app.use(
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', auth, workspaceRoutes);
-app.use('/api/workspaces/:workspaceId/boards', auth, boardRoutes);
-app.use('/api/boards', auth, boardRoutes);
+app.use('/api/workspaces/:workspaceId/boards', auth, workspaceBoardRouter);
+app.use('/api/boards', auth, boardRouter);
 
 // Routes to be added
 // import listRoutes from './routes/listRoutes.js';
