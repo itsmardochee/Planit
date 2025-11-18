@@ -270,6 +270,87 @@ const options = {
             },
           },
         },
+        List: {
+          type: 'object',
+          required: ['name', 'workspaceId', 'boardId', 'userId'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'List ID (auto-generated)',
+              example: '507f1f77bcf86cd799439011',
+            },
+            name: {
+              type: 'string',
+              maxLength: 100,
+              description: 'List name',
+              example: 'To Do',
+            },
+            description: {
+              type: 'string',
+              maxLength: 500,
+              description: 'List description (optional)',
+              example: 'Tasks to complete',
+            },
+            position: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Position of list in board (for ordering)',
+              example: 0,
+            },
+            workspaceId: {
+              type: 'string',
+              description: 'ID of the workspace this list belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            boardId: {
+              type: 'string',
+              description: 'ID of the board this list belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            userId: {
+              type: 'string',
+              description: 'ID of the user who owns this list',
+              example: '507f1f77bcf86cd799439011',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'List creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+          },
+        },
+        ListResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              $ref: '#/components/schemas/List',
+            },
+          },
+        },
+        ListsResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/List',
+              },
+            },
+          },
+        },
       },
     },
     tags: [
@@ -287,7 +368,7 @@ const options = {
       },
       {
         name: 'Lists',
-        description: 'List management (coming soon)',
+        description: 'List management endpoints',
       },
       {
         name: 'Cards',

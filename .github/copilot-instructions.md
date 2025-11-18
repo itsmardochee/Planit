@@ -88,6 +88,23 @@ test(board): add controller unit tests
 
 Branch naming: `feature/description`, `bugfix/description`, `hotfix/description`
 
+### Git Workflow
+
+**Branch Strategy (GitFlow):**
+
+- `main` - Production-ready code (protected)
+- `dev` - Integration branch for features (protected)
+- `feature/*` - New features (merge into `dev`)
+- `bugfix/*` - Bug fixes (merge into `dev`)
+- `hotfix/*` - Critical production fixes (merge into `main` then `dev`)
+
+**Pull Request Rules:**
+
+- **Always create PRs targeting `dev` branch** (not `main`)
+- Exception: `hotfix/*` branches target `main` directly
+- PRs must pass all CI checks before merge
+- Merge `dev` into `main` only after validation/release cycle
+
 ### API Design Patterns
 
 - **RESTful endpoints**: `/api/workspaces`, `/api/boards/:id`, etc.
