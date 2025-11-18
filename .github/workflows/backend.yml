@@ -46,6 +46,10 @@ jobs:
         working-directory: ./server
         run: npx eslint src/
 
+      - name: Check code formatting
+        working-directory: ./server
+        run: npx prettier --check "src/**/*.{js,jsx,ts,tsx}"
+
       - name: Run tests
         working-directory: ./server
         run: npm test -- --coverage --watchAll=false --passWithNoTests
