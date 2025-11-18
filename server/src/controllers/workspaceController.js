@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
+import Board from '../models/Board.js';
+import List from '../models/List.js';
+import Card from '../models/Card.js';
 
 /**
  * @swagger
@@ -452,11 +455,8 @@ export const deleteWorkspace = async (req, res) => {
       });
     }
 
-    // TODO: When Board model is implemented, add cascade delete logic:
-    // - Delete all boards associated with this workspace
-    // - Delete all lists associated with those boards
-    // - Delete all cards associated with those lists
-    const workspace = await Workspace.findOneAndDelete({
+    // Find workspace first to verify ownership
+    const workspace = await Workspace.findOne({
       _id: id,
       userId: req.user._id,
     });
@@ -467,6 +467,22 @@ export const deleteWorkspace = async (req, res) => {
         message: 'Workspace not found',
       });
     }
+
+    // Cascade delete: Get all boards in this workspace
+    const boards = await Board.find({ workspaceId: id });
+    const boardIds = boards.map(board => board._id);
+
+    // Delete all cards associated with those boards
+    await Card.deleteMany({ boardId: { $in: boardIds } });
+
+    // Delete all lists associated with those boards
+    await List.deleteMany({ boardId: { $in: boardIds } });
+
+    // Delete all boards in this workspace
+    await Board.deleteMany({ workspaceId: id });
+
+    // Finally, delete the workspace itself
+    await Workspace.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,

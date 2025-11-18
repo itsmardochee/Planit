@@ -8,6 +8,8 @@ import auth from '../../middlewares/auth.js';
 import User from '../../models/User.js';
 import Workspace from '../../models/Workspace.js';
 import Board from '../../models/Board.js';
+import List from '../../models/List.js';
+import Card from '../../models/Card.js';
 
 const app = express();
 app.use(express.json());
@@ -879,6 +881,62 @@ describe('DELETE /api/boards/:id', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
+    });
+
+    it('should cascade delete all lists and cards when deleting board', async () => {
+      // Create lists in the board
+      const list1 = await List.create({
+        name: 'Test List 1',
+        workspaceId: testWorkspace._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 0,
+      });
+
+      const list2 = await List.create({
+        name: 'Test List 2',
+        workspaceId: testWorkspace._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 1,
+      });
+
+      // Create cards in the lists
+      await Card.create({
+        title: 'Card 1',
+        listId: list1._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 0,
+      });
+
+      await Card.create({
+        title: 'Card 2',
+        listId: list2._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 0,
+      });
+
+      // Delete the board
+      const response = await request(app)
+        .delete(`/api/boards/${testBoard._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+
+      // Verify board is deleted
+      const deletedBoard = await Board.findById(testBoard._id);
+      expect(deletedBoard).toBeNull();
+
+      // Verify lists are deleted
+      const deletedLists = await List.find({ boardId: testBoard._id });
+      expect(deletedLists).toHaveLength(0);
+
+      // Verify cards are deleted
+      const deletedCards = await Card.find({ boardId: testBoard._id });
+      expect(deletedCards).toHaveLength(0);
     });
   });
 });

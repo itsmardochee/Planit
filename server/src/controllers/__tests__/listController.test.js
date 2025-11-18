@@ -9,6 +9,7 @@ import User from '../../models/User.js';
 import Workspace from '../../models/Workspace.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
+import Card from '../../models/Card.js';
 
 const app = express();
 app.use(express.json());
@@ -710,6 +711,41 @@ describe('DELETE /api/lists/:id', () => {
       .delete(`/api/lists/${otherList._id}`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.status).toBe(403);
+  });
+
+  it('should cascade delete all cards when deleting list', async () => {
+    // Create cards in the list
+    await Card.create({
+      title: 'Card 1',
+      listId: testList._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 0,
+    });
+
+    await Card.create({
+      title: 'Card 2',
+      listId: testList._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 1,
+    });
+
+    // Delete the list
+    const res = await request(app)
+      .delete(`/api/lists/${testList._id}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+
+    // Verify list is deleted
+    const deletedList = await List.findById(testList._id);
+    expect(deletedList).toBeNull();
+
+    // Verify cards are deleted
+    const deletedCards = await Card.find({ listId: testList._id });
+    expect(deletedCards).toHaveLength(0);
   });
 });
 
