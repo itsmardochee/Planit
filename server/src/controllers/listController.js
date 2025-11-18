@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import List from '../models/List.js';
 import Board from '../models/Board.js';
+import Card from '../models/Card.js';
 
 /**
  * @swagger
@@ -610,7 +611,8 @@ export const deleteList = async (req, res) => {
 
     await List.findByIdAndDelete(id);
 
-    // TODO: When Card model exists, cascade delete cards by listId
+    // Cascade delete: remove all cards that belong to this list
+    await Card.deleteMany({ listId: id });
 
     res
       .status(200)

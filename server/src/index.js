@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import { workspaceBoardRouter, boardRouter } from './routes/boardRoutes.js';
 import { boardListRouter, listRouter } from './routes/listRoutes.js';
+import { listCardRouter, cardRouter } from './routes/cardRoutes.js';
 import auth from './middlewares/auth.js';
 import errorHandler from './middlewares/errorHandler.js';
 
@@ -66,10 +67,8 @@ app.use('/api/workspaces/:workspaceId/boards', auth, workspaceBoardRouter);
 app.use('/api/boards', auth, boardRouter);
 app.use('/api/boards/:boardId/lists', auth, boardListRouter);
 app.use('/api/lists', auth, listRouter);
-
-// Routes to be added next
-// import cardRoutes from './routes/cardRoutes.js';
-// app.use('/api/cards', cardRoutes);
+app.use('/api/lists/:listId/cards', auth, listCardRouter);
+app.use('/api/cards', auth, cardRouter);
 
 // 404 handler - must be before error handler
 app.use((req, res) => {
