@@ -200,6 +200,76 @@ const options = {
             },
           },
         },
+        Board: {
+          type: 'object',
+          required: ['name', 'workspaceId', 'userId'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Board ID (auto-generated)',
+              example: '507f1f77bcf86cd799439011',
+            },
+            name: {
+              type: 'string',
+              maxLength: 100,
+              description: 'Board name',
+              example: 'Project Sprint 1',
+            },
+            description: {
+              type: 'string',
+              maxLength: 500,
+              description: 'Board description (optional)',
+              example: 'Sprint planning and tracking',
+            },
+            workspaceId: {
+              type: 'string',
+              description: 'ID of the workspace this board belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            userId: {
+              type: 'string',
+              description: 'ID of the user who owns this board',
+              example: '507f1f77bcf86cd799439011',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Board creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+          },
+        },
+        BoardResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              $ref: '#/components/schemas/Board',
+            },
+          },
+        },
+        BoardsResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Board',
+              },
+            },
+          },
+        },
       },
     },
     tags: [
@@ -209,11 +279,11 @@ const options = {
       },
       {
         name: 'Workspaces',
-        description: 'Workspace management (coming soon)',
+        description: 'Workspace management endpoints',
       },
       {
         name: 'Boards',
-        description: 'Board management (coming soon)',
+        description: 'Board management endpoints',
       },
       {
         name: 'Lists',
