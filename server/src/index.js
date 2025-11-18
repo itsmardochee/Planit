@@ -7,6 +7,7 @@ import swaggerSpec from './config/swagger.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import { workspaceBoardRouter, boardRouter } from './routes/boardRoutes.js';
+import { boardListRouter, listRouter } from './routes/listRoutes.js';
 import auth from './middlewares/auth.js';
 import errorHandler from './middlewares/errorHandler.js';
 
@@ -63,11 +64,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', auth, workspaceRoutes);
 app.use('/api/workspaces/:workspaceId/boards', auth, workspaceBoardRouter);
 app.use('/api/boards', auth, boardRouter);
+app.use('/api/boards/:boardId/lists', auth, boardListRouter);
+app.use('/api/lists', auth, listRouter);
 
-// Routes to be added
-// import listRoutes from './routes/listRoutes.js';
+// Routes to be added next
 // import cardRoutes from './routes/cardRoutes.js';
-// app.use('/api/lists', listRoutes);
 // app.use('/api/cards', cardRoutes);
 
 // 404 handler - must be before error handler
