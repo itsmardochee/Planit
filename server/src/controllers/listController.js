@@ -480,12 +480,10 @@ export const reorderList = async (req, res) => {
     }
 
     if (!Number.isInteger(position) || position < 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Position must be a non-negative integer',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Position must be a non-negative integer',
+      });
     }
 
     const list = await List.findById(id);
