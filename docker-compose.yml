@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:8.0
+    image: mongodb/mongodb-community-server:8.0-ubi8
     container_name: planit-mongodb
     restart: always
     environment:
@@ -11,7 +11,6 @@ services:
       # Never use default credentials in production!
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: planit
     volumes:
       - mongodb_data:/data/db
     healthcheck:
