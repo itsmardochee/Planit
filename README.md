@@ -4,6 +4,7 @@
 [![Frontend CI](https://github.com/itsmardochee/Planit/actions/workflows/frontend.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/frontend.yml)
 [![Docker Build](https://github.com/itsmardochee/Planit/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/docker.yml)
 [![Code Quality](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml)
+[![codecov](https://codecov.io/gh/itsmardochee/Planit/branch/main/graph/badge.svg)](https://codecov.io/gh/itsmardochee/Planit)
 
 > "Plan your success, one board at a time." — *The Planit Team*
 
