@@ -412,6 +412,138 @@ export const updateList = async (req, res) => {
 
 /**
  * @swagger
+ * /api/lists/{id}/reorder:
+ *   put:
+ *     summary: Reorder a list by updating its position
+ *     tags: [Lists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: List ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - position
+ *             properties:
+ *               position:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 2
+ *                 description: New position for the list
+ *     responses:
+ *       200:
+ *         description: List reordered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ListResponse'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized to reorder this list
+ *       404:
+ *         description: List not found
+ *       500:
+ *         description: Server error
+ */
+/**
+ * @desc    Update list position for reordering
+ * @route   PUT /api/lists/:id/reorder
+ * @access  Private
+ */
+export const reorderList = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { position } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid list ID format' });
+    }
+
+    if (position === undefined || position === null) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Position is required' });
+    }
+
+    if (!Number.isInteger(position) || position < 0) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Position must be a non-negative integer',
+        });
+    }
+
+    const list = await List.findById(id);
+    if (!list) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'List not found' });
+    }
+
+    if (list.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to reorder this list',
+      });
+    }
+
+    const oldPosition = list.position;
+    const newPosition = position;
+
+    // Update positions of other lists in the same board
+    if (oldPosition !== newPosition) {
+      const boardId = list.boardId;
+
+      if (newPosition > oldPosition) {
+        // Moving down: decrement position of lists between old and new position
+        await List.updateMany(
+          {
+            boardId,
+            position: { $gt: oldPosition, $lte: newPosition },
+            _id: { $ne: id },
+          },
+          { $inc: { position: -1 } }
+        );
+      } else {
+        // Moving up: increment position of lists between new and old position
+        await List.updateMany(
+          {
+            boardId,
+            position: { $gte: newPosition, $lt: oldPosition },
+            _id: { $ne: id },
+          },
+          { $inc: { position: 1 } }
+        );
+      }
+    }
+
+    // Update the list's position
+    list.position = newPosition;
+    await list.save();
+
+    res.status(200).json({ success: true, data: list });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @swagger
  * /api/lists/{id}:
  *   delete:
  *     summary: Delete a list

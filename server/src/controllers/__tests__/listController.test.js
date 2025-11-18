@@ -712,3 +712,220 @@ describe('DELETE /api/lists/:id', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('PUT /api/lists/:id/reorder', () => {
+  let mongoServer;
+  let testUser;
+  let testWorkspace;
+  let testBoard;
+  let list1, list2, list3;
+  let authToken;
+
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    process.env.JWT_SECRET = 'test_secret_key';
+  }, 30000);
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+    delete process.env.JWT_SECRET;
+  });
+
+  beforeEach(async () => {
+    testUser = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123',
+    });
+    testWorkspace = await Workspace.create({
+      name: 'Test Workspace',
+      userId: testUser._id,
+    });
+    testBoard = await Board.create({
+      name: 'Test Board',
+      workspaceId: testWorkspace._id,
+      userId: testUser._id,
+    });
+    list1 = await List.create({
+      name: 'List 1',
+      position: 0,
+      workspaceId: testWorkspace._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+    });
+    list2 = await List.create({
+      name: 'List 2',
+      position: 1,
+      workspaceId: testWorkspace._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+    });
+    list3 = await List.create({
+      name: 'List 3',
+      position: 2,
+      workspaceId: testWorkspace._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+    });
+    authToken = jwt.sign(
+      { id: testUser._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+  });
+
+  afterEach(async () => {
+    await List.deleteMany({});
+    await Board.deleteMany({});
+    await Workspace.deleteMany({});
+    await User.deleteMany({});
+  });
+
+  describe('Authentication', () => {
+    it('should fail without authentication token', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list1._id}/reorder`)
+        .send({ position: 2 });
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Reordering Lists', () => {
+    it('should reorder list from position 0 to 2', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list1._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 2 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.position).toBe(2);
+
+      // Verify other lists were adjusted
+      const updatedList2 = await List.findById(list2._id);
+      const updatedList3 = await List.findById(list3._id);
+      expect(updatedList2.position).toBe(0);
+      expect(updatedList3.position).toBe(1);
+    });
+
+    it('should reorder list from position 2 to 0', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list3._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 0 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.position).toBe(0);
+
+      // Verify other lists were adjusted
+      const updatedList1 = await List.findById(list1._id);
+      const updatedList2 = await List.findById(list2._id);
+      expect(updatedList1.position).toBe(1);
+      expect(updatedList2.position).toBe(2);
+    });
+
+    it('should handle reordering to same position', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list2._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 1 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.position).toBe(1);
+
+      // Verify other lists unchanged
+      const updatedList1 = await List.findById(list1._id);
+      const updatedList3 = await List.findById(list3._id);
+      expect(updatedList1.position).toBe(0);
+      expect(updatedList3.position).toBe(2);
+    });
+
+    it('should fail with missing position', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list1._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Position is required');
+    });
+
+    it('should fail with negative position', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list1._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: -1 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('non-negative integer');
+    });
+
+    it('should fail with non-integer position', async () => {
+      const res = await request(app)
+        .put(`/api/lists/${list1._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 1.5 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('non-negative integer');
+    });
+
+    it('should fail with invalid list id format', async () => {
+      const res = await request(app)
+        .put('/api/lists/invalid-id/reorder')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 1 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Invalid list ID format');
+    });
+
+    it('should fail when list does not exist', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      const res = await request(app)
+        .put(`/api/lists/${fakeId}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 1 });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toContain('List not found');
+    });
+
+    it('should fail when reordering list owned by another user', async () => {
+      const otherUser = await User.create({
+        username: 'other',
+        email: 'other@example.com',
+        password: 'password123',
+      });
+      const otherWorkspace = await Workspace.create({
+        name: 'Other Workspace',
+        userId: otherUser._id,
+      });
+      const otherBoard = await Board.create({
+        name: 'Other Board',
+        workspaceId: otherWorkspace._id,
+        userId: otherUser._id,
+      });
+      const otherList = await List.create({
+        name: 'Other List',
+        position: 0,
+        workspaceId: otherWorkspace._id,
+        boardId: otherBoard._id,
+        userId: otherUser._id,
+      });
+
+      const res = await request(app)
+        .put(`/api/lists/${otherList._id}/reorder`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ position: 1 });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Not authorized');
+    });
+  });
+});

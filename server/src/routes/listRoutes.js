@@ -4,6 +4,7 @@ import {
   getLists,
   getList,
   updateList,
+  reorderList,
   deleteList,
 } from '../controllers/listController.js';
 
@@ -17,6 +18,7 @@ boardListRouter.get('/', getLists);
 // Routes for /api/lists/:id
 listRouter.get('/:id', getList);
 listRouter.put('/:id', updateList);
+listRouter.put('/:id/reorder', reorderList);
 listRouter.delete('/:id', deleteList);
 
 export { boardListRouter, listRouter };
