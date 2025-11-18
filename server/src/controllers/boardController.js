@@ -104,7 +104,7 @@ export const createBoard = async (req, res) => {
     }
 
     // Trim and validate description
-    const trimmedDescription = description?.trim() || undefined;
+    const trimmedDescription = description?.trim();
     if (trimmedDescription && trimmedDescription.length > 500) {
       return res.status(400).json({
         success: false,
@@ -384,8 +384,8 @@ export const updateBoard = async (req, res) => {
 
     // Trim and validate description if provided
     if (description !== undefined) {
-      const trimmedDescription = description?.trim() || undefined;
-      if (trimmedDescription && trimmedDescription.length > 500) {
+      const trimmedDescription = description.trim();
+      if (trimmedDescription.length > 500) {
         return res.status(400).json({
           success: false,
           message: 'Description cannot exceed 500 characters',
