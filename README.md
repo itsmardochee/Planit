@@ -6,7 +6,7 @@
 [![Code Quality](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml/badge.svg?branch=main)](https://github.com/itsmardochee/Planit/actions/workflows/code-quality.yml)
 [![codecov](https://codecov.io/gh/itsmardochee/Planit/branch/main/graph/badge.svg)](https://codecov.io/gh/itsmardochee/Planit)
 
-> "Plan your success, one board at a time." — *The Planit Team*
+> "Plan your success, one board at a time." — _The Planit Team_
 
 **A Trello-like Web Application built with React, Node.js, and MongoDB**
 
@@ -22,10 +22,10 @@ Planit provides a solid foundation for team organization and project tracking wh
 
 ## 🧠 Objectives
 
-* Deliver a **maintainable, modular MVP** focused on reliability and usability.
-* Apply **agile practices**, **test-driven development**, and **CI/CD pipelines**.
-* Provide a **responsive**, **Material UI-based** user interface.
-* Prepare a foundation ready for **future collaboration and real-time updates**.
+- Deliver a **maintainable, modular MVP** focused on reliability and usability.
+- Apply **agile practices**, **test-driven development**, and **CI/CD pipelines**.
+- Provide a **responsive**, **Material UI-based** user interface.
+- Prepare a foundation ready for **future collaboration and real-time updates**.
 
 ---
 
@@ -33,21 +33,21 @@ Planit provides a solid foundation for team organization and project tracking wh
 
 ### ✅ MVP (Must-Have)
 
-* **Authentication & User Management**: Sign up, login/logout (JWT), profile editing.
-* **Workspaces**: CRUD operations, workspace metadata (name, description).
-* **Boards**: CRUD operations, workspace-based grouping, board settings (title, background, archive).
-* **Lists**: CRUD + drag & drop reordering within a board.
-* **Cards**: CRUD + reordering within lists and between lists.
-* **UI/UX**: Material UI components, snackbars for feedback, responsive dashboard.
+- **Authentication & User Management**: Sign up, login/logout (JWT), profile editing.
+- **Workspaces**: CRUD operations, workspace metadata (name, description).
+- **Boards**: CRUD operations, workspace-based grouping, board settings (title, background, archive).
+- **Lists**: CRUD + drag & drop reordering within a board.
+- **Cards**: CRUD + reordering within lists and between lists.
+- **UI/UX**: Material UI components, snackbars for feedback, responsive dashboard.
 
 ### 🌟 Stretch Goals
 
-* Workspace members & roles (Owner, Member)
-* Comments, labels, due dates, assignees, checklists
-* File attachments
-* Activity log
-* Real-time updates (Socket.IO)
-* Search and dark mode
+- Workspace members & roles (Owner, Member)
+- Comments, labels, due dates, assignees, checklists
+- File attachments
+- Activity log
+- Real-time updates (Socket.IO)
+- Search and dark mode
 
 ---
 
@@ -55,31 +55,31 @@ Planit provides a solid foundation for team organization and project tracking wh
 
 ### Frontend
 
-* **React.js (latest stable)**
-* **Vite** (build tool and dev server)
-* **Material UI (MUI)**
-* **Redux Toolkit** or **React Query** (for state management)
-* **react-router-dom** (routing)
-* **dnd-kit** or **Pragmatic Drag and Drop** (drag & drop)
-* **Axios** (API communication)
-* **Vitest** (testing framework)
+- **React.js (latest stable)**
+- **Vite** (build tool and dev server)
+- **Material UI (MUI)**
+- **Redux Toolkit** or **React Query** (for state management)
+- **react-router-dom** (routing)
+- **dnd-kit** or **Pragmatic Drag and Drop** (drag & drop)
+- **Axios** (API communication)
+- **Vitest** (testing framework)
 
 ### Backend
 
-* **Node.js + Express**
-* **MongoDB (Atlas)** with **Mongoose** ORM
-* **JWT** authentication (jsonwebtoken)
-* **Jest + Supertest** for API testing
+- **Node.js + Express**
+- **MongoDB (Atlas)** with **Mongoose** ORM
+- **JWT** authentication (jsonwebtoken)
+- **Jest + Supertest** for API testing
 
 ### DevOps / Tools
 
-* **GitHub** (repo, issues, Projects/Kanban)
-* **GitHub Actions** (CI)
-* **Docker** (for dev and production)
-* **Vercel** (frontend deployment)
-* **Render/Railway** (backend deployment)
-* **MongoDB Atlas** (database)
-* **Postman / Insomnia** (API testing)
+- **GitHub** (repo, issues, Projects/Kanban)
+- **GitHub Actions** (CI)
+- **Docker** (for dev and production)
+- **Vercel** (frontend deployment)
+- **Render/Railway** (backend deployment)
+- **MongoDB Atlas** (database)
+- **Postman / Insomnia** (API testing)
 
 ---
 
@@ -107,9 +107,9 @@ server/ (Express)
 
 ## 🧪 Testing Strategy
 
-* **Backend:** Jest + Supertest for API endpoints (auth, workspaces, boards, lists, cards).
-* **Frontend:** Jest + React Testing Library for reducers, hooks, and components.
-* **CI:** GitHub Actions runs tests on every PR before merging.
+- **Backend:** Jest + Supertest for API endpoints (auth, workspaces, boards, lists, cards).
+- **Frontend:** Jest + React Testing Library for reducers, hooks, and components.
+- **CI:** GitHub Actions runs tests on every PR before merging.
 
 ---
 
@@ -200,7 +200,7 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 
 ## 🧱 Deployment
 
-* **Frontend:** deployed on Vercel.
-* **Backend:** deployed on Render or Railway.
-* **Database:** hosted on MongoDB Atlas.
-* **CI/CD:** handled by GitHub Actions.
+- **Frontend:** deployed on Vercel.
+- **Backend:** deployed on Render or Railway.
+- **Database:** hosted on MongoDB Atlas.
+- **CI/CD:** handled by GitHub Actions.
