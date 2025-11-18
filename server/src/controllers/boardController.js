@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Board from '../models/Board.js';
 import Workspace from '../models/Workspace.js';
 import List from '../models/List.js';
+import Card from '../models/Card.js';
 
 /**
  * @swagger
@@ -504,13 +505,14 @@ export const deleteBoard = async (req, res) => {
       });
     }
 
-    // Delete board
-    await Board.findByIdAndDelete(id);
+    // Cascade delete: Delete all cards associated with this board
+    await Card.deleteMany({ boardId: id });
 
-    // Cascade delete: remove lists under this board
+    // Cascade delete: Delete all lists under this board
     await List.deleteMany({ boardId: id });
 
-    // TODO: When Card model is implemented, also delete cards associated with those lists
+    // Finally, delete the board itself
+    await Board.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
