@@ -39,10 +39,10 @@ export const ToastProvider = ({ children }) => {
               toast.type === 'error'
                 ? 'bg-red-500'
                 : toast.type === 'success'
-                ? 'bg-green-500'
-                : toast.type === 'warning'
-                ? 'bg-yellow-500'
-                : 'bg-blue-500'
+                  ? 'bg-green-500'
+                  : toast.type === 'warning'
+                    ? 'bg-yellow-500'
+                    : 'bg-blue-500'
             }`}
           >
             <div className="flex justify-between items-center">
