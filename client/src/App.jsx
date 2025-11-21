@@ -1,43 +1,43 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Container,
+  Stack,
+} from '@mui/material';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import WorkspacePage from './pages/WorkspacePage.jsx';
-import BoardPage from './pages/BoardPage.jsx';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 function App() {
   return (
-    <div className="min-h-screen">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/workspace/:workspaceId"
-          element={
-            <ProtectedRoute>
-              <WorkspacePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/board/:boardId"
-          element={
-            <ProtectedRoute>
-              <BoardPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </div>
+    <Stack minHeight="100vh">
+      <AppBar position="static" color="primary">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Planit
+          </Typography>
+          <Button color="inherit" component={Link} to="/">
+            Home
+          </Button>
+          <Button color="inherit" component={Link} to="/dashboard">
+            Dashboard
+          </Button>
+          <Button color="inherit" component={Link} to="/login">
+            Login
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <Container sx={{ py: 3, flex: 1 }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Container>
+    </Stack>
   );
 }
 
