@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginSuccess, loginError } from '../store/index';
-// import { authAPI } from '../utils/api'; // Uncomment to enable real backend calls
+import { authAPI } from '../utils/api';
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -12,7 +12,6 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -22,29 +21,38 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // TEMP: backend calls are commented so UI can be tested without server.
-      // To enable real auth, uncomment the import above and use authAPI.login / authAPI.register.
-
-      // Example (backend):
+      // TEMPORARY: Commented out validation to view frontend pages
       // if (isRegister) {
+      //   if (password !== confirmPassword) {
+      //     setError('Les mots de passe ne correspondent pas');
+      //     setLoading(false);
+      //     return;
+      //   }
       //   await authAPI.register({ username, email, password });
+      //   setError('');
+      //   setIsRegister(false);
+      //   setUsername('');
+      //   setEmail('');
+      //   setPassword('');
+      //   setConfirmPassword('');
       // } else {
       //   const response = await authAPI.login({ email, password });
-      //   const { user, token } = response.data;
+      //   const { user, token } = response.data.data;
       //   dispatch(loginSuccess({ user, token }));
+      //   navigate('/dashboard');
       // }
 
-      // Mock behaviour for local UI testing:
+      // TEMPORARY: Bypass auth to navigate directly to dashboard
       const mockUser = {
-        id: 'u1',
-        username: username || 'testuser',
+        id: '123',
+        username: 'testuser',
         email: email || 'test@example.com',
       };
       const mockToken = 'mock-token-for-testing';
       dispatch(loginSuccess({ user: mockUser, token: mockToken }));
       navigate('/dashboard');
     } catch (err) {
-      const message = err?.response?.data?.message || 'An error occurred';
+      const message = err.response?.data?.message || 'Une erreur est survenue';
       setError(message);
       dispatch(loginError(message));
     } finally {
@@ -53,11 +61,15 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-trello-blue to-trello-blue-dark flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-center mb-4">
-          {isRegister ? 'Create an account' : 'Sign in to Planit'}
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
+          {isRegister ? 'Créer un compte' : 'Planit'}
         </h1>
+        <p className="text-center text-gray-600 mb-6 text-sm">
+          {isRegister ? 'Rejoignez Planit' : 'Connectez-vous à votre compte'}
+        </p>
+
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error}
@@ -68,15 +80,15 @@ const Login = () => {
           {isRegister && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Username
+                Nom d'utilisateur
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 required={isRegister}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Your username"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+                placeholder="Votre nom d'utilisateur"
               />
             </div>
           )}
@@ -89,35 +101,40 @@ const Login = () => {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="you@example.com"
+              // required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+              placeholder="votre@email.com"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Mot de passe
             </label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Your password"
+              // required
+              // minLength={6}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+              placeholder="••••••"
             />
           </div>
 
           {isRegister && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                Confirmer le mot de passe
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Confirm password"
+                required={isRegister}
+                minLength={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+                placeholder="••••••"
               />
             </div>
           )}
@@ -125,30 +142,39 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+            className="w-full bg-trello-blue hover:bg-trello-blue-dark text-white font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
           >
             {loading
-              ? 'Please wait...'
+              ? 'Chargement...'
               : isRegister
-              ? 'Create account'
-              : 'Sign in'}
+              ? "S'inscrire"
+              : 'Se connecter'}
           </button>
         </form>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <button
-            onClick={() => setIsRegister(!isRegister)}
-            className="text-blue-600 hover:underline"
-          >
-            {isRegister
-              ? 'Already have an account? Sign in'
-              : "Don't have an account? Create one"}
-          </button>
+        <div className="mt-6 text-center text-sm">
+          {isRegister ? (
+            <>
+              Vous avez déjà un compte?{' '}
+              <button
+                onClick={() => setIsRegister(false)}
+                className="text-trello-blue hover:underline font-medium"
+              >
+                Se connecter
+              </button>
+            </>
+          ) : (
+            <>
+              Pas encore de compte?{' '}
+              <button
+                onClick={() => setIsRegister(true)}
+                className="text-trello-blue hover:underline font-medium"
+              >
+                S'inscrire
+              </button>
+            </>
+          )}
         </div>
-
-        <p className="mt-4 text-center text-xs text-gray-400">
-          This page uses mock authentication for UI testing.
-        </p>
       </div>
     </div>
   );
