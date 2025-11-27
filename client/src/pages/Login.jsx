@@ -18,27 +18,68 @@ const Login = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
+    console.log('Form submitted, preventDefault called');
     setError('');
     setLoading(true);
 
+    // Validation
+    if (isRegister && password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isRegister) {
-        await authAPI.register({ username, email, password });
+        // Register new user
+        console.log('Attempting registration...');
+        await authAPI.register({
+          username,
+          email,
+          password,
+        });
+
         // After successful registration, automatically log in
+        console.log('Registration successful, logging in...');
         const loginResponse = await authAPI.login({ email, password });
-        const { user, token } = loginResponse.data;
-        dispatch(loginSuccess({ user, token }));
+
+        if (loginResponse.data.success) {
+          const { user, token } = loginResponse.data.data;
+
+          // Store token and user in localStorage
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+
+          dispatch(loginSuccess({ user, token }));
+          navigate('/dashboard');
+        }
       } else {
+        // Login existing user
+        console.log('Attempting login...');
         const response = await authAPI.login({ email, password });
-        const { user, token } = response.data;
-        dispatch(loginSuccess({ user, token }));
+
+        if (response.data.success) {
+          const { user, token } = response.data.data;
+
+          // Store token and user in localStorage
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+
+          dispatch(loginSuccess({ user, token }));
+          navigate('/dashboard');
+        }
       }
-      navigate('/dashboard');
     } catch (err) {
-      const message = err?.response?.data?.message || 'An error occurred';
+      console.error('Auth error:', err);
+      console.log('Error response:', err.response);
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        'An error occurred. Please try again.';
       setError(message);
       dispatch(loginError(message));
     } finally {
+      console.log('Finally block, setting loading to false');
       setLoading(false);
     }
   };
@@ -136,10 +177,6 @@ const Login = () => {
               : "Don't have an account? Create one"}
           </button>
         </div>
-
-        <p className="mt-4 text-center text-xs text-gray-400">
-          This page uses mock authentication for UI testing.
-        </p>
       </div>
     </div>
   );
