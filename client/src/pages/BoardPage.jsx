@@ -1,8 +1,6 @@
-// Removed stray triple-backtick
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// Backend APIs commented out for UI-only mode. To enable real backend calls,
-// import `boardAPI`, `listAPI`, and `cardAPI` from `../utils/api` and restore the commented sections below.
+import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
 import {
@@ -35,63 +33,17 @@ const BoardPage = () => {
       try {
         setLoading(true);
 
-        // === Backend fetching commented out for UI-only mode ===
-        // To enable real backend, uncomment and use these calls:
-        // const boardResponse = await boardAPI.getById(boardId);
-        // setBoard(boardResponse.data.data);
-        // const listsResponse = await listAPI.getByBoard(boardId);
-        // const listsData = listsResponse.data.data || [];
-        // const listsWithCards = await Promise.all(listsData.map(async l => { ... }));
-        // setLists(listsWithCards);
-
-        // Fallback mock data for UI testing
-        const mockBoard = {
-          _id: boardId || 'local-board-1',
-          name: 'Demo Board (local)',
-          description: 'Tableau mock pour tests UI',
-          createdAt: new Date().toISOString(),
-        };
-
-        const mockLists = [
-          {
-            _id: 'local-list-1',
-            name: 'To Do',
-            position: 0,
-            cards: [
-              {
-                _id: 'local-card-1',
-                title: 'Card A',
-                description: 'Demo card A',
-              },
-              {
-                _id: 'local-card-2',
-                title: 'Card B',
-                description: 'Demo card B',
-              },
-            ],
-          },
-          {
-            _id: 'local-list-2',
-            name: 'In Progress',
-            position: 1,
-            cards: [
-              {
-                _id: 'local-card-3',
-                title: 'Card C',
-                description: 'Demo card C',
-              },
-            ],
-          },
-          {
-            _id: 'local-list-3',
-            name: 'Done',
-            position: 2,
-            cards: [],
-          },
-        ];
-
-        setBoard(mockBoard);
-        setLists(mockLists);
+        const boardResponse = await boardAPI.getById(boardId);
+        setBoard(boardResponse.data.data);
+        const listsResponse = await listAPI.getByBoard(boardId);
+        const listsData = listsResponse.data.data || [];
+        const listsWithCards = await Promise.all(
+          listsData.map(async list => {
+            const cardsResponse = await cardAPI.getByList(list._id);
+            return { ...list, cards: cardsResponse.data.data || [] };
+          })
+        );
+        setLists(listsWithCards);
       } catch (err) {
         console.error('Erreur lors du chargement du tableau', err);
       } finally {
@@ -104,7 +56,7 @@ const BoardPage = () => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const handleDragEnd = event => {
+  const handleDragEnd = async event => {
     const { active, over } = event;
     if (!over) return;
     if (active.id === over.id) return;
@@ -133,8 +85,10 @@ const BoardPage = () => {
       );
       setLists(newLists);
 
-      // Persist reorder (commented out for UI-only mode)
-      // await cardAPI.reorder(active.id, { listId: sourceList._id, position: newIndex });
+      await cardAPI.reorder(active.id, {
+        listId: sourceList._id,
+        position: newIndex,
+      });
       return;
     }
 
@@ -166,8 +120,10 @@ const BoardPage = () => {
 
     setLists(newLists);
 
-    // Persist card move (commented out for UI-only mode)
-    // await cardAPI.reorder(active.id, { listId: destList._id, position: insertIndex });
+    await cardAPI.reorder(active.id, {
+      listId: destList._id,
+      position: insertIndex,
+    });
   };
 
   const handleCreateList = e => {

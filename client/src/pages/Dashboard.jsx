@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout, setWorkspaces, setBoards } from '../store/index';
 import { useAuth } from '../hooks/useAuth';
+import { workspaceAPI } from '../utils/api';
 
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -24,21 +25,8 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        // === Backend call (commented out for UI-only mode) ===
-        // When enabling backend, uncomment and import `workspaceAPI` from `../utils/api`, then:
-        // const response = await workspaceAPI.getAll();
-        // dispatch(setWorkspaces(response.data.data));
-
-        // Fallback: mock local workspaces so the UI can be tested without backend
-        const mockWorkspaces = [
-          {
-            _id: 'local-1',
-            name: 'Demo Workspace',
-            description: 'Workspace local pour tests UI',
-            createdAt: new Date().toISOString(),
-          },
-        ];
-        dispatch(setWorkspaces(mockWorkspaces));
+        const response = await workspaceAPI.getAll();
+        dispatch(setWorkspaces(response.data.data));
         setError('');
       } catch (err) {
         setError('Erreur lors du chargement des workspaces');
@@ -56,22 +44,11 @@ const Dashboard = () => {
     if (!newWorkspaceName.trim()) return;
 
     try {
-      // === Backend create (commented out for UI-only mode) ===
-      // When enabling backend, uncomment and use the real API call:
-      // const response = await workspaceAPI.create({
-      //   name: newWorkspaceName,
-      //   description: 'New workspace',
-      // });
-      // dispatch(setWorkspaces([...workspaces, response.data.data]));
-
-      // UI-only behavior: create a local workspace object and update store
-      const localWorkspace = {
-        _id: `local-${Date.now()}`,
+      const response = await workspaceAPI.create({
         name: newWorkspaceName,
-        description: 'Créé localement (UI-only)',
-        createdAt: new Date().toISOString(),
-      };
-      dispatch(setWorkspaces([...(workspaces || []), localWorkspace]));
+        description: 'New workspace',
+      });
+      dispatch(setWorkspaces([...(workspaces || []), response.data.data]));
       setNewWorkspaceName('');
       setShowNewWorkspaceForm(false);
     } catch (err) {

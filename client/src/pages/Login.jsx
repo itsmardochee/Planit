@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginSuccess, loginError } from '../store/index';
-// import { authAPI } from '../utils/api'; // Uncomment to enable real backend calls
+import { authAPI } from '../utils/api';
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -22,26 +22,17 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // TEMP: backend calls are commented so UI can be tested without server.
-      // To enable real auth, uncomment the import above and use authAPI.login / authAPI.register.
-
-      // Example (backend):
-      // if (isRegister) {
-      //   await authAPI.register({ username, email, password });
-      // } else {
-      //   const response = await authAPI.login({ email, password });
-      //   const { user, token } = response.data;
-      //   dispatch(loginSuccess({ user, token }));
-      // }
-
-      // Mock behaviour for local UI testing:
-      const mockUser = {
-        id: 'u1',
-        username: username || 'testuser',
-        email: email || 'test@example.com',
-      };
-      const mockToken = 'mock-token-for-testing';
-      dispatch(loginSuccess({ user: mockUser, token: mockToken }));
+      if (isRegister) {
+        await authAPI.register({ username, email, password });
+        // After successful registration, automatically log in
+        const loginResponse = await authAPI.login({ email, password });
+        const { user, token } = loginResponse.data;
+        dispatch(loginSuccess({ user, token }));
+      } else {
+        const response = await authAPI.login({ email, password });
+        const { user, token } = response.data;
+        dispatch(loginSuccess({ user, token }));
+      }
       navigate('/dashboard');
     } catch (err) {
       const message = err?.response?.data?.message || 'An error occurred';
@@ -130,8 +121,8 @@ const Login = () => {
             {loading
               ? 'Please wait...'
               : isRegister
-                ? 'Create account'
-                : 'Sign in'}
+              ? 'Create account'
+              : 'Sign in'}
           </button>
         </form>
 

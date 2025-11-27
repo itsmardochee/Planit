@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setBoards } from '../store/index';
+import { workspaceAPI, boardAPI } from '../utils/api';
 
 const WorkspacePage = () => {
   const { workspaceId } = useParams();
@@ -18,34 +19,12 @@ const WorkspacePage = () => {
       try {
         setLoading(true);
 
-        // === Backend calls commented out for UI-only mode ===
-        // To enable real backend, import `workspaceAPI` and `boardAPI` from `../utils/api` and
-        // uncomment the lines below:
-        // const wsResponse = await workspaceAPI.getById(workspaceId);
-        // setWorkspace(wsResponse.data.data);
-        // const boardsResponse = await boardAPI.getByWorkspace(workspaceId);
-        // const boardsData = boardsResponse.data.data;
-        // setLocalBoards(boardsData);
-        // dispatch(setBoards(boardsData));
-
-        // Fallback: mock workspace and boards for UI testing
-        const mockWorkspace = {
-          _id: workspaceId || 'local-ws-1',
-          name: 'Demo Workspace (local)',
-          description: 'Workspace mock pour tests UI',
-          createdAt: new Date().toISOString(),
-        };
-        const mockBoards = [
-          {
-            _id: `local-board-${Date.now()}`,
-            name: 'Board Demo',
-            description: 'Tableau créé localement',
-            createdAt: new Date().toISOString(),
-          },
-        ];
-        setWorkspace(mockWorkspace);
-        setLocalBoards(mockBoards);
-        dispatch(setBoards(mockBoards));
+        const wsResponse = await workspaceAPI.getById(workspaceId);
+        setWorkspace(wsResponse.data.data);
+        const boardsResponse = await boardAPI.getByWorkspace(workspaceId);
+        const boardsData = boardsResponse.data.data;
+        setLocalBoards(boardsData);
+        dispatch(setBoards(boardsData));
       } catch (err) {
         console.error('Erreur lors du chargement du workspace', err);
       } finally {
