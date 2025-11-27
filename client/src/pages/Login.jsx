@@ -121,6 +121,7 @@ const Login = () => {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="you@example.com"
             />
@@ -134,6 +135,8 @@ const Login = () => {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              required
+              minLength={6}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Your password"
             />
@@ -148,6 +151,8 @@ const Login = () => {
                 type="password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
+                required={isRegister}
+                minLength={6}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="Confirm password"
               />
