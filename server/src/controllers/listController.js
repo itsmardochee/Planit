@@ -6,8 +6,6 @@ import {
   ValidationError,
   NotFoundError,
   ForbiddenError,
-  AuthError,
-  ConflictError,
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
