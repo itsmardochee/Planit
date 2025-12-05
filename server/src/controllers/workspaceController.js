@@ -3,6 +3,7 @@ import Workspace from '../models/Workspace.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 
 /**
  * @swagger
@@ -60,33 +61,24 @@ import Card from '../models/Card.js';
  * @route   POST /api/workspaces
  * @access  Private
  */
-export const createWorkspace = async (req, res) => {
+export const createWorkspace = async (req, res, next) => {
   try {
     const { name, description } = req.body;
 
     // Trim and validate name
     const trimmedName = name?.trim();
     if (!trimmedName) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide workspace name',
-      });
+      throw new ValidationError('Please provide workspace name');
     }
 
     if (trimmedName.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Workspace name cannot exceed 100 characters',
-      });
+      throw new ValidationError('Workspace name cannot exceed 100 characters');
     }
 
     // Trim and validate description
     const trimmedDescription = description?.trim();
     if (trimmedDescription && trimmedDescription.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Description cannot exceed 500 characters',
-      });
+      throw new ValidationError('Description cannot exceed 500 characters');
     }
 
     // Create workspace
@@ -101,10 +93,7 @@ export const createWorkspace = async (req, res) => {
       data: workspace,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -141,7 +130,7 @@ export const createWorkspace = async (req, res) => {
  * @route   GET /api/workspaces
  * @access  Private
  */
-export const getWorkspaces = async (req, res) => {
+export const getWorkspaces = async (req, res, next) => {
   try {
     const workspaces = await Workspace.find({ userId: req.user._id });
 
@@ -150,10 +139,7 @@ export const getWorkspaces = async (req, res) => {
       data: workspaces,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -209,16 +195,13 @@ export const getWorkspaces = async (req, res) => {
  * @route   GET /api/workspaces/:id
  * @access  Private
  */
-export const getWorkspaceById = async (req, res) => {
+export const getWorkspaceById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
+      throw new ValidationError('Invalid workspace ID format');
     }
 
     const workspace = await Workspace.findOne({
@@ -227,10 +210,7 @@ export const getWorkspaceById = async (req, res) => {
     });
 
     if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
+      throw new NotFoundError('Workspace not found');
     }
 
     res.status(200).json({
@@ -238,10 +218,7 @@ export const getWorkspaceById = async (req, res) => {
       data: workspace,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -312,17 +289,14 @@ export const getWorkspaceById = async (req, res) => {
  * @route   PUT /api/workspaces/:id
  * @access  Private
  */
-export const updateWorkspace = async (req, res) => {
+export const updateWorkspace = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
+      throw new ValidationError('Invalid workspace ID format');
     }
 
     // Prepare update data with trimmed values
@@ -332,16 +306,12 @@ export const updateWorkspace = async (req, res) => {
     if (name !== undefined) {
       const trimmedName = name.trim();
       if (!trimmedName) {
-        return res.status(400).json({
-          success: false,
-          message: 'Workspace name cannot be empty',
-        });
+        throw new ValidationError('Workspace name cannot be empty');
       }
       if (trimmedName.length > 100) {
-        return res.status(400).json({
-          success: false,
-          message: 'Workspace name cannot exceed 100 characters',
-        });
+        throw new ValidationError(
+          'Workspace name cannot exceed 100 characters'
+        );
       }
       updateData.name = trimmedName;
     }
@@ -350,10 +320,7 @@ export const updateWorkspace = async (req, res) => {
     if (description !== undefined) {
       const trimmedDescription = description.trim();
       if (trimmedDescription.length > 500) {
-        return res.status(400).json({
-          success: false,
-          message: 'Description cannot exceed 500 characters',
-        });
+        throw new ValidationError('Description cannot exceed 500 characters');
       }
       updateData.description = trimmedDescription;
     }
@@ -366,10 +333,7 @@ export const updateWorkspace = async (req, res) => {
     );
 
     if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
+      throw new NotFoundError('Workspace not found');
     }
 
     res.status(200).json({
@@ -377,10 +341,7 @@ export const updateWorkspace = async (req, res) => {
       data: workspace,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -443,16 +404,13 @@ export const updateWorkspace = async (req, res) => {
  * @route   DELETE /api/workspaces/:id
  * @access  Private
  */
-export const deleteWorkspace = async (req, res) => {
+export const deleteWorkspace = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
+      throw new ValidationError('Invalid workspace ID format');
     }
 
     // Find workspace first to verify ownership
@@ -462,10 +420,7 @@ export const deleteWorkspace = async (req, res) => {
     });
 
     if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
+      throw new NotFoundError('Workspace not found');
     }
 
     // Cascade delete: Get all boards in this workspace
@@ -489,9 +444,6 @@ export const deleteWorkspace = async (req, res) => {
       message: 'Workspace deleted successfully',
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };

@@ -10,11 +10,13 @@ import Workspace from '../../models/Workspace.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
+import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use('/api/boards/:boardId/lists', auth, boardListRouter);
 app.use('/api/lists', auth, listRouter);
+app.use(errorHandler);
 
 describe('POST /api/boards/:boardId/lists', () => {
   let mongoServer;

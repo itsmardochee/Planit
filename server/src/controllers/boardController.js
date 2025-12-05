@@ -3,6 +3,11 @@ import Board from '../models/Board.js';
 import Workspace from '../models/Workspace.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ForbiddenError,
+} from '../utils/errors.js';
 
 /**
  * @swagger
@@ -59,59 +64,41 @@ import Card from '../models/Card.js';
  * @route   POST /api/workspaces/:workspaceId/boards
  * @access  Private
  */
-export const createBoard = async (req, res) => {
+export const createBoard = async (req, res, next) => {
   try {
     const { workspaceId } = req.params;
     const { name, description } = req.body;
 
     // Validate workspace ID format
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
+      throw new ValidationError('Invalid workspace ID format');
     }
 
     // Check if workspace exists and belongs to user
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
+      throw new NotFoundError('Workspace not found');
     }
 
     if (workspace.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this workspace',
-      });
+      throw new ForbiddenError('Not authorized to access this workspace');
     }
 
     // Trim and validate name
     const trimmedName = name?.trim();
     if (!trimmedName) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide board name',
-      });
+      throw new ValidationError('Please provide board name');
     }
 
     if (trimmedName.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Board name cannot exceed 100 characters',
-      });
+      throw new ValidationError('Board name cannot exceed 100 characters');
     }
 
     // Trim and validate description
     const trimmedDescription = description?.trim();
     if (trimmedDescription && trimmedDescription.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Description cannot exceed 500 characters',
-      });
+      throw new ValidationError('Description cannot exceed 500 characters');
     }
 
     // Create board
@@ -127,10 +114,7 @@ export const createBoard = async (req, res) => {
       data: board,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -172,33 +156,24 @@ export const createBoard = async (req, res) => {
  * @route   GET /api/workspaces/:workspaceId/boards
  * @access  Private
  */
-export const getBoards = async (req, res) => {
+export const getBoards = async (req, res, next) => {
   try {
     const { workspaceId } = req.params;
 
     // Validate workspace ID format
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
+      throw new ValidationError('Invalid workspace ID format');
     }
 
     // Check if workspace exists and belongs to user
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
+      throw new NotFoundError('Workspace not found');
     }
 
     if (workspace.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this workspace',
-      });
+      throw new ForbiddenError('Not authorized to access this workspace');
     }
 
     const boards = await Board.find({
@@ -211,10 +186,7 @@ export const getBoards = async (req, res) => {
       data: boards,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -256,33 +228,24 @@ export const getBoards = async (req, res) => {
  * @route   GET /api/boards/:id
  * @access  Private
  */
-export const getBoard = async (req, res) => {
+export const getBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid board ID format',
-      });
+      throw new ValidationError('Invalid board ID format');
     }
 
     // Find board
     const board = await Board.findById(id);
 
     if (!board) {
-      return res.status(404).json({
-        success: false,
-        message: 'Board not found',
-      });
+      throw new NotFoundError('Board not found');
     }
 
     if (board.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this board',
-      });
+      throw new ForbiddenError('Not authorized to access this board');
     }
 
     res.status(200).json({
@@ -290,10 +253,7 @@ export const getBoard = async (req, res) => {
       data: board,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -350,17 +310,14 @@ export const getBoard = async (req, res) => {
  * @route   PUT /api/boards/:id
  * @access  Private
  */
-export const updateBoard = async (req, res) => {
+export const updateBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid board ID format',
-      });
+      throw new ValidationError('Invalid board ID format');
     }
 
     // Build update object
@@ -370,16 +327,10 @@ export const updateBoard = async (req, res) => {
     if (name !== undefined) {
       const trimmedName = name?.trim();
       if (!trimmedName) {
-        return res.status(400).json({
-          success: false,
-          message: 'Board name cannot be empty',
-        });
+        throw new ValidationError('Board name cannot be empty');
       }
       if (trimmedName.length > 100) {
-        return res.status(400).json({
-          success: false,
-          message: 'Board name cannot exceed 100 characters',
-        });
+        throw new ValidationError('Board name cannot exceed 100 characters');
       }
       updateData.name = trimmedName;
     }
@@ -388,10 +339,7 @@ export const updateBoard = async (req, res) => {
     if (description !== undefined) {
       const trimmedDescription = description.trim();
       if (trimmedDescription.length > 500) {
-        return res.status(400).json({
-          success: false,
-          message: 'Description cannot exceed 500 characters',
-        });
+        throw new ValidationError('Description cannot exceed 500 characters');
       }
       updateData.description = trimmedDescription;
     }
@@ -400,17 +348,11 @@ export const updateBoard = async (req, res) => {
     const existingBoard = await Board.findById(id);
 
     if (!existingBoard) {
-      return res.status(404).json({
-        success: false,
-        message: 'Board not found',
-      });
+      throw new NotFoundError('Board not found');
     }
 
     if (existingBoard.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this board',
-      });
+      throw new ForbiddenError('Not authorized to update this board');
     }
 
     // Update board
@@ -424,10 +366,7 @@ export const updateBoard = async (req, res) => {
       data: board,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -476,33 +415,24 @@ export const updateBoard = async (req, res) => {
  * @route   DELETE /api/boards/:id
  * @access  Private
  */
-export const deleteBoard = async (req, res) => {
+export const deleteBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid board ID format',
-      });
+      throw new ValidationError('Invalid board ID format');
     }
 
     // Find board first to check authorization
     const board = await Board.findById(id);
 
     if (!board) {
-      return res.status(404).json({
-        success: false,
-        message: 'Board not found',
-      });
+      throw new NotFoundError('Board not found');
     }
 
     if (board.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this board',
-      });
+      throw new ForbiddenError('Not authorized to delete this board');
     }
 
     // Cascade delete: Delete all cards associated with this board
@@ -519,9 +449,6 @@ export const deleteBoard = async (req, res) => {
       message: 'Board deleted successfully',
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };

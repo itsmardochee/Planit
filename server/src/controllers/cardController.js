@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import Card from '../models/Card.js';
 import List from '../models/List.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ForbiddenError,
+} from '../utils/errors.js';
 
 /**
  * @swagger
@@ -62,63 +67,45 @@ import List from '../models/List.js';
  * @route   POST /api/lists/:listId/cards
  * @access  Private
  */
-export const createCard = async (req, res) => {
+export const createCard = async (req, res, next) => {
   try {
     const { listId } = req.params;
     const { title, description, position } = req.body;
 
     // Validate list ID format
     if (!mongoose.Types.ObjectId.isValid(listId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     // Check if list exists and belongs to user
     const list = await List.findById(listId);
     if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
     if (list.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this list',
-      });
+      throw new ForbiddenError('Not authorized to access this list');
     }
 
     // Trim and validate title
     const trimmedTitle = title?.trim();
     if (!trimmedTitle) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Please provide card title' });
+      throw new ValidationError('Please provide card title');
     }
     if (trimmedTitle.length > 200) {
-      return res.status(400).json({
-        success: false,
-        message: 'Card title cannot exceed 200 characters',
-      });
+      throw new ValidationError('Card title cannot exceed 200 characters');
     }
 
     // Trim and validate description
     const trimmedDescription = description?.trim();
     if (trimmedDescription && trimmedDescription.length > 2000) {
-      return res.status(400).json({
-        success: false,
-        message: 'Description cannot exceed 2000 characters',
-      });
+      throw new ValidationError('Description cannot exceed 2000 characters');
     }
 
     // Validate/derive position
     let nextPosition = 0;
     if (position !== undefined) {
       if (!Number.isInteger(position) || position < 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Position must be a non-negative integer',
-        });
+        throw new ValidationError('Position must be a non-negative integer');
       }
       nextPosition = position;
     } else {
@@ -137,7 +124,7 @@ export const createCard = async (req, res) => {
 
     res.status(201).json({ success: true, data: card });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -179,27 +166,20 @@ export const createCard = async (req, res) => {
  * @route   GET /api/lists/:listId/cards
  * @access  Private
  */
-export const getCards = async (req, res) => {
+export const getCards = async (req, res, next) => {
   try {
     const { listId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(listId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     const list = await List.findById(listId);
     if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
     if (list.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this list',
-      });
+      throw new ForbiddenError('Not authorized to access this list');
     }
 
     const cards = await Card.find({ listId, userId: req.user._id }).sort({
@@ -208,7 +188,7 @@ export const getCards = async (req, res) => {
 
     res.status(200).json({ success: true, data: cards });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -250,32 +230,25 @@ export const getCards = async (req, res) => {
  * @route   GET /api/cards/:id
  * @access  Private
  */
-export const getCard = async (req, res) => {
+export const getCard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid card ID format' });
+      throw new ValidationError('Invalid card ID format');
     }
 
     const card = await Card.findById(id);
     if (!card) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Card not found' });
+      throw new NotFoundError('Card not found');
     }
     if (card.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this card',
-      });
+      throw new ForbiddenError('Not authorized to access this card');
     }
 
     res.status(200).json({ success: true, data: card });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -332,43 +305,31 @@ export const getCard = async (req, res) => {
  * @route   PUT /api/cards/:id
  * @access  Private
  */
-export const updateCard = async (req, res) => {
+export const updateCard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid card ID format' });
+      throw new ValidationError('Invalid card ID format');
     }
 
     const card = await Card.findById(id);
     if (!card) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Card not found' });
+      throw new NotFoundError('Card not found');
     }
     if (card.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this card',
-      });
+      throw new ForbiddenError('Not authorized to update this card');
     }
 
     // Update title if provided
     if (title !== undefined) {
       const trimmedTitle = title.trim();
       if (!trimmedTitle) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Title cannot be empty' });
+        throw new ValidationError('Title cannot be empty');
       }
       if (trimmedTitle.length > 200) {
-        return res.status(400).json({
-          success: false,
-          message: 'Card title cannot exceed 200 characters',
-        });
+        throw new ValidationError('Card title cannot exceed 200 characters');
       }
       card.title = trimmedTitle;
     }
@@ -377,10 +338,7 @@ export const updateCard = async (req, res) => {
     if (description !== undefined) {
       const trimmedDescription = description.trim();
       if (trimmedDescription.length > 2000) {
-        return res.status(400).json({
-          success: false,
-          message: 'Description cannot exceed 2000 characters',
-        });
+        throw new ValidationError('Description cannot exceed 2000 characters');
       }
       card.description = trimmedDescription;
     }
@@ -389,7 +347,7 @@ export const updateCard = async (req, res) => {
 
     res.status(200).json({ success: true, data: card });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -427,27 +385,20 @@ export const updateCard = async (req, res) => {
  * @route   DELETE /api/cards/:id
  * @access  Private
  */
-export const deleteCard = async (req, res) => {
+export const deleteCard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid card ID format' });
+      throw new ValidationError('Invalid card ID format');
     }
 
     const card = await Card.findById(id);
     if (!card) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Card not found' });
+      throw new NotFoundError('Card not found');
     }
     if (card.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this card',
-      });
+      throw new ForbiddenError('Not authorized to delete this card');
     }
 
     const deletedPosition = card.position;
@@ -470,7 +421,7 @@ export const deleteCard = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'Card deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -526,16 +477,14 @@ export const deleteCard = async (req, res) => {
  * @route   PUT /api/cards/:id/reorder
  * @access  Private
  */
-export const reorderCard = async (req, res) => {
+export const reorderCard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { newPosition } = req.body;
 
     // Validate card ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid card ID format' });
+      throw new ValidationError('Invalid card ID format');
     }
 
     // Validate newPosition
@@ -544,24 +493,16 @@ export const reorderCard = async (req, res) => {
       !Number.isInteger(newPosition) ||
       newPosition < 0
     ) {
-      return res.status(400).json({
-        success: false,
-        message: 'newPosition must be a non-negative integer',
-      });
+      throw new ValidationError('newPosition must be a non-negative integer');
     }
 
     // Find card and verify ownership
     const card = await Card.findById(id);
     if (!card) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Card not found' });
+      throw new NotFoundError('Card not found');
     }
     if (card.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to reorder this card',
-      });
+      throw new ForbiddenError('Not authorized to reorder this card');
     }
 
     const oldPosition = card.position;
@@ -603,6 +544,6 @@ export const reorderCard = async (req, res) => {
 
     res.status(200).json({ success: true, data: card });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };

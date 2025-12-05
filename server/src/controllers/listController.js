@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import List from '../models/List.js';
 import Board from '../models/Board.js';
 import Card from '../models/Card.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ForbiddenError,
+} from '../utils/errors.js';
 
 /**
  * @swagger
@@ -63,63 +68,45 @@ import Card from '../models/Card.js';
  * @route   POST /api/boards/:boardId/lists
  * @access  Private
  */
-export const createList = async (req, res) => {
+export const createList = async (req, res, next) => {
   try {
     const { boardId } = req.params;
     const { name, description, position } = req.body;
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(boardId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid board ID format' });
+      throw new ValidationError('Invalid board ID format');
     }
 
     // Check if board exists and belongs to user
     const board = await Board.findById(boardId);
     if (!board) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Board not found' });
+      throw new NotFoundError('Board not found');
     }
     if (board.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this board',
-      });
+      throw new ForbiddenError('Not authorized to access this board');
     }
 
     // Trim and validate name
     const trimmedName = name?.trim();
     if (!trimmedName) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Please provide list name' });
+      throw new ValidationError('Please provide list name');
     }
     if (trimmedName.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'List name cannot exceed 100 characters',
-      });
+      throw new ValidationError('List name cannot exceed 100 characters');
     }
 
     // Trim and validate description
     const trimmedDescription = description?.trim();
     if (trimmedDescription && trimmedDescription.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Description cannot exceed 500 characters',
-      });
+      throw new ValidationError('Description cannot exceed 500 characters');
     }
 
     // Validate/derive position
     let nextPosition = 0;
     if (position !== undefined) {
       if (!Number.isInteger(position) || position < 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Position must be a non-negative integer',
-        });
+        throw new ValidationError('Position must be a non-negative integer');
       }
       nextPosition = position;
     } else {
@@ -138,7 +125,7 @@ export const createList = async (req, res) => {
 
     res.status(201).json({ success: true, data: list });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -180,27 +167,20 @@ export const createList = async (req, res) => {
  * @route   GET /api/boards/:boardId/lists
  * @access  Private
  */
-export const getLists = async (req, res) => {
+export const getLists = async (req, res, next) => {
   try {
     const { boardId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(boardId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid board ID format' });
+      throw new ValidationError('Invalid board ID format');
     }
 
     const board = await Board.findById(boardId);
     if (!board) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Board not found' });
+      throw new NotFoundError('Board not found');
     }
     if (board.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this board',
-      });
+      throw new ForbiddenError('Not authorized to access this board');
     }
 
     const lists = await List.find({ boardId, userId: req.user._id }).sort({
@@ -209,7 +189,7 @@ export const getLists = async (req, res) => {
 
     res.status(200).json({ success: true, data: lists });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -251,32 +231,25 @@ export const getLists = async (req, res) => {
  * @route   GET /api/lists/:id
  * @access  Private
  */
-export const getList = async (req, res) => {
+export const getList = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     const list = await List.findById(id);
     if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
     if (list.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this list',
-      });
+      throw new ForbiddenError('Not authorized to access this list');
     }
 
     res.status(200).json({ success: true, data: list });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -337,28 +310,21 @@ export const getList = async (req, res) => {
  * @route   PUT /api/lists/:id
  * @access  Private
  */
-export const updateList = async (req, res) => {
+export const updateList = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description, position } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     const existing = await List.findById(id);
     if (!existing) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
     if (existing.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this list',
-      });
+      throw new ForbiddenError('Not authorized to update this list');
     }
 
     const updateData = {};
@@ -366,15 +332,10 @@ export const updateList = async (req, res) => {
     if (name !== undefined) {
       const trimmedName = name?.trim();
       if (!trimmedName) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'List name cannot be empty' });
+        throw new ValidationError('List name cannot be empty');
       }
       if (trimmedName.length > 100) {
-        return res.status(400).json({
-          success: false,
-          message: 'List name cannot exceed 100 characters',
-        });
+        throw new ValidationError('List name cannot exceed 100 characters');
       }
       updateData.name = trimmedName;
     }
@@ -382,20 +343,14 @@ export const updateList = async (req, res) => {
     if (description !== undefined) {
       const trimmedDescription = description.trim();
       if (trimmedDescription.length > 500) {
-        return res.status(400).json({
-          success: false,
-          message: 'Description cannot exceed 500 characters',
-        });
+        throw new ValidationError('Description cannot exceed 500 characters');
       }
       updateData.description = trimmedDescription;
     }
 
     if (position !== undefined) {
       if (!Number.isInteger(position) || position < 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Position must be a non-negative integer',
-        });
+        throw new ValidationError('Position must be a non-negative integer');
       }
       updateData.position = position;
     }
@@ -407,7 +362,7 @@ export const updateList = async (req, res) => {
 
     res.status(200).json({ success: true, data: list });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -463,42 +418,30 @@ export const updateList = async (req, res) => {
  * @route   PUT /api/lists/:id/reorder
  * @access  Private
  */
-export const reorderList = async (req, res) => {
+export const reorderList = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { position } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     if (position === undefined || position === null) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Position is required' });
+      throw new ValidationError('Position is required');
     }
 
     if (!Number.isInteger(position) || position < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Position must be a non-negative integer',
-      });
+      throw new ValidationError('Position must be a non-negative integer');
     }
 
     const list = await List.findById(id);
     if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
 
     if (list.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to reorder this list',
-      });
+      throw new ForbiddenError('Not authorized to reorder this list');
     }
 
     const oldPosition = list.position;
@@ -537,7 +480,7 @@ export const reorderList = async (req, res) => {
 
     res.status(200).json({ success: true, data: list });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
@@ -586,27 +529,20 @@ export const reorderList = async (req, res) => {
  * @route   DELETE /api/lists/:id
  * @access  Private
  */
-export const deleteList = async (req, res) => {
+export const deleteList = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid list ID format' });
+      throw new ValidationError('Invalid list ID format');
     }
 
     const list = await List.findById(id);
     if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'List not found' });
+      throw new NotFoundError('List not found');
     }
     if (list.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this list',
-      });
+      throw new ForbiddenError('Not authorized to delete this list');
     }
 
     await List.findByIdAndDelete(id);
@@ -618,6 +554,6 @@ export const deleteList = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'List deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
