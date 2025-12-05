@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { ValidationError, AuthError } from '../utils/errors.js';
 
 /**
  * Generate JWT token
@@ -62,29 +61,41 @@ const generateToken = id => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const register = async (req, res, next) => {
+export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     // Validation
     if (!username || !email || !password) {
-      throw new ValidationError('Please provide username, email and password');
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide username, email and password',
+      });
     }
 
     // Validate email format
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!emailRegex.test(email)) {
-      throw new ValidationError('Please provide a valid email');
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email',
+      });
     }
 
     // Validate password length
     if (password.length < 6) {
-      throw new ValidationError('Password must be at least 6 characters');
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters',
+      });
     }
 
     // Validate username length
     if (username.length > 50) {
-      throw new ValidationError('Username must not exceed 50 characters');
+      return res.status(400).json({
+        success: false,
+        message: 'Username must not exceed 50 characters',
+      });
     }
 
     // Check if user already exists
@@ -94,9 +105,15 @@ export const register = async (req, res, next) => {
 
     if (existingUser) {
       if (existingUser.email === email.toLowerCase()) {
-        throw new ValidationError('User with this email already exists');
+        return res.status(400).json({
+          success: false,
+          message: 'User with this email already exists',
+        });
       }
-      throw new ValidationError('User with this username already exists');
+      return res.status(400).json({
+        success: false,
+        message: 'User with this username already exists',
+      });
     }
 
     // Create user
@@ -126,7 +143,10 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -179,27 +199,36 @@ export const register = async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const login = async (req, res, next) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Validation
     if (!email || !password) {
-      throw new ValidationError('Please provide email and password');
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password',
+      });
     }
 
     // Check if user exists
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      throw new AuthError('Invalid credentials');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new AuthError('Invalid credentials');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
     }
 
     // Generate token
@@ -222,6 +251,9 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

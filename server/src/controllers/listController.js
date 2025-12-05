@@ -6,7 +6,10 @@ import {
   ValidationError,
   NotFoundError,
   ForbiddenError,
+  AuthError,
+  ConflictError,
 } from '../utils/errors.js';
+import logger from '../utils/logger.js';
 
 /**
  * @swagger
@@ -123,6 +126,7 @@ export const createList = async (req, res, next) => {
       userId: req.user._id,
     });
 
+    logger.info(`List created: ${list._id} by user ${req.user._id}`);
     res.status(201).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -187,6 +191,7 @@ export const getLists = async (req, res, next) => {
       position: 1,
     });
 
+    logger.info(`Retrieved ${lists.length} lists for board ${boardId}`);
     res.status(200).json({ success: true, data: lists });
   } catch (error) {
     next(error);
@@ -247,6 +252,7 @@ export const getList = async (req, res, next) => {
       throw new ForbiddenError('Not authorized to access this list');
     }
 
+    logger.info(`Retrieved list ${id}`);
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -360,6 +366,7 @@ export const updateList = async (req, res, next) => {
       runValidators: true,
     });
 
+    logger.info(`List updated: ${id}`);
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -478,6 +485,7 @@ export const reorderList = async (req, res, next) => {
     list.position = newPosition;
     await list.save();
 
+    logger.info(`List reordered: ${id} to position ${newPosition}`);
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -550,6 +558,7 @@ export const deleteList = async (req, res, next) => {
     // Cascade delete: remove all cards that belong to this list
     await Card.deleteMany({ listId: id });
 
+    logger.info(`List deleted: ${id}`);
     res
       .status(200)
       .json({ success: true, message: 'List deleted successfully' });

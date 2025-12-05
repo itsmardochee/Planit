@@ -5,7 +5,10 @@ import {
   ValidationError,
   NotFoundError,
   ForbiddenError,
+  AuthError,
+  ConflictError,
 } from '../utils/errors.js';
+import logger from '../utils/logger.js';
 
 /**
  * @swagger
@@ -122,6 +125,7 @@ export const createCard = async (req, res, next) => {
       userId: req.user._id,
     });
 
+    logger.info(`Card created: ${card._id} by user ${req.user._id}`);
     res.status(201).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -186,6 +190,7 @@ export const getCards = async (req, res, next) => {
       position: 1,
     });
 
+    logger.info(`Retrieved ${cards.length} cards for list ${listId}`);
     res.status(200).json({ success: true, data: cards });
   } catch (error) {
     next(error);
@@ -246,6 +251,7 @@ export const getCard = async (req, res, next) => {
       throw new ForbiddenError('Not authorized to access this card');
     }
 
+    logger.info(`Retrieved card ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -345,6 +351,7 @@ export const updateCard = async (req, res, next) => {
 
     await card.save();
 
+    logger.info(`Card updated: ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -417,6 +424,7 @@ export const deleteCard = async (req, res, next) => {
       }
     );
 
+    logger.info(`Card deleted: ${id}`);
     res
       .status(200)
       .json({ success: true, message: 'Card deleted successfully' });
@@ -542,6 +550,7 @@ export const reorderCard = async (req, res, next) => {
     card.position = newPosition;
     await card.save();
 
+    logger.info(`Card reordered: ${id} to position ${newPosition}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);

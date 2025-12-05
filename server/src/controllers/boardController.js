@@ -8,6 +8,7 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../utils/errors.js';
+import logger from '../utils/logger.js';
 
 /**
  * @swagger
@@ -107,6 +108,13 @@ export const createBoard = async (req, res, next) => {
       description: trimmedDescription,
       workspaceId,
       userId: req.user._id,
+    });
+
+    logger.info('Board created', {
+      requestId: req.id,
+      userId: req.user._id,
+      boardId: board._id,
+      workspaceId,
     });
 
     res.status(201).json({
@@ -256,55 +264,6 @@ export const getBoard = async (req, res, next) => {
     next(error);
   }
 };
-
-/**
- * @swagger
- * /api/boards/{id}:
- *   put:
- *     summary: Update a board
- *     tags: [Boards]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Board ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 maxLength: 100
- *                 example: Updated Board Name
- *               description:
- *                 type: string
- *                 maxLength: 500
- *                 example: Updated description
- *     responses:
- *       200:
- *         description: Board updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BoardResponse'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to update this board
- *       404:
- *         description: Board not found
- *       500:
- *         description: Server error
- */
 /**
  * @desc    Update board
  * @route   PUT /api/boards/:id
@@ -359,6 +318,12 @@ export const updateBoard = async (req, res, next) => {
     const board = await Board.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
+    });
+
+    logger.info('Board updated', {
+      requestId: req.id,
+      userId: req.user._id,
+      boardId: board._id,
     });
 
     res.status(200).json({
@@ -443,6 +408,12 @@ export const deleteBoard = async (req, res, next) => {
 
     // Finally, delete the board itself
     await Board.findByIdAndDelete(id);
+
+    logger.info('Board deleted', {
+      requestId: req.id,
+      userId: req.user._id,
+      boardId: id,
+    });
 
     res.status(200).json({
       success: true,
