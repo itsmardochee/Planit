@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout, setWorkspaces, setBoards } from '../store/index';
+import { logout, setWorkspaces } from '../store/index';
 import { useAuth } from '../hooks/useAuth';
 import { workspaceAPI } from '../utils/api';
 

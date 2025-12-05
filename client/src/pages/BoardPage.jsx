@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
@@ -28,31 +28,31 @@ const BoardPage = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardModal, setShowCardModal] = useState(false);
 
-  useEffect(() => {
-    const fetchBoardData = async () => {
-      try {
-        setLoading(true);
+  const fetchBoardData = useCallback(async () => {
+    try {
+      setLoading(true);
 
-        const boardResponse = await boardAPI.getById(boardId);
-        setBoard(boardResponse.data.data);
-        const listsResponse = await listAPI.getByBoard(boardId);
-        const listsData = listsResponse.data.data || [];
-        const listsWithCards = await Promise.all(
-          listsData.map(async list => {
-            const cardsResponse = await cardAPI.getByList(list._id);
-            return { ...list, cards: cardsResponse.data.data || [] };
-          })
-        );
-        setLists(listsWithCards);
-      } catch (err) {
-        console.error('Erreur lors du chargement du tableau', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBoardData();
+      const boardResponse = await boardAPI.getById(boardId);
+      setBoard(boardResponse.data.data);
+      const listsResponse = await listAPI.getByBoard(boardId);
+      const listsData = listsResponse.data.data || [];
+      const listsWithCards = await Promise.all(
+        listsData.map(async list => {
+          const cardsResponse = await cardAPI.getByList(list._id);
+          return { ...list, cards: cardsResponse.data.data || [] };
+        })
+      );
+      setLists(listsWithCards);
+    } catch (err) {
+      console.error('Erreur lors du chargement du tableau', err);
+    } finally {
+      setLoading(false);
+    }
   }, [boardId]);
+
+  useEffect(() => {
+    fetchBoardData();
+  }, [fetchBoardData]);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -126,19 +126,22 @@ const BoardPage = () => {
     });
   };
 
-  const handleCreateList = e => {
+  const handleCreateList = async e => {
     e.preventDefault();
     if (!newListName.trim()) return;
 
-    const localList = {
-      _id: `local-list-${Date.now()}`,
-      name: newListName,
-      position: lists.length,
-      cards: [],
-    };
-    setLists(prev => [...(prev || []), localList]);
-    setNewListName('');
-    setShowNewListForm(false);
+    try {
+      const response = await listAPI.create(boardId, {
+        name: newListName,
+        position: lists.length,
+      });
+      const newList = { ...response.data.data, cards: [] };
+      setLists(prev => [...(prev || []), newList]);
+      setNewListName('');
+      setShowNewListForm(false);
+    } catch (err) {
+      console.error('Erreur lors de la création de la liste', err);
+    }
   };
 
   const handleOpenCardModal = (card, list) => {
@@ -149,6 +152,10 @@ const BoardPage = () => {
   const handleCloseCardModal = () => {
     setShowCardModal(false);
     setSelectedCard(null);
+  };
+
+  const handleCardUpdate = async () => {
+    await fetchBoardData();
   };
 
   if (loading) {
@@ -196,7 +203,7 @@ const BoardPage = () => {
                   list={list}
                   boardId={boardId}
                   onCardClick={card => handleOpenCardModal(card, list)}
-                  onListUpdate={() => setLists(prev => [...prev])}
+                  onListUpdate={fetchBoardData}
                 />
               </SortableContext>
             ))}
@@ -251,7 +258,7 @@ const BoardPage = () => {
             card={selectedCard}
             boardId={boardId}
             onClose={handleCloseCardModal}
-            onCardUpdate={() => setLists(prev => [...prev])}
+            onCardUpdate={handleCardUpdate}
           />
         )}
       </div>
