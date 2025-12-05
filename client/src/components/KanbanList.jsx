@@ -1,10 +1,30 @@
 import { useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { cardAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
 
-const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
+const KanbanList = ({
+  list,
+  boardId,
+  onCardClick,
+  onListUpdate,
+  activeCardId,
+  overId,
+}) => {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `list-${list._id}`,
+    data: {
+      type: 'list',
+      listId: list._id,
+    },
+  });
 
   const cards = list.cards || [];
 
@@ -42,16 +62,38 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
         <p className="text-xs text-gray-600">{cards.length} cartes</p>
       </div>
 
-      {/* Cards Container */}
-      <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
-        {cards.map(card => (
-          <KanbanCard
-            key={card._id}
-            card={card}
-            onClick={() => onCardClick(card)}
-            onDelete={() => handleDeleteCard(card._id)}
-          />
-        ))}
+      {/* Cards Container - Droppable Zone */}
+      <div
+        ref={setNodeRef}
+        className={`space-y-2 mb-4 max-h-[calc(100vh-350px)] overflow-y-auto min-h-[50px] rounded-lg transition-all duration-200 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 pr-1 ${
+          isOver
+            ? 'bg-blue-50 border-2 border-dashed border-blue-500 shadow-inner scale-[1.02]'
+            : 'border-2 border-transparent'
+        }`}
+      >
+        <SortableContext
+          items={cards.map(c => c._id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {cards.map((card, index) => {
+            const isOverThisCard = overId === card._id;
+            const isDraggingThisCard = activeCardId === card._id;
+
+            return (
+              <div key={card._id} className="relative">
+                {/* Drop indicator line */}
+                {isOverThisCard && !isDraggingThisCard && (
+                  <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 rounded-full shadow-lg z-10" />
+                )}
+                <KanbanCard
+                  card={card}
+                  onClick={() => onCardClick(card)}
+                  onDelete={() => handleDeleteCard(card._id)}
+                />
+              </div>
+            );
+          })}
+        </SortableContext>
       </div>
 
       {/* Add New Card */}

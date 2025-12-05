@@ -40,24 +40,24 @@ const WorkspacePage = () => {
     if (!newBoardName.trim()) return;
 
     try {
-      // === Backend create commented out for UI-only mode ===
-      // To enable real backend, import `boardAPI` and uncomment:
-      // const response = await boardAPI.create(workspaceId, { name: newBoardName, description: 'Nouveau tableau' });
-      // setLocalBoards([...boards, response.data.data]);
-
-      // UI-only: create locally
-      const localBoard = {
-        _id: `local-board-${Date.now()}`,
+      // Create board via backend API
+      const response = await boardAPI.create(workspaceId, {
         name: newBoardName,
-        description: 'Créé localement (UI-only)',
-        createdAt: new Date().toISOString(),
-      };
-      setLocalBoards([...(boards || []), localBoard]);
-      dispatch(setBoards([...(boards || []), localBoard]));
-      setNewBoardName('');
-      setShowNewBoardForm(false);
+        description: 'Nouveau tableau',
+      });
+
+      if (response.data.success) {
+        const newBoard = response.data.data;
+        setLocalBoards([...(boards || []), newBoard]);
+        dispatch(setBoards([...(boards || []), newBoard]));
+        setNewBoardName('');
+        setShowNewBoardForm(false);
+      }
     } catch (err) {
       console.error('Erreur lors de la création du tableau', err);
+      alert(
+        err.response?.data?.message || 'Erreur lors de la création du tableau'
+      );
     }
   };
 

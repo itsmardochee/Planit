@@ -3,12 +3,27 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 const KanbanCard = ({ card, onClick, onDelete }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: card._id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({
+    id: card._id,
+    transition: {
+      duration: 200,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || undefined,
+    opacity: isDragging ? 0.3 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   };
 
   const handleDelete = async e => {
@@ -28,7 +43,9 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="bg-white rounded-lg p-3 shadow hover:shadow-md cursor-pointer transition border-l-4 border-trello-blue"
+      className={`bg-white rounded-lg p-3 shadow hover:shadow-md transition border-l-4 border-trello-blue ${
+        isDragging ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
+      }`}
     >
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1">

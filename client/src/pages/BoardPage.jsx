@@ -3,12 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
+import KanbanCard from '../components/KanbanCard';
 import {
   DndContext,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  closestCorners,
+  DragOverlay,
+  pointerWithin,
+  rectIntersection,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -27,6 +33,8 @@ const BoardPage = () => {
   const [newListName, setNewListName] = useState('');
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardModal, setShowCardModal] = useState(false);
+  const [activeCard, setActiveCard] = useState(null);
+  const [overId, setOverId] = useState(null);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -54,30 +62,150 @@ const BoardPage = () => {
     fetchBoardData();
   }, [fetchBoardData]);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
+  // Custom collision detection for better cross-list dragging
+  const customCollisionDetection = args => {
+    // First, try to find collisions with droppable containers (lists)
+    const pointerCollisions = pointerWithin(args);
+
+    if (pointerCollisions.length > 0) {
+      // Filter to prioritize card collisions over list collisions
+      const cardCollisions = pointerCollisions.filter(
+        collision => !collision.id.toString().startsWith('list-')
+      );
+
+      // If we have card collisions, use those
+      if (cardCollisions.length > 0) {
+        return cardCollisions;
+      }
+
+      // Otherwise return all pointer collisions (including lists)
+      return pointerCollisions;
+    }
+
+    // If no pointer collisions, fall back to rect intersection
+    const rectCollisions = rectIntersection(args);
+
+    // Filter out list containers from rect collisions for better precision
+    const cardRectCollisions = rectCollisions.filter(
+      collision => !collision.id.toString().startsWith('list-')
+    );
+
+    return cardRectCollisions.length > 0 ? cardRectCollisions : rectCollisions;
+  };
+
+  const handleDragStart = event => {
+    const { active } = event;
+    const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
+    const card = activeList?.cards.find(c => c._id === active.id);
+    setActiveCard(card);
+    setOverId(null);
+  };
+
+  const handleDragOver = event => {
+    const { over } = event;
+    setOverId(over?.id || null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveCard(null);
+    setOverId(null);
+  };
 
   const handleDragEnd = async event => {
     const { active, over } = event;
-    if (!over) return;
-    if (active.id === over.id) return;
+    if (!over) {
+      setActiveCard(null);
+      return;
+    }
+    if (active.id === over.id) {
+      setActiveCard(null);
+      return;
+    }
 
-    // find source and destination lists
+    // Find source list
     const sourceListIndex = lists.findIndex(l =>
       l.cards.some(c => c._id === active.id)
     );
-    const destListIndex = lists.findIndex(l =>
-      l.cards.some(c => c._id === over.id)
-    );
-    if (sourceListIndex === -1 || destListIndex === -1) return;
+    if (sourceListIndex === -1) {
+      setActiveCard(null);
+      return;
+    }
 
     const sourceList = lists[sourceListIndex];
-    const destList = lists[destListIndex];
+    const movedCard = sourceList.cards.find(c => c._id === active.id);
+    if (!movedCard) {
+      setActiveCard(null);
+      return;
+    }
 
-    // reorder within same list
+    // Determine destination list
+    let destListIndex = -1;
+    let destList = null;
+
+    // Check if dropping on a list container (empty list or list area)
+    if (over.data?.current?.type === 'list') {
+      const listId = over.data.current.listId;
+      destListIndex = lists.findIndex(l => l._id === listId);
+      destList = lists[destListIndex];
+    } else {
+      // Dropping on a card
+      destListIndex = lists.findIndex(l =>
+        l.cards.some(c => c._id === over.id)
+      );
+      destList = lists[destListIndex];
+    }
+
+    if (destListIndex === -1 || !destList) {
+      setActiveCard(null);
+      return;
+    }
+
+    // Reorder within same list
     if (sourceList._id === destList._id) {
       const oldIndex = sourceList.cards.findIndex(c => c._id === active.id);
       const newIndex = sourceList.cards.findIndex(c => c._id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
+
+      // If dropping on list container (not a card), place at end
+      if (newIndex === -1) {
+        const reorderedCards = sourceList.cards.filter(
+          c => c._id !== active.id
+        );
+        reorderedCards.push(movedCard);
+        const newLists = lists.map((l, idx) =>
+          idx === sourceListIndex ? { ...l, cards: reorderedCards } : l
+        );
+        setLists(newLists);
+
+        try {
+          await cardAPI.reorder(active.id, {
+            position: reorderedCards.length - 1,
+          });
+        } catch (err) {
+          console.error('Erreur lors du réordonnancement', err);
+          await fetchBoardData();
+        }
+        setActiveCard(null);
+        return;
+      }
 
       const newCards = arrayMove(sourceList.cards, oldIndex, newIndex);
       const newLists = lists.map((l, idx) =>
@@ -85,32 +213,36 @@ const BoardPage = () => {
       );
       setLists(newLists);
 
-      await cardAPI.reorder(active.id, {
-        listId: sourceList._id,
-        position: newIndex,
-      });
+      try {
+        await cardAPI.reorder(active.id, {
+          position: newIndex,
+        });
+      } catch (err) {
+        console.error('Erreur lors du réordonnancement', err);
+        await fetchBoardData();
+      }
+      setActiveCard(null);
       return;
     }
 
-    // move between lists
+    // Move between lists
     const oldCardIndex = sourceList.cards.findIndex(c => c._id === active.id);
     const newCardIndex = destList.cards.findIndex(c => c._id === over.id);
-    const movedCard = sourceList.cards[oldCardIndex];
-    if (!movedCard) return;
 
-    // when dropping between items, insert after the target card
-    const insertIndex =
-      newCardIndex === -1 ? destList.cards.length : newCardIndex + 1;
+    // Determine insert position
+    let insertIndex;
+    if (newCardIndex === -1) {
+      // Dropping on empty list or list container - place at end
+      insertIndex = destList.cards.length;
+    } else {
+      // Dropping on a card - insert at its position (before it)
+      insertIndex = newCardIndex;
+    }
 
-    const newSourceCards = [
-      ...sourceList.cards.slice(0, oldCardIndex),
-      ...sourceList.cards.slice(oldCardIndex + 1),
-    ];
-    const newDestCards = [
-      ...destList.cards.slice(0, insertIndex),
-      movedCard,
-      ...destList.cards.slice(insertIndex),
-    ];
+    const newSourceCards = sourceList.cards.filter(c => c._id !== active.id);
+
+    const newDestCards = [...destList.cards];
+    newDestCards.splice(insertIndex, 0, movedCard);
 
     const newLists = lists.map((l, idx) => {
       if (idx === sourceListIndex) return { ...l, cards: newSourceCards };
@@ -120,10 +252,18 @@ const BoardPage = () => {
 
     setLists(newLists);
 
-    await cardAPI.reorder(active.id, {
-      listId: destList._id,
-      position: insertIndex,
-    });
+    try {
+      await cardAPI.reorder(active.id, {
+        listId: destList._id,
+        position: insertIndex,
+      });
+    } catch (err) {
+      console.error('Erreur lors du déplacement', err);
+      // Revert on error
+      await fetchBoardData();
+    }
+    setActiveCard(null);
+    setOverId(null);
   };
 
   const handleCreateList = async e => {
@@ -135,12 +275,17 @@ const BoardPage = () => {
         name: newListName,
         position: lists.length,
       });
-      const newList = { ...response.data.data, cards: [] };
-      setLists(prev => [...(prev || []), newList]);
-      setNewListName('');
-      setShowNewListForm(false);
+      if (response.data.success) {
+        const newList = { ...response.data.data, cards: [] };
+        setLists(prev => [...(prev || []), newList]);
+        setNewListName('');
+        setShowNewListForm(false);
+      }
     } catch (err) {
       console.error('Erreur lors de la création de la liste', err);
+      alert(
+        err.response?.data?.message || 'Erreur lors de la création de la liste'
+      );
     }
   };
 
@@ -169,8 +314,11 @@ const BoardPage = () => {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600">
         {/* Header */}
@@ -191,21 +339,17 @@ const BoardPage = () => {
 
         {/* Kanban Board */}
         <main className="py-6 px-4">
-          <div className="flex gap-6 overflow-x-auto pb-6">
+          <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 hover:scrollbar-thumb-blue-400">
             {lists.map(list => (
-              <SortableContext
+              <KanbanList
                 key={list._id}
-                items={list.cards.map(c => c._id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <KanbanList
-                  key={list._id}
-                  list={list}
-                  boardId={boardId}
-                  onCardClick={card => handleOpenCardModal(card, list)}
-                  onListUpdate={fetchBoardData}
-                />
-              </SortableContext>
+                list={list}
+                boardId={boardId}
+                onCardClick={card => handleOpenCardModal(card, list)}
+                onListUpdate={fetchBoardData}
+                activeCardId={activeCard?._id}
+                overId={overId}
+              />
             ))}
 
             <div className="flex-shrink-0 w-80">
@@ -262,6 +406,18 @@ const BoardPage = () => {
           />
         )}
       </div>
+
+      <DragOverlay dropAnimation={null}>
+        {activeCard ? (
+          <div className="opacity-95 rotate-2 cursor-grabbing scale-105 shadow-2xl">
+            <KanbanCard
+              card={activeCard}
+              onClick={() => {}}
+              onDelete={() => {}}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 };

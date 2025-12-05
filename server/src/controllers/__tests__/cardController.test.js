@@ -962,7 +962,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 2 });
+      .send({ position: 2 });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -976,7 +976,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     expect(reorderedCards[2].title).toBe('Card 0');
   });
 
-  it('should fail when newPosition is missing', async () => {
+  it('should fail when position is missing', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
@@ -985,20 +985,20 @@ describe('PUT /api/cards/:id/reorder', () => {
     expect(res.status).toBe(400);
   });
 
-  it('should fail when newPosition is negative', async () => {
+  it('should fail when position is negative', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: -1 });
+      .send({ position: -1 });
 
     expect(res.status).toBe(400);
   });
 
-  it('should fail when newPosition is not an integer', async () => {
+  it('should fail when position is not an integer', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1.5 });
+      .send({ position: 1.5 });
 
     expect(res.status).toBe(400);
   });
@@ -1007,7 +1007,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(200);
 
@@ -1024,7 +1024,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[2]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 0 });
+      .send({ position: 0 });
 
     expect(res.status).toBe(200);
 
@@ -1041,7 +1041,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put('/api/cards/invalid-id/reorder')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(400);
   });
@@ -1051,7 +1051,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${fakeCardId}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(404);
   });
@@ -1071,7 +1071,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${otherToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(403);
   });
