@@ -45,7 +45,7 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
       onClick={onClick}
       className={`bg-white rounded-lg p-3 shadow hover:shadow-md transition border-l-4 border-trello-blue ${
         isDragging ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
-      }`}
+      } ${isOver ? 'border-t-4 border-t-blue-500' : ''}`}
     >
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1">

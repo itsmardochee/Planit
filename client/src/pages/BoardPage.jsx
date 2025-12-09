@@ -35,6 +35,7 @@ const BoardPage = () => {
   const [showCardModal, setShowCardModal] = useState(false);
   const [activeCard, setActiveCard] = useState(null);
   const [overId, setOverId] = useState(null);
+  const [activeSourceListId, setActiveSourceListId] = useState(null);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -83,33 +84,34 @@ const BoardPage = () => {
 
   // Custom collision detection for better cross-list dragging
   const customCollisionDetection = args => {
-    // First, try to find collisions with droppable containers (lists)
+    // First, try pointer-based collision detection
     const pointerCollisions = pointerWithin(args);
 
     if (pointerCollisions.length > 0) {
-      // Filter to prioritize card collisions over list collisions
+      // Separate list and card collisions
+      const listCollisions = pointerCollisions.filter(collision =>
+        collision.id.toString().startsWith('list-')
+      );
       const cardCollisions = pointerCollisions.filter(
         collision => !collision.id.toString().startsWith('list-')
       );
 
-      // If we have card collisions, use those
+      // If we have card collisions, prioritize those
       if (cardCollisions.length > 0) {
         return cardCollisions;
       }
 
-      // Otherwise return all pointer collisions (including lists)
+      // If only list collisions, return them (entering list area)
+      if (listCollisions.length > 0) {
+        return listCollisions;
+      }
+
       return pointerCollisions;
     }
 
-    // If no pointer collisions, fall back to rect intersection
+    // Fallback to rect intersection
     const rectCollisions = rectIntersection(args);
-
-    // Filter out list containers from rect collisions for better precision
-    const cardRectCollisions = rectCollisions.filter(
-      collision => !collision.id.toString().startsWith('list-')
-    );
-
-    return cardRectCollisions.length > 0 ? cardRectCollisions : rectCollisions;
+    return rectCollisions;
   };
 
   const handleDragStart = event => {
@@ -117,6 +119,7 @@ const BoardPage = () => {
     const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
     const card = activeList?.cards.find(c => c._id === active.id);
     setActiveCard(card);
+    setActiveSourceListId(activeList?._id || null);
     setOverId(null);
   };
 
@@ -128,32 +131,32 @@ const BoardPage = () => {
   const handleDragCancel = () => {
     setActiveCard(null);
     setOverId(null);
+    setActiveSourceListId(null);
   };
 
   const handleDragEnd = async event => {
     const { active, over } = event;
-    if (!over) {
-      setActiveCard(null);
-      return;
-    }
-    if (active.id === over.id) {
-      setActiveCard(null);
+
+    const sourceListId = activeSourceListId;
+    setActiveCard(null);
+    setOverId(null);
+    setActiveSourceListId(null);
+
+    if (!over || active.id === over.id) {
       return;
     }
 
     // Find source list
-    const sourceListIndex = lists.findIndex(l =>
-      l.cards.some(c => c._id === active.id)
-    );
+    const sourceListIndex = lists.findIndex(l => l._id === sourceListId);
     if (sourceListIndex === -1) {
-      setActiveCard(null);
+      await fetchBoardData();
       return;
     }
 
     const sourceList = lists[sourceListIndex];
     const movedCard = sourceList.cards.find(c => c._id === active.id);
     if (!movedCard) {
-      setActiveCard(null);
+      await fetchBoardData();
       return;
     }
 
@@ -161,7 +164,7 @@ const BoardPage = () => {
     let destListIndex = -1;
     let destList = null;
 
-    // Check if dropping on a list container (empty list or list area)
+    // Check if dropping on a list container
     if (over.data?.current?.type === 'list') {
       const listId = over.data.current.listId;
       destListIndex = lists.findIndex(l => l._id === listId);
@@ -175,7 +178,7 @@ const BoardPage = () => {
     }
 
     if (destListIndex === -1 || !destList) {
-      setActiveCard(null);
+      await fetchBoardData();
       return;
     }
 
@@ -203,7 +206,6 @@ const BoardPage = () => {
           console.error('Erreur lors du réordonnancement', err);
           await fetchBoardData();
         }
-        setActiveCard(null);
         return;
       }
 
@@ -221,12 +223,10 @@ const BoardPage = () => {
         console.error('Erreur lors du réordonnancement', err);
         await fetchBoardData();
       }
-      setActiveCard(null);
       return;
     }
 
     // Move between lists
-    const oldCardIndex = sourceList.cards.findIndex(c => c._id === active.id);
     const newCardIndex = destList.cards.findIndex(c => c._id === over.id);
 
     // Determine insert position
@@ -240,7 +240,6 @@ const BoardPage = () => {
     }
 
     const newSourceCards = sourceList.cards.filter(c => c._id !== active.id);
-
     const newDestCards = [...destList.cards];
     newDestCards.splice(insertIndex, 0, movedCard);
 
@@ -259,11 +258,8 @@ const BoardPage = () => {
       });
     } catch (err) {
       console.error('Erreur lors du déplacement', err);
-      // Revert on error
       await fetchBoardData();
     }
-    setActiveCard(null);
-    setOverId(null);
   };
 
   const handleCreateList = async e => {

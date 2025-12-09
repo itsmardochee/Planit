@@ -55,44 +55,38 @@ const KanbanList = ({
   };
 
   return (
-    <div className="flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow">
+    <div
+      ref={setNodeRef}
+      className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow transition-all duration-200 ${
+        isOver
+          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 scale-[1.02]'
+          : ''
+      }`}
+    >
       {/* List Header */}
       <div className="mb-4">
         <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
         <p className="text-xs text-gray-600">{cards.length} cartes</p>
       </div>
 
-      {/* Cards Container - Droppable Zone */}
+      {/* Cards Container */}
       <div
-        ref={setNodeRef}
-        className={`space-y-2 mb-4 max-h-[calc(100vh-350px)] overflow-y-auto min-h-[50px] rounded-lg transition-all duration-200 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 pr-1 ${
-          isOver
-            ? 'bg-blue-50 border-2 border-dashed border-blue-500 shadow-inner scale-[1.02]'
-            : 'border-2 border-transparent'
+        className={`space-y-2 max-h-[calc(100vh-350px)] overflow-y-auto rounded-lg scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 pr-1 ${
+          cards.length > 0 ? 'mb-4' : ''
         }`}
       >
         <SortableContext
           items={cards.map(c => c._id)}
           strategy={verticalListSortingStrategy}
         >
-          {cards.map((card, index) => {
-            const isOverThisCard = overId === card._id;
-            const isDraggingThisCard = activeCardId === card._id;
-
-            return (
-              <div key={card._id} className="relative">
-                {/* Drop indicator line */}
-                {isOverThisCard && !isDraggingThisCard && (
-                  <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 rounded-full shadow-lg z-10" />
-                )}
-                <KanbanCard
-                  card={card}
-                  onClick={() => onCardClick(card)}
-                  onDelete={() => handleDeleteCard(card._id)}
-                />
-              </div>
-            );
-          })}
+          {cards.map(card => (
+            <KanbanCard
+              key={card._id}
+              card={card}
+              onClick={() => onCardClick(card)}
+              onDelete={() => handleDeleteCard(card._id)}
+            />
+          ))}
         </SortableContext>
       </div>
 
