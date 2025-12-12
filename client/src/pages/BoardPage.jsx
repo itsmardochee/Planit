@@ -278,7 +278,7 @@ const BoardPage = () => {
         setShowNewListForm(false);
       }
     } catch (err) {
-      console.error('Erreur lors de la création de la liste', err);
+      console.error('Error creating list', err);
       alert(
         err.response?.data?.message || 'Erreur lors de la création de la liste'
       );
@@ -302,7 +302,7 @@ const BoardPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-blue-500 flex items-center justify-center">
-        <p className="text-white">Chargement...</p>
+        <p className="text-white">Loading...</p>
       </div>
     );
   }
@@ -324,7 +324,7 @@ const BoardPage = () => {
               onClick={() => navigate(-1)}
               className="text-white hover:opacity-80 text-sm mb-2 inline-block"
             >
-              ← Retour
+              ← Back
             </button>
             <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
             {board?.description && (
@@ -352,14 +352,14 @@ const BoardPage = () => {
               {showNewListForm ? (
                 <div className="bg-gray-700 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-3">
-                    Ajouter une nouvelle liste
+                    Add a new list
                   </h3>
                   <form onSubmit={handleCreateList} className="space-y-2">
                     <input
                       type="text"
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
-                      placeholder="Titre de la liste"
+                      placeholder="List title"
                       className="w-full px-3 py-2 bg-gray-600 text-white rounded-lg placeholder-gray-400 focus:ring-2 focus:ring-trello-blue outline-none"
                       autoFocus
                     />
@@ -368,14 +368,14 @@ const BoardPage = () => {
                         type="submit"
                         className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
                       >
-                        Ajouter
+                        Add
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowNewListForm(false)}
                         className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm transition"
                       >
-                        Annuler
+                        Cancel
                       </button>
                     </div>
                   </form>
@@ -385,7 +385,7 @@ const BoardPage = () => {
                   onClick={() => setShowNewListForm(true)}
                   className="w-80 bg-gray-700 hover:bg-gray-600 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
                 >
-                  + Ajouter une autre liste
+                  + Add another list
                 </button>
               )}
             </div>

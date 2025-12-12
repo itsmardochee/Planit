@@ -32,7 +32,7 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
       await cardAPI.delete(card._id);
       onDelete(card._id);
     } catch (err) {
-      console.error('Erreur lors de la suppression de la carte', err);
+      console.error('Error deleting card', err);
     }
   };
 
@@ -61,7 +61,7 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
         <button
           onClick={handleDelete}
           className="text-gray-400 hover:text-red-500 transition text-sm"
-          title="Supprimer"
+          title="Delete"
         >
           ✕
         </button>

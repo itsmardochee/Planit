@@ -45,7 +45,7 @@ const KanbanList = ({
       // ask parent to refresh lists/cards
       onListUpdate();
     } catch (err) {
-      console.error('Erreur lors de la création de la carte', err);
+      console.error('Error creating card', err);
     }
   };
 
@@ -66,7 +66,7 @@ const KanbanList = ({
       {/* List Header */}
       <div className="mb-4">
         <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
-        <p className="text-xs text-gray-600">{cards.length} cartes</p>
+        <p className="text-xs text-gray-600">{cards.length} cards</p>
       </div>
 
       {/* Cards Container */}
@@ -96,7 +96,7 @@ const KanbanList = ({
           <textarea
             value={newCardTitle}
             onChange={e => setNewCardTitle(e.target.value)}
-            placeholder="Entrez le titre de la carte..."
+            placeholder="Enter card title..."
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
             rows="2"
             autoFocus
@@ -106,7 +106,7 @@ const KanbanList = ({
               type="submit"
               className="px-3 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
             >
-              Ajouter
+              Add
             </button>
             <button
               type="button"
@@ -116,7 +116,7 @@ const KanbanList = ({
               }}
               className="px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm transition"
             >
-              Annuler
+              Cancel
             </button>
           </div>
         </form>
@@ -125,7 +125,7 @@ const KanbanList = ({
           onClick={() => setShowNewCardForm(true)}
           className="w-full text-left px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
         >
-          + Ajouter une carte
+          + Add a card
         </button>
       )}
     </div>

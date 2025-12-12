@@ -26,7 +26,7 @@ const WorkspacePage = () => {
         setLocalBoards(boardsData);
         dispatch(setBoards(boardsData));
       } catch (err) {
-        console.error('Erreur lors du chargement du workspace', err);
+        console.error('Error loading workspace', err);
       } finally {
         setLoading(false);
       }
@@ -43,7 +43,7 @@ const WorkspacePage = () => {
       // Create board via backend API
       const response = await boardAPI.create(workspaceId, {
         name: newBoardName,
-        description: 'Nouveau tableau',
+        description: 'New board',
       });
 
       if (response.data.success) {
@@ -54,7 +54,7 @@ const WorkspacePage = () => {
         setShowNewBoardForm(false);
       }
     } catch (err) {
-      console.error('Erreur lors de la création du tableau', err);
+      console.error('Error creating board', err);
       alert(
         err.response?.data?.message || 'Erreur lors de la création du tableau'
       );
@@ -82,7 +82,7 @@ const WorkspacePage = () => {
             onClick={() => navigate('/dashboard')}
             className="text-trello-blue hover:underline text-sm mb-2"
           >
-            ← Retour aux workspaces
+            ← Back aux workspaces
           </button>
           <h1 className="text-3xl font-bold text-gray-800">
             {workspace?.name}
