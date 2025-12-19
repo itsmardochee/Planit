@@ -53,7 +53,7 @@ const BoardPage = () => {
       );
       setLists(listsWithCards);
     } catch (err) {
-      console.error('Erreur lors du chargement du tableau', err);
+      console.error('Error loading board', err);
     } finally {
       setLoading(false);
     }
@@ -203,7 +203,7 @@ const BoardPage = () => {
             position: reorderedCards.length - 1,
           });
         } catch (err) {
-          console.error('Erreur lors du réordonnancement', err);
+          console.error('Error during reordering', err);
           await fetchBoardData();
         }
         return;
@@ -220,7 +220,7 @@ const BoardPage = () => {
           position: newIndex,
         });
       } catch (err) {
-        console.error('Erreur lors du réordonnancement', err);
+        console.error('Error during reordering', err);
         await fetchBoardData();
       }
       return;
@@ -257,7 +257,7 @@ const BoardPage = () => {
         position: insertIndex,
       });
     } catch (err) {
-      console.error('Erreur lors du déplacement', err);
+      console.error('Error moving card', err);
       await fetchBoardData();
     }
   };
@@ -279,9 +279,7 @@ const BoardPage = () => {
       }
     } catch (err) {
       console.error('Error creating list', err);
-      alert(
-        err.response?.data?.message || 'Erreur lors de la création de la liste'
-      );
+      alert(err.response?.data?.message || 'Error creating list');
     }
   };
 

@@ -52,7 +52,7 @@ const Dashboard = () => {
       setNewWorkspaceName('');
       setShowNewWorkspaceForm(false);
     } catch (err) {
-      setError('Erreur lors de la création du workspace');
+      setError('Error creating workspace');
       console.error(err);
     }
   };
