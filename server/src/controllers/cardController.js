@@ -435,7 +435,7 @@ export const deleteCard = async (req, res, next) => {
  * @swagger
  * /api/cards/{id}/reorder:
  *   put:
- *     summary: Reorder a card within its list
+ *     summary: Reorder a card within its list or move to another list
  *     tags: [Cards]
  *     security:
  *       - bearerAuth: []
@@ -453,13 +453,17 @@ export const deleteCard = async (req, res, next) => {
  *           schema:
  *             type: object
  *             required:
- *               - newPosition
+ *               - position
  *             properties:
- *               newPosition:
+ *               position:
  *                 type: integer
  *                 minimum: 0
  *                 example: 2
  *                 description: New position index in the list
+ *               listId:
+ *                 type: string
+ *                 example: 507f1f77bcf86cd799439011
+ *                 description: Target list ID (optional, for moving between lists)
  *     responses:
  *       200:
  *         description: Card reordered successfully
@@ -479,26 +483,22 @@ export const deleteCard = async (req, res, next) => {
  *         description: Server error
  */
 /**
- * @desc    Reorder card within its list
+ * @desc    Reorder card within its list or move to another list
  * @route   PUT /api/cards/:id/reorder
  * @access  Private
  */
 export const reorderCard = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { newPosition } = req.body;
+    const { position, listId: newListId } = req.body;
 
     // Validate card ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid card ID format');
     }
 
-    // Validate newPosition
-    if (
-      newPosition === undefined ||
-      !Number.isInteger(newPosition) ||
-      newPosition < 0
-    ) {
+    // Validate position
+    if (position === undefined || !Number.isInteger(position) || position < 0) {
       throw new ValidationError('newPosition must be a non-negative integer');
     }
 
@@ -512,19 +512,63 @@ export const reorderCard = async (req, res, next) => {
     }
 
     const oldPosition = card.position;
-    const listId = card.listId;
+    const oldListId = card.listId.toString();
+    const targetListId = newListId || oldListId;
 
-    // No change needed
-    if (oldPosition === newPosition) {
+    // Validate new list ID if moving between lists
+    if (newListId && !mongoose.Types.ObjectId.isValid(newListId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid list ID format' });
+    }
+
+    // If moving to a different list, verify the new list exists and belongs to user
+    if (newListId && newListId !== oldListId) {
+      const targetList = await List.findById(newListId);
+      if (!targetList) {
+        return res
+          .status(404)
+          .json({ success: false, message: 'Target list not found' });
+      }
+      if (targetList.userId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to access target list',
+        });
+      }
+
+      // Remove card from old list (shift positions)
+      await Card.updateMany(
+        { listId: oldListId, position: { $gt: oldPosition } },
+        { $inc: { position: -1 } }
+      );
+
+      // Make space in new list (shift positions)
+      await Card.updateMany(
+        { listId: targetListId, position: { $gte: position } },
+        { $inc: { position: 1 } }
+      );
+
+      // Move card to new list
+      card.listId = targetListId;
+      card.boardId = targetList.boardId;
+      card.position = position;
+      await card.save();
+
+      return res.status(200).json({ success: true, data: card });
+    }
+
+    // Reordering within same list
+    if (oldPosition === position) {
       return res.status(200).json({ success: true, data: card });
     }
 
     // Moving card down (increasing position)
-    if (newPosition > oldPosition) {
+    if (position > oldPosition) {
       await Card.updateMany(
         {
-          listId,
-          position: { $gt: oldPosition, $lte: newPosition },
+          listId: oldListId,
+          position: { $gt: oldPosition, $lte: position },
         },
         {
           $inc: { position: -1 },
@@ -535,8 +579,8 @@ export const reorderCard = async (req, res, next) => {
     else {
       await Card.updateMany(
         {
-          listId,
-          position: { $gte: newPosition, $lt: oldPosition },
+          listId: oldListId,
+          position: { $gte: position, $lt: oldPosition },
         },
         {
           $inc: { position: 1 },
@@ -545,7 +589,7 @@ export const reorderCard = async (req, res, next) => {
     }
 
     // Update card position
-    card.position = newPosition;
+    card.position = position;
     await card.save();
 
     logger.info(`Card reordered: ${id} to position ${newPosition}`);

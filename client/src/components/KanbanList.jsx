@@ -1,10 +1,30 @@
 import { useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { cardAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
 
-const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
+const KanbanList = ({
+  list,
+  boardId,
+  onCardClick,
+  onListUpdate,
+  activeCardId,
+  overId,
+}) => {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `list-${list._id}`,
+    data: {
+      type: 'list',
+      listId: list._id,
+    },
+  });
 
   const cards = list.cards || [];
 
@@ -25,7 +45,7 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
       // ask parent to refresh lists/cards
       onListUpdate();
     } catch (err) {
-      console.error('Erreur lors de la création de la carte', err);
+      console.error('Error creating card', err);
     }
   };
 
@@ -35,23 +55,39 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
   };
 
   return (
-    <div className="flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow">
+    <div
+      ref={setNodeRef}
+      className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow transition-all duration-200 ${
+        isOver
+          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 scale-[1.02]'
+          : ''
+      }`}
+    >
       {/* List Header */}
       <div className="mb-4">
         <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
-        <p className="text-xs text-gray-600">{cards.length} cartes</p>
+        <p className="text-xs text-gray-600">{cards.length} cards</p>
       </div>
 
       {/* Cards Container */}
-      <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
-        {cards.map(card => (
-          <KanbanCard
-            key={card._id}
-            card={card}
-            onClick={() => onCardClick(card)}
-            onDelete={() => handleDeleteCard(card._id)}
-          />
-        ))}
+      <div
+        className={`space-y-2 max-h-[calc(100vh-350px)] overflow-y-auto rounded-lg scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 pr-1 ${
+          cards.length > 0 ? 'mb-4' : ''
+        }`}
+      >
+        <SortableContext
+          items={cards.map(c => c._id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {cards.map(card => (
+            <KanbanCard
+              key={card._id}
+              card={card}
+              onClick={() => onCardClick(card)}
+              onDelete={() => handleDeleteCard(card._id)}
+            />
+          ))}
+        </SortableContext>
       </div>
 
       {/* Add New Card */}
@@ -60,7 +96,7 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
           <textarea
             value={newCardTitle}
             onChange={e => setNewCardTitle(e.target.value)}
-            placeholder="Entrez le titre de la carte..."
+            placeholder="Enter card title..."
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
             rows="2"
             autoFocus
@@ -70,7 +106,7 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
               type="submit"
               className="px-3 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
             >
-              Ajouter
+              Add
             </button>
             <button
               type="button"
@@ -80,7 +116,7 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
               }}
               className="px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm transition"
             >
-              Annuler
+              Cancel
             </button>
           </div>
         </form>
@@ -89,7 +125,7 @@ const KanbanList = ({ list, boardId, onCardClick, onListUpdate }) => {
           onClick={() => setShowNewCardForm(true)}
           className="w-full text-left px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
         >
-          + Ajouter une carte
+          + Add a card
         </button>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { loginSuccess, loginError } from '../store/index';
 import { authAPI } from '../utils/api';
 
@@ -167,8 +167,8 @@ const Login = () => {
             {loading
               ? 'Please wait...'
               : isRegister
-              ? 'Create account'
-              : 'Sign in'}
+                ? 'Create account'
+                : 'Sign in'}
           </button>
         </form>
 
