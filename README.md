@@ -200,80 +200,23 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 
 ## 🧱 Deployment
 
-- **Frontend:** deployed on Vercel.
-- **Backend:** deployed on Render or Railway.
+- **Frontend:** deployed on Vercel - see [docs/DEPLOYMENT-VERCEL.md](./docs/DEPLOYMENT-VERCEL.md)
+- **Backend:** deployed on Render - see [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
 - **Database:** hosted on MongoDB Atlas.
 - **CI/CD:** handled by GitHub Actions.
 
-**Deployment → Frontend (Vercel)**
+### Quick Deployment Guide
 
-Follow these step-by-step instructions to deploy the Vite/React frontend to Vercel. All repository documentation and project environment conventions require environment variables that are exposed to the client to be prefixed with `VITE_`.
+**Step 1: Deploy Backend to Render**
+- Follow the comprehensive guide in [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
+- Set environment variables (`NODE_ENV`, `MONGO_URI`, `JWT_SECRET`, `API_URL`)
+- Test Swagger documentation at `https://your-service.onrender.com/api-docs`
 
-1. Create a Vercel project and link GitHub
+**Step 2: Deploy Frontend to Vercel**
+- Follow the guide in [docs/DEPLOYMENT-VERCEL.md](./docs/DEPLOYMENT-VERCEL.md)
+- Configure `VITE_API_URL` to point to your Render backend URL
+- Test the deployed application
 
-- Go to https://vercel.com/new and import the GitHub repository `itsmardochee/Planit`.
-- Authorize Vercel to access the repository if needed.
-- In the import flow, set the **Production Branch** to `main`.
+For detailed step-by-step instructions, refer to the deployment guides above.
 
-2. Configure project settings (important)
-
-- **Project Root**: set to `client` (this makes Vercel run install/build in the frontend folder).
-- **Framework Preset**: select `Vite` if available (otherwise leave as "Other").
-- **Install Command**: `npm install` (default).
-- **Build Command**: `npm run build` (this runs Vite's production build).
-- **Output Directory**: `dist` (Vite outputs to `dist/` by default).
-
-3. Environment variables (Vite note)
-
-- In Vercel Dashboard, go to **Settings → Environment Variables** and add the following variable at minimum:
-  - `VITE_API_URL` = `https://api.example.com/api` (replace with your backend production URL)
-- Add the variable for the scopes you need: **Production**, **Preview**, and/or **Development**. Vite only exposes variables prefixed with `VITE_` at build time — set them in Vercel so builds include the correct values.
-
-4. Automatic previews and production
-
-- Vercel creates **Preview Deployments** automatically for pull requests and **Production Deployments** for pushes to `main` (ensure "Automatic Deploys" is enabled in the Git integration settings).
-
-5. CORS considerations (backend)
-
-- The backend must allow requests from the Vercel-hosted frontend origin (e.g. `https://<your-project>.vercel.app`).
-- Example (Express + `cors`):
-
-```js
-// server/src/index.js (or your CORS middleware)
-const cors = require('cors');
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'https://your-project.vercel.app'],
-    credentials: true,
-  })
-);
-```
-
-6. Common Vercel / Vite troubleshooting
-
-- Build fails or `dist/` not found: ensure **Project Root** is `client` and **Build Command** is `npm run build` and **Output Directory** is `dist`.
-- Environment variables missing in runtime: remember Vite inlines `VITE_` variables at build time — redeploy after changing Vercel env vars.
-- Wrong API URL (CORS / 404s): verify `VITE_API_URL` points to the API base (including `/api` if your client expects it) and that backend CORS whitelist includes the Vercel domain.
-- Node version or dependency mismatch: set a Node version in `client/package.json` `engines` field or configure it in Vercel Project Settings if builds fail due to Node version.
-- Large builds or timeouts: increase the Vercel build timeout or optimize the build (remove dev-only dependencies from `dependencies`).
-
-7. Useful links & conventions
-
-- Vercel docs: https://vercel.com/docs
-- Vite env variables: https://vitejs.dev/guide/env-and-mode.html
-- Repository environment conventions: all frontend runtime env vars must be prefixed with `VITE_` and dev server runs on port `5173`.
-
-8. Example `.env.production` (client)
-
-- Create a file `client/.env.production` locally for local production builds or use the example below. Do NOT commit secrets — prefer Vercel UI for production values.
-
-```env
-# client/.env.production.example
-# Replace the URL with your production API base (no trailing slash unless expected)
-VITE_API_URL=https://api.example.com/api
-```
-
-Notes
-
-- `npm run build` (in `client`) produces `dist/` which Vercel will serve via its CDN.
-- Preview deployments let you test PRs — ensure you also set `VITE_API_URL` for Preview scope in Vercel so previews talk to a preview/staging API if necessary.
+---
