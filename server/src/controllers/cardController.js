@@ -499,7 +499,7 @@ export const reorderCard = async (req, res, next) => {
 
     // Validate position
     if (position === undefined || !Number.isInteger(position) || position < 0) {
-      throw new ValidationError('newPosition must be a non-negative integer');
+      throw new ValidationError('position must be a non-negative integer');
     }
 
     // Find card and verify ownership
@@ -592,7 +592,7 @@ export const reorderCard = async (req, res, next) => {
     card.position = position;
     await card.save();
 
-    logger.info(`Card reordered: ${id} to position ${newPosition}`);
+    logger.info(`Card reordered: ${id} to position ${position}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
