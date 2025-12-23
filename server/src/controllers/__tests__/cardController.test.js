@@ -10,11 +10,13 @@ import Workspace from '../../models/Workspace.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
+import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use('/api/lists/:listId/cards', auth, listCardRouter);
 app.use('/api/cards', auth, cardRouter);
+app.use(errorHandler);
 
 describe('POST /api/lists/:listId/cards', () => {
   let mongoServer;
@@ -962,7 +964,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 2 });
+      .send({ position: 2 });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -976,7 +978,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     expect(reorderedCards[2].title).toBe('Card 0');
   });
 
-  it('should fail when newPosition is missing', async () => {
+  it('should fail when position is missing', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
@@ -985,20 +987,20 @@ describe('PUT /api/cards/:id/reorder', () => {
     expect(res.status).toBe(400);
   });
 
-  it('should fail when newPosition is negative', async () => {
+  it('should fail when position is negative', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: -1 });
+      .send({ position: -1 });
 
     expect(res.status).toBe(400);
   });
 
-  it('should fail when newPosition is not an integer', async () => {
+  it('should fail when position is not an integer', async () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1.5 });
+      .send({ position: 1.5 });
 
     expect(res.status).toBe(400);
   });
@@ -1007,7 +1009,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(200);
 
@@ -1024,7 +1026,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[2]._id}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 0 });
+      .send({ position: 0 });
 
     expect(res.status).toBe(200);
 
@@ -1041,7 +1043,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put('/api/cards/invalid-id/reorder')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(400);
   });
@@ -1051,7 +1053,7 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${fakeCardId}/reorder`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(404);
   });
@@ -1071,8 +1073,148 @@ describe('PUT /api/cards/:id/reorder', () => {
     const res = await request(app)
       .put(`/api/cards/${cards[0]._id}/reorder`)
       .set('Authorization', `Bearer ${otherToken}`)
-      .send({ newPosition: 1 });
+      .send({ position: 1 });
 
     expect(res.status).toBe(403);
+  });
+
+  it('should move card to another list', async () => {
+    // Create a second list
+    const secondList = await List.create({
+      name: 'Second List',
+      workspaceId: testWorkspace._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 1,
+    });
+
+    // Create cards in second list
+    await Card.create([
+      {
+        title: 'Card in List 2 - 0',
+        listId: secondList._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 0,
+      },
+      {
+        title: 'Card in List 2 - 1',
+        listId: secondList._id,
+        boardId: testBoard._id,
+        userId: testUser._id,
+        position: 1,
+      },
+    ]);
+
+    // Move Card 0 from testList to secondList at position 1
+    const res = await request(app)
+      .put(`/api/cards/${cards[0]._id}/reorder`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ position: 1, listId: secondList._id.toString() });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+
+    // Check source list - Card 0 should be removed
+    const sourceCards = await Card.find({ listId: testList._id }).sort({
+      position: 1,
+    });
+    expect(sourceCards.length).toBe(2);
+    expect(sourceCards[0].title).toBe('Card 1');
+    expect(sourceCards[1].title).toBe('Card 2');
+
+    // Check destination list - Card 0 should be at position 1
+    const destCards = await Card.find({ listId: secondList._id }).sort({
+      position: 1,
+    });
+    expect(destCards.length).toBe(3);
+    expect(destCards[0].title).toBe('Card in List 2 - 0');
+    expect(destCards[1].title).toBe('Card 0');
+    expect(destCards[2].title).toBe('Card in List 2 - 1');
+
+    // Verify the moved card has the correct listId
+    const movedCard = await Card.findById(cards[0]._id);
+    expect(movedCard.listId.toString()).toBe(secondList._id.toString());
+  });
+
+  it('should move card to empty list', async () => {
+    const emptyList = await List.create({
+      name: 'Empty List',
+      workspaceId: testWorkspace._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 1,
+    });
+
+    const res = await request(app)
+      .put(`/api/cards/${cards[0]._id}/reorder`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ position: 0, listId: emptyList._id.toString() });
+
+    expect(res.status).toBe(200);
+
+    // Check card is in the new list
+    const movedCard = await Card.findById(cards[0]._id);
+    expect(movedCard.listId.toString()).toBe(emptyList._id.toString());
+    expect(movedCard.position).toBe(0);
+
+    // Check source list
+    const sourceCards = await Card.find({ listId: testList._id }).sort({
+      position: 1,
+    });
+    expect(sourceCards.length).toBe(2);
+  });
+
+  it('should fail when moving to non-existent list', async () => {
+    const fakeListId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .put(`/api/cards/${cards[0]._id}/reorder`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ position: 0, listId: fakeListId.toString() });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('should fail when moving to list owned by another user', async () => {
+    const otherUser = await User.create({
+      username: 'otheruser2',
+      email: 'other2@example.com',
+      password: 'password123',
+    });
+
+    const otherWorkspace = await Workspace.create({
+      name: 'Other Workspace',
+      userId: otherUser._id,
+    });
+
+    const otherBoard = await Board.create({
+      name: 'Other Board',
+      workspaceId: otherWorkspace._id,
+      userId: otherUser._id,
+    });
+
+    const otherList = await List.create({
+      name: 'Other List',
+      workspaceId: otherWorkspace._id,
+      boardId: otherBoard._id,
+      userId: otherUser._id,
+      position: 0,
+    });
+
+    const res = await request(app)
+      .put(`/api/cards/${cards[0]._id}/reorder`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ position: 0, listId: otherList._id.toString() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('should fail with invalid listId format', async () => {
+    const res = await request(app)
+      .put(`/api/cards/${cards[0]._id}/reorder`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ position: 0, listId: 'invalid-id' });
+
+    expect(res.status).toBe(400);
   });
 });

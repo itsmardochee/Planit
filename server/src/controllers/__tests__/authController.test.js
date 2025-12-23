@@ -5,10 +5,12 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import jwt from 'jsonwebtoken';
 import authRoutes from '../../routes/authRoutes.js';
 import User from '../../models/User.js';
+import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use(errorHandler); // Add error handler middleware
 
 describe('POST /api/auth/register', () => {
   let mongoServer;

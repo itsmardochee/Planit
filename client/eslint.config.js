@@ -5,6 +5,9 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 
 export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'build/**', 'coverage/**'],
+  },
   js.configs.recommended,
   {
     files: ['src/**/*.{js,jsx}'],
@@ -34,6 +37,21 @@ export default [
     settings: {
       react: {
         version: 'detect',
+      },
+    },
+  },
+  {
+    files: [
+      '*.config.js',
+      'vite.config.js',
+      'vitest.config.js',
+      'tailwind.config.js',
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
       },
     },
   },
