@@ -8,10 +8,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
-    pool: 'threads',
-    poolMatchGlobs: [
-      ['**/*.test.{js,jsx}', 'threads'],
-    ],
-    singleThread: true,
+    pool: 'forks',
   },
 });
