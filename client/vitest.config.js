@@ -9,10 +9,9 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
     css: true,
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    poolMatchGlobs: [
+      ['**/*.test.{js,jsx}', 'threads'],
+    ],
+    singleThread: true,
   },
 });
