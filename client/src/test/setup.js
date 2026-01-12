@@ -8,4 +8,4 @@ const localStorageMock = {
   clear: () => {},
 };
 
-global.localStorage = localStorageMock;
+globalThis.localStorage = localStorageMock;
