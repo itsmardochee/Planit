@@ -20,9 +20,9 @@ Planit provides a solid foundation for team organization and project tracking wh
 
 ### 🌐 Live Demo
 
-- **Frontend (Production)**: [https://planit-nine-psi.vercel.app](https://planit-nine-psi.vercel.app)
-- **Backend API**: Ready for deployment (see [Deployment Guide](#-deployment))
-- **API Documentation**: Available at `/api-docs` endpoint
+- **Frontend**: [https://planit-nine-psi.vercel.app](https://planit-nine-psi.vercel.app)
+- **Backend API**: [https://planit-3fms.onrender.com](https://planit-3fms.onrender.com)
+- **API Documentation**: [https://planit-3fms.onrender.com/api-docs](https://planit-3fms.onrender.com/api-docs)
 
 ---
 
@@ -209,14 +209,15 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 ### Production URLs
 
 - **Frontend**: [https://planit-nine-psi.vercel.app](https://planit-nine-psi.vercel.app) (Vercel)
-- **Backend**: Ready for deployment on Render/Railway
+- **Backend API**: [https://planit-3fms.onrender.com](https://planit-3fms.onrender.com) (Render)
+- **API Docs**: [https://planit-3fms.onrender.com/api-docs](https://planit-3fms.onrender.com/api-docs) (Swagger UI)
 - **Database**: MongoDB Atlas (shared cluster)
 - **CI/CD**: GitHub Actions
 
 ### Deployment Guides
 
 - **Frontend:** deployed on Vercel - see [docs/DEPLOYMENT-VERCEL.md](./docs/DEPLOYMENT-VERCEL.md)
-- **Backend:** deployment guide - see [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
+- **Backend:** deployed on Render - see [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
 
 ### Quick Deployment Guide
 
