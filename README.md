@@ -18,6 +18,12 @@ Planit is a professional, production-oriented **Trello-like web application** bu
 
 Planit provides a solid foundation for team organization and project tracking while remaining flexible enough to evolve with future needs.
 
+### 🌐 Live Demo
+
+- **Frontend (Production)**: [https://planit-nine-psi.vercel.app](https://planit-nine-psi.vercel.app)
+- **Backend API**: Ready for deployment (see [Deployment Guide](#-deployment))
+- **API Documentation**: Available at `/api-docs` endpoint
+
 ---
 
 ## 🧠 Objectives
@@ -200,10 +206,17 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 
 ## 🧱 Deployment
 
+### Production URLs
+
+- **Frontend**: [https://planit-nine-psi.vercel.app](https://planit-nine-psi.vercel.app) (Vercel)
+- **Backend**: Ready for deployment on Render/Railway
+- **Database**: MongoDB Atlas (shared cluster)
+- **CI/CD**: GitHub Actions
+
+### Deployment Guides
+
 - **Frontend:** deployed on Vercel - see [docs/DEPLOYMENT-VERCEL.md](./docs/DEPLOYMENT-VERCEL.md)
-- **Backend:** deployed on Render - see [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
-- **Database:** hosted on MongoDB Atlas.
-- **CI/CD:** handled by GitHub Actions.
+- **Backend:** deployment guide - see [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
 
 ### Quick Deployment Guide
 
