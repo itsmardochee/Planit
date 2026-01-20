@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { logout, setWorkspaces } from '../store/index';
 import { useAuth } from '../hooks/useAuth';
 import { workspaceAPI } from '../utils/api';
+import WorkspaceEditModal from '../components/WorkspaceEditModal';
 
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const [editingWorkspace, setEditingWorkspace] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -64,6 +66,27 @@ const Dashboard = () => {
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  const handleEditWorkspace = (e, workspace) => {
+    e.stopPropagation();
+    setEditingWorkspace(workspace);
+  };
+
+  const handleSaveWorkspace = async updates => {
+    try {
+      const response = await workspaceAPI.update(
+        editingWorkspace._id,
+        updates
+      );
+      const updatedWorkspaces = workspaces.map(w =>
+        w._id === editingWorkspace._id ? response.data.data : w
+      );
+      dispatch(setWorkspaces(updatedWorkspaces));
+      setError('');
+    } catch (err) {
+      throw err;
+    }
   };
 
   return (
@@ -159,9 +182,16 @@ const Dashboard = () => {
                 <div
                   key={workspace._id}
                   onClick={() => handleWorkspaceClick(workspace._id)}
-                  className="bg-white rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6"
+                  className="bg-white rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 relative"
                 >
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  <button
+                    onClick={e => handleEditWorkspace(e, workspace)}
+                    className="absolute top-4 right-4 p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    title="Edit workspace"
+                  >
+                    ✏️
+                  </button>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 pr-8">
                     {workspace.name}
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -177,6 +207,13 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      {/* Edit Workspace Modal */}
+      <WorkspaceEditModal
+        workspace={editingWorkspace}
+        onClose={() => setEditingWorkspace(null)}
+        onSave={handleSaveWorkspace}
+      />
     </div>
   );
 };
