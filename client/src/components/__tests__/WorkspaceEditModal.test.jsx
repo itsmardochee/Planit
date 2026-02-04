@@ -6,6 +6,8 @@ import {
   vi,
   beforeEach as vitestBeforeEach,
 } from 'vitest';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import WorkspaceEditModal from '../WorkspaceEditModal';
 
 describe('WorkspaceEditModal', () => {
@@ -24,11 +26,13 @@ describe('WorkspaceEditModal', () => {
 
   it('renders modal with workspace data', () => {
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     expect(screen.getByText('Edit Workspace')).toBeInTheDocument();
@@ -38,11 +42,13 @@ describe('WorkspaceEditModal', () => {
 
   it('does not render when workspace is null', () => {
     const { container } = render(
-      <WorkspaceEditModal
-        workspace={null}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={null}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     expect(container.firstChild).toBeNull();
@@ -50,11 +56,13 @@ describe('WorkspaceEditModal', () => {
 
   it('updates name input value', () => {
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const nameInput = screen.getByLabelText(/workspace name/i);
@@ -65,11 +73,13 @@ describe('WorkspaceEditModal', () => {
 
   it('updates description input value', () => {
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const descriptionInput = screen.getByLabelText(/description/i);
@@ -82,11 +92,13 @@ describe('WorkspaceEditModal', () => {
 
   it('shows error when name is empty', async () => {
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const nameInput = screen.getByLabelText(/workspace name/i);
@@ -108,11 +120,13 @@ describe('WorkspaceEditModal', () => {
     mockOnSave.mockResolvedValueOnce();
 
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const nameInput = screen.getByLabelText(/workspace name/i);
@@ -140,11 +154,13 @@ describe('WorkspaceEditModal', () => {
     mockOnSave.mockResolvedValueOnce();
 
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const nameInput = screen.getByLabelText(/workspace name/i);
@@ -163,11 +179,13 @@ describe('WorkspaceEditModal', () => {
 
   it('calls onClose when Cancel button is clicked', () => {
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const cancelButton = screen.getByText('Cancel');
@@ -182,11 +200,13 @@ describe('WorkspaceEditModal', () => {
     );
 
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const saveButton = screen.getByText('Save Changes');
@@ -203,11 +223,13 @@ describe('WorkspaceEditModal', () => {
     });
 
     render(
-      <WorkspaceEditModal
-        workspace={mockWorkspace}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />
+      <I18nextProvider i18n={i18n}>
+        <WorkspaceEditModal
+          workspace={mockWorkspace}
+          onClose={mockOnClose}
+          onSave={mockOnSave}
+        />
+      </I18nextProvider>
     );
 
     const saveButton = screen.getByText('Save Changes');

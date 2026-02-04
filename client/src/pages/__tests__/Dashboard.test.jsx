@@ -4,6 +4,8 @@ import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { ThemeProvider } from '../../contexts/ThemeContext';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import * as apiModule from '../../utils/api';
 
 // Mock useNavigate globally before importing Dashboard
@@ -60,7 +62,9 @@ function renderWithProviders(ui, { store } = {}) {
   return render(
     <Provider store={testStore}>
       <ThemeProvider>
-        <MemoryRouter>{ui}</MemoryRouter>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter>{ui}</MemoryRouter>
+        </I18nextProvider>
       </ThemeProvider>
     </Provider>
   );
@@ -90,7 +94,9 @@ describe('Dashboard Page', () => {
     const store = getStore();
     renderWithProviders(<Dashboard />, { store });
     await waitFor(() => {
-      expect(screen.getByText(/no workspaces yet/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/aucun workspace pour le moment|no workspaces yet/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -113,10 +119,12 @@ describe('Dashboard Page', () => {
     const store = getStore();
     renderWithProviders(<Dashboard />, { store });
     const button = await screen.findByRole('button', {
-      name: /new workspace/i,
+      name: /nouveau workspace|new workspace/i,
     });
     fireEvent.click(button);
-    expect(screen.getByText(/create a new workspace/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/créer un nouveau workspace|create a new workspace/i)
+    ).toBeInTheDocument();
   });
 
   it('navigates to workspace boards on click', async () => {

@@ -1,0 +1,15 @@
+{
+  "detailsTitle": "Détails de la carte",
+  "titleLabel": "Titre",
+  "descriptionLabel": "Description",
+  "descriptionPlaceholder": "Ajoutez une description plus détaillée...",
+  "informationTitle": "Information",
+  "idLabel": "ID",
+  "createdOn": "Créée le",
+  "updatedOn": "Modifiée le",
+  "delete": "Supprimer",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "saving": "Enregistrement...",
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette carte ?"
+}

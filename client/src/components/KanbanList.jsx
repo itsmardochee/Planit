@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -16,6 +17,7 @@ const KanbanList = ({
   onListUpdate,
   onEditList,
 }) => {
+  const { t } = useTranslation(['lists', 'common']);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
 
@@ -86,7 +88,7 @@ const KanbanList = ({
   const handleDeleteList = async () => {
     if (
       !window.confirm(
-        `Are you sure you want to delete "${list.name}"? This will also delete all cards in this list. This action cannot be undone.`
+        t('common:messages.confirmDeleteList', { name: list.name })
       )
     ) {
       return;
@@ -123,7 +125,7 @@ const KanbanList = ({
             {list.name}
           </h3>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            {cards.length} cards
+            {t('lists:cardsCount', { count: cards.length })}
           </p>
         </div>
         <div className="flex gap-1">
@@ -132,14 +134,14 @@ const KanbanList = ({
               onClick={() => onEditList(list)}
               className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
             >
-              Edit
+              {t('lists:edit')}
             </button>
           )}
           <button
             onClick={handleDeleteList}
             className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-gray-700 transition"
           >
-            Delete
+            {t('lists:delete')}
           </button>
         </div>
       </div>
@@ -171,7 +173,7 @@ const KanbanList = ({
           <textarea
             value={newCardTitle}
             onChange={e => setNewCardTitle(e.target.value)}
-            placeholder="Enter card title..."
+            placeholder={t('lists:cardTitlePlaceholder')}
             className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
             rows="2"
             autoFocus
@@ -181,7 +183,7 @@ const KanbanList = ({
               type="submit"
               className="px-3 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
             >
-              Add
+              {t('lists:addCard')}
             </button>
             <button
               type="button"
@@ -191,7 +193,7 @@ const KanbanList = ({
               }}
               className="px-3 py-2 bg-gray-400 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-700 text-white rounded-lg text-sm transition"
             >
-              Cancel
+              {t('lists:cancel')}
             </button>
           </div>
         </form>
@@ -200,7 +202,7 @@ const KanbanList = ({
           onClick={() => setShowNewCardForm(true)}
           className="w-full text-left px-3 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition"
         >
-          + Add a card
+          + {t('lists:addAnotherCard')}
         </button>
       )}
     </div>

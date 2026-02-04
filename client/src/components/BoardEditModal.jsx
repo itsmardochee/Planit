@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 const BoardEditModal = ({ board, onClose, onSave }) => {
+  const { t } = useTranslation(['modals', 'common']);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
     setError('');
 
     if (!name.trim()) {
-      setError('Board name is required');
+      setError(t('modals:board.requiredError'));
       return;
     }
 
@@ -28,7 +30,7 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
       await onSave({ name: name.trim(), description: description.trim() });
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update board');
+      setError(err.response?.data?.message || t('modals:board.updateError'));
     } finally {
       setLoading(false);
     }
@@ -39,7 +41,9 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 dark:text-white">Edit Board</h2>
+        <h2 className="text-2xl font-bold mb-4 dark:text-white">
+          {t('modals:board.title')}
+        </h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -47,7 +51,7 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
               htmlFor="board-name"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Board Name *
+              {t('modals:board.nameLabel')}
             </label>
             <input
               id="board-name"
@@ -55,7 +59,7 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter board name"
+              placeholder={t('modals:board.namePlaceholder')}
               required
             />
           </div>
@@ -65,14 +69,14 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
               htmlFor="board-description"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Description
+              {t('modals:board.descriptionLabel')}
             </label>
             <textarea
               id="board-description"
               value={description}
               onChange={e => setDescription(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter board description (optional)"
+              placeholder={t('modals:board.descriptionPlaceholder')}
               rows={3}
             />
           </div>
@@ -90,14 +94,14 @@ const BoardEditModal = ({ board, onClose, onSave }) => {
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               disabled={loading}
             >
-              Cancel
+              {t('modals:board.cancel')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
               disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? t('modals:board.saving') : t('modals:board.save')}
             </button>
           </div>
         </form>

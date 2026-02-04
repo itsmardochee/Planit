@@ -1,0 +1,13 @@
+{
+  "back": "Retour",
+  "loading": "Chargement...",
+  "addNewList": "Ajouter une nouvelle liste",
+  "listTitlePlaceholder": "Titre de la liste",
+  "add": "Ajouter",
+  "cancel": "Annuler",
+  "addAnotherList": "Ajouter une autre liste",
+  "errors": {
+    "loadingBoard": "Erreur lors du chargement du board",
+    "creatingList": "Erreur lors de la création de la liste"
+  }
+}

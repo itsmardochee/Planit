@@ -1,0 +1,33 @@
+{
+  "buttons": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "add": "Ajouter",
+    "logout": "Déconnexion",
+    "back": "Retour"
+  },
+  "messages": {
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également tous les {{children}}. Cette action est irréversible.",
+    "confirmDeleteWorkspace": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également tous les boards, listes et cartes de ce workspace. Cette action est irréversible.",
+    "confirmDeleteBoard": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les listes et cartes de ce board. Cette action est irréversible.",
+    "confirmDeleteList": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les cartes de cette liste. Cette action est irréversible.",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "success": "Opération réussie",
+    "noData": "Aucune donnée disponible",
+    "noDescription": "Aucune description"
+  },
+  "labels": {
+    "name": "Nom",
+    "description": "Description",
+    "createdAt": "Créé le",
+    "language": "Langue"
+  },
+  "languages": {
+    "en": "English",
+    "fr": "Français"
+  }
+}
