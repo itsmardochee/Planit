@@ -1,0 +1,15 @@
+{
+  "detailsTitle": "Card details",
+  "titleLabel": "Title",
+  "descriptionLabel": "Description",
+  "descriptionPlaceholder": "Add a more detailed description...",
+  "informationTitle": "Information",
+  "idLabel": "ID",
+  "createdOn": "Created on",
+  "updatedOn": "Modified on",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "save": "Save",
+  "saving": "Saving...",
+  "confirmDelete": "Are you sure you want to delete this card?"
+}

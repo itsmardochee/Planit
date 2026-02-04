@@ -1,0 +1,14 @@
+{
+  "backToWorkspaces": "Back to workspaces",
+  "boardsTitle": "Boards",
+  "newBoard": "New Board",
+  "createBoard": "Create a new board",
+  "boardName": "Board name",
+  "boardNamePlaceholder": "My new board",
+  "noBoards": "No boards yet",
+  "errors": {
+    "loadingWorkspace": "Error loading workspace",
+    "creatingBoard": "Error creating board",
+    "deletingBoard": "Error deleting board"
+  }
+}

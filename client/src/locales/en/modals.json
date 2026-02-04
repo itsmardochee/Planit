@@ -1,0 +1,36 @@
+{
+  "workspace": {
+    "title": "Edit Workspace",
+    "nameLabel": "Workspace Name *",
+    "namePlaceholder": "Enter workspace name",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter workspace description (optional)",
+    "requiredError": "Workspace name is required",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "updateError": "Failed to update workspace"
+  },
+  "board": {
+    "title": "Edit Board",
+    "nameLabel": "Board Name *",
+    "namePlaceholder": "Enter board name",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter board description (optional)",
+    "requiredError": "Board name is required",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "updateError": "Failed to update board"
+  },
+  "list": {
+    "title": "Edit List",
+    "nameLabel": "List Name *",
+    "namePlaceholder": "Enter list name",
+    "requiredError": "List name is required",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "updateError": "Failed to update list"
+  }
+}

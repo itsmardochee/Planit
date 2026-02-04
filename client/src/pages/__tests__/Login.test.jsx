@@ -3,6 +3,9 @@ import { describe, it, expect } from 'vitest';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
+import { ThemeProvider } from '../../contexts/ThemeContext';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import Login from '../Login.jsx';
 import { vi } from 'vitest';
 import * as apiModule from '../../utils/api';
@@ -18,7 +21,11 @@ function renderWithProviders(ui, { store } = {}) {
     });
   return render(
     <Provider store={testStore}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <ThemeProvider>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter>{ui}</MemoryRouter>
+        </I18nextProvider>
+      </ThemeProvider>
     </Provider>
   );
 }

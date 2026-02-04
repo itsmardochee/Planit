@@ -1,0 +1,10 @@
+{
+  "cardsCount_one": "{{count}} card",
+  "cardsCount_other": "{{count}} cards",
+  "edit": "Edit",
+  "delete": "Delete",
+  "addCard": "Add",
+  "addAnotherCard": "Add a card",
+  "cardTitlePlaceholder": "Enter card title...",
+  "cancel": "Cancel"
+}

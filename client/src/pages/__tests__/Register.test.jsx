@@ -1,23 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import { Provider } from 'react-redux';
-import { MemoryRouter } from 'react-router-dom';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it } from 'vitest';
 // import Register from '../Register.jsx'; // Uncomment when Register.jsx exists
-// import * as apiModule from '../../utils/api';
-
-function renderWithProviders(ui, { store } = {}) {
-  const testStore =
-    store ||
-    configureStore({
-      reducer: {}, // Add reducers if needed
-    });
-  return render(
-    <Provider store={testStore}>
-      <MemoryRouter>{ui}</MemoryRouter>
-    </Provider>
-  );
-}
 
 describe('Register Page', () => {
   it('renders username, email, password, and confirm password fields', () => {

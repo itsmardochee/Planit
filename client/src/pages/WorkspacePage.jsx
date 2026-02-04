@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { setBoards } from '../store/index';
 import { workspaceAPI, boardAPI } from '../utils/api';
+import BoardEditModal from '../components/BoardEditModal';
 
 const WorkspacePage = () => {
+  const { t } = useTranslation(['workspace', 'common']);
   const { workspaceId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -13,6 +16,7 @@ const WorkspacePage = () => {
   const [loading, setLoading] = useState(true);
   const [showNewBoardForm, setShowNewBoardForm] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
+  const [editingBoard, setEditingBoard] = useState(null);
 
   useEffect(() => {
     const fetchWorkspaceAndBoards = async () => {
@@ -55,7 +59,7 @@ const WorkspacePage = () => {
       }
     } catch (err) {
       console.error('Error creating board', err);
-      alert(err.response?.data?.message || 'Error creating board');
+      alert(err.response?.data?.message || t('workspace:errors.creatingBoard'));
     }
   };
 
@@ -63,30 +67,74 @@ const WorkspacePage = () => {
     navigate(`/board/${boardId}`);
   };
 
+  const handleEditBoard = (e, board) => {
+    e.stopPropagation();
+    setEditingBoard(board);
+  };
+
+  const handleSaveBoard = async updatedData => {
+    const response = await boardAPI.update(editingBoard._id, updatedData);
+    if (response.data.success) {
+      const updatedBoard = response.data.data;
+      setLocalBoards(prevBoards =>
+        prevBoards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+      );
+      dispatch(
+        setBoards(
+          boards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+        )
+      );
+    }
+  };
+
+  const handleDeleteBoard = async (e, boardId, boardName) => {
+    e.stopPropagation();
+
+    if (
+      !window.confirm(
+        t('common:messages.confirmDeleteBoard', { name: boardName })
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await boardAPI.delete(boardId);
+      const updatedBoards = boards.filter(b => b._id !== boardId);
+      setLocalBoards(updatedBoards);
+      dispatch(setBoards(updatedBoards));
+    } catch (err) {
+      console.error('Error deleting board', err);
+      alert(err.response?.data?.message || t('workspace:errors.deletingBoard'));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">{t('common:messages.loading')}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-trello-blue hover:underline text-sm mb-2"
+            className="text-trello-blue dark:text-blue-400 hover:underline text-sm mb-2"
           >
-            ← Back to workspaces
+            ← {t('workspace:backToWorkspaces')}
           </button>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
             {workspace?.name}
           </h1>
           {workspace?.description && (
-            <p className="text-gray-600 mt-1">{workspace.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
+              {workspace.description}
+            </p>
           )}
         </div>
       </header>
@@ -95,19 +143,21 @@ const WorkspacePage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* New Board Form */}
         {showNewBoardForm && (
-          <div className="mb-8 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Create a new board</h2>
+          <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">
+              {t('workspace:createBoard')}
+            </h2>
             <form onSubmit={handleCreateBoard} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Board name
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('workspace:boardName')}
                 </label>
                 <input
                   type="text"
                   value={newBoardName}
                   onChange={e => setNewBoardName(e.target.value)}
-                  placeholder="My new board"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+                  placeholder={t('workspace:boardNamePlaceholder')}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
                   autoFocus
                 />
               </div>
@@ -116,14 +166,14 @@ const WorkspacePage = () => {
                   type="submit"
                   className="px-4 py-2 bg-trello-blue hover:bg-trello-blue-dark text-white rounded-lg transition"
                 >
-                  Create
+                  {t('common:buttons.create')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowNewBoardForm(false)}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white rounded-lg transition"
                 >
-                  Cancel
+                  {t('common:buttons.cancel')}
                 </button>
               </div>
             </form>
@@ -133,20 +183,24 @@ const WorkspacePage = () => {
         {/* Boards Grid */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Boards</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              {t('workspace:boardsTitle')}
+            </h2>
             {!showNewBoardForm && (
               <button
                 onClick={() => setShowNewBoardForm(true)}
                 className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg transition"
               >
-                + New Board
+                + {t('workspace:newBoard')}
               </button>
             )}
           </div>
 
           {boards.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg">
-              <p className="text-gray-600">No boards yet</p>
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('workspace:noBoards')}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -154,14 +208,29 @@ const WorkspacePage = () => {
                 <div
                   key={board._id}
                   onClick={() => handleBoardClick(board._id)}
-                  className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white"
+                  className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white relative"
                 >
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <button
+                      onClick={e => handleEditBoard(e, board)}
+                      className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
+                    >
+                      {t('common:buttons.edit')}
+                    </button>
+                    <button
+                      onClick={e => handleDeleteBoard(e, board._id, board.name)}
+                      className="bg-red-500 bg-opacity-60 hover:bg-opacity-80 text-white px-3 py-1 rounded text-sm transition"
+                    >
+                      {t('common:buttons.delete')}
+                    </button>
+                  </div>
                   <h3 className="text-lg font-semibold mb-2">{board.name}</h3>
                   <p className="text-sm opacity-90">
-                    {board.description || 'No description'}
+                    {board.description || t('common:messages.noDescription')}
                   </p>
                   <div className="mt-4 pt-4 border-t border-white border-opacity-30 text-xs opacity-75">
-                    Created on {new Date(board.createdAt).toLocaleDateString()}
+                    {t('common:labels.createdAt')}{' '}
+                    {new Date(board.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               ))}
@@ -169,6 +238,12 @@ const WorkspacePage = () => {
           )}
         </div>
       </main>
+
+      <BoardEditModal
+        board={editingBoard}
+        onClose={() => setEditingBoard(null)}
+        onSave={handleSaveBoard}
+      />
     </div>
   );
 };

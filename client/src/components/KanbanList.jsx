@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { cardAPI } from '../utils/api';
+import { cardAPI, listAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
 
 const KanbanList = ({
@@ -12,19 +15,47 @@ const KanbanList = ({
   boardId,
   onCardClick,
   onListUpdate,
-  activeCardId,
-  overId,
+  onEditList,
 }) => {
+  const { t } = useTranslation(['lists', 'common']);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
 
-  const { setNodeRef, isOver } = useDroppable({
+  // Make the list itself draggable
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: list._id,
+    data: {
+      type: 'list',
+      list,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `list-${list._id}`,
     data: {
       type: 'list',
       listId: list._id,
     },
   });
+
+  // Combine refs
+  const setNodeRef = node => {
+    setSortableRef(node);
+    setDroppableRef(node);
+  };
 
   const cards = list.cards || [];
 
@@ -54,19 +85,65 @@ const KanbanList = ({
     onListUpdate();
   };
 
+  const handleDeleteList = async () => {
+    if (
+      !window.confirm(
+        t('common:messages.confirmDeleteList', { name: list.name })
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await listAPI.delete(list._id);
+      // Notify parent to refresh
+      onListUpdate();
+    } catch (err) {
+      console.error('Error deleting list', err);
+      alert('Error deleting list');
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
-      className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow transition-all duration-200 ${
+      style={style}
+      className={`flex-shrink-0 w-80 bg-gray-200 dark:bg-gray-800 rounded-lg p-4 shadow transition-all duration-200 ${
         isOver
-          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 scale-[1.02]'
+          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 dark:bg-blue-900 scale-[1.02]'
           : ''
-      }`}
+      } ${isDragging ? 'cursor-grabbing' : ''}`}
     >
       {/* List Header */}
-      <div className="mb-4">
-        <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
-        <p className="text-xs text-gray-600">{cards.length} cards</p>
+      <div className="mb-4 flex justify-between items-start">
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex-1 cursor-grab active:cursor-grabbing"
+        >
+          <h3 className="font-semibold text-gray-800 dark:text-white text-lg">
+            {list.name}
+          </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            {t('lists:cardsCount', { count: cards.length })}
+          </p>
+        </div>
+        <div className="flex gap-1">
+          {onEditList && (
+            <button
+              onClick={() => onEditList(list)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+            >
+              {t('lists:edit')}
+            </button>
+          )}
+          <button
+            onClick={handleDeleteList}
+            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-gray-700 transition"
+          >
+            {t('lists:delete')}
+          </button>
+        </div>
       </div>
 
       {/* Cards Container */}
@@ -96,8 +173,8 @@ const KanbanList = ({
           <textarea
             value={newCardTitle}
             onChange={e => setNewCardTitle(e.target.value)}
-            placeholder="Enter card title..."
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
+            placeholder={t('lists:cardTitlePlaceholder')}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
             rows="2"
             autoFocus
           />
@@ -106,7 +183,7 @@ const KanbanList = ({
               type="submit"
               className="px-3 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
             >
-              Add
+              {t('lists:addCard')}
             </button>
             <button
               type="button"
@@ -114,18 +191,18 @@ const KanbanList = ({
                 setShowNewCardForm(false);
                 setNewCardTitle('');
               }}
-              className="px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm transition"
+              className="px-3 py-2 bg-gray-400 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-700 text-white rounded-lg text-sm transition"
             >
-              Cancel
+              {t('lists:cancel')}
             </button>
           </div>
         </form>
       ) : (
         <button
           onClick={() => setShowNewCardForm(true)}
-          className="w-full text-left px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+          className="w-full text-left px-3 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition"
         >
-          + Add a card
+          + {t('lists:addAnotherCard')}
         </button>
       )}
     </div>

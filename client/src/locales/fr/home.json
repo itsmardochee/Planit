@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "login": "Connexion"
+  },
+  "hero": {
+    "title": "Planifiez votre succès, un board à la fois",
+    "subtitle": "Planit est une application Kanban simple et puissante pour gérer vos projets et équipes. Inspirée de Trello, construite avec les meilleures technologies modernes.",
+    "getStarted": "Commencer gratuitement",
+    "signUp": "S'inscrire"
+  },
+  "features": {
+    "title": "Fonctionnalités",
+    "boards": {
+      "title": "Boards intuitifs",
+      "description": "Organisez vos idées avec des boards Kanban faciles à utiliser et à comprendre."
+    },
+    "management": {
+      "title": "Gestion fluide",
+      "description": "Glissez-déposez vos cartes entre les listes pour une gestion de projet sans effort."
+    },
+    "production": {
+      "title": "Prêt pour la production",
+      "description": "Construit avec React, Node.js et MongoDB pour une expérience fiable et rapide."
+    }
+  },
+  "tech": {
+    "title": "Construit avec"
+  }
+}
