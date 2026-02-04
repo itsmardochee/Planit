@@ -6,7 +6,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { cardAPI } from '../utils/api';
+import { cardAPI, listAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
 
 const KanbanList = ({
@@ -85,6 +85,21 @@ const KanbanList = ({
     onListUpdate();
   };
 
+  const handleDeleteList = async () => {
+    if (!window.confirm(`Are you sure you want to delete "${list.name}"? This will also delete all cards in this list. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await listAPI.delete(list._id);
+      // Notify parent to refresh
+      onListUpdate();
+    } catch (err) {
+      console.error('Error deleting list', err);
+      alert('Error deleting list');
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -105,14 +120,22 @@ const KanbanList = ({
           <h3 className="font-semibold text-gray-800 dark:text-white text-lg">{list.name}</h3>
           <p className="text-xs text-gray-600 dark:text-gray-400">{cards.length} cards</p>
         </div>
-        {onEditList && (
+        <div className="flex gap-1">
+          {onEditList && (
+            <button
+              onClick={() => onEditList(list)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+            >
+              Edit
+            </button>
+          )}
           <button
-            onClick={() => onEditList(list)}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+            onClick={handleDeleteList}
+            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-gray-700 transition"
           >
-            Edit
+            Delete
           </button>
-        )}
+        </div>
       </div>
 
       {/* Cards Container */}

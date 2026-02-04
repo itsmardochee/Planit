@@ -89,6 +89,24 @@ const WorkspacePage = () => {
     }
   };
 
+  const handleDeleteBoard = async (e, boardId, boardName) => {
+    e.stopPropagation();
+    
+    if (!window.confirm(`Are you sure you want to delete "${boardName}"? This will also delete all lists and cards in this board. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await boardAPI.delete(boardId);
+      const updatedBoards = boards.filter(b => b._id !== boardId);
+      setLocalBoards(updatedBoards);
+      dispatch(setBoards(updatedBoards));
+    } catch (err) {
+      console.error('Error deleting board', err);
+      alert(err.response?.data?.message || 'Error deleting board');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -182,12 +200,20 @@ const WorkspacePage = () => {
                   onClick={() => handleBoardClick(board._id)}
                   className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white relative"
                 >
-                  <button
-                    onClick={e => handleEditBoard(e, board)}
-                    className="absolute top-2 right-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
-                  >
-                    Edit
-                  </button>
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <button
+                      onClick={e => handleEditBoard(e, board)}
+                      className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={e => handleDeleteBoard(e, board._id, board.name)}
+                      className="bg-red-500 bg-opacity-60 hover:bg-opacity-80 text-white px-3 py-1 rounded text-sm transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
                   <h3 className="text-lg font-semibold mb-2">{board.name}</h3>
                   <p className="text-sm opacity-90">
                     {board.description || 'No description'}

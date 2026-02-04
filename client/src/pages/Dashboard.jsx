@@ -87,6 +87,24 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteWorkspace = async (e, workspaceId, workspaceName) => {
+    e.stopPropagation();
+    
+    if (!window.confirm(`Are you sure you want to delete "${workspaceName}"? This will also delete all boards, lists, and cards in this workspace. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await workspaceAPI.delete(workspaceId);
+      const updatedWorkspaces = workspaces.filter(w => w._id !== workspaceId);
+      dispatch(setWorkspaces(updatedWorkspaces));
+      setError('');
+    } catch (err) {
+      setError('Error deleting workspace');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Header */}
@@ -185,13 +203,22 @@ const Dashboard = () => {
                   onClick={() => handleWorkspaceClick(workspace._id)}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 relative"
                 >
-                  <button
-                    onClick={e => handleEditWorkspace(e, workspace)}
-                    className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
-                    title="Edit workspace"
-                  >
-                    ✏️
-                  </button>
+                  <div className="absolute top-4 right-4 flex gap-1">
+                    <button
+                      onClick={e => handleEditWorkspace(e, workspace)}
+                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
+                      title="Edit workspace"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={e => handleDeleteWorkspace(e, workspace._id, workspace.name)}
+                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
+                      title="Delete workspace"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 pr-8">
                     {workspace.name}
                   </h3>
