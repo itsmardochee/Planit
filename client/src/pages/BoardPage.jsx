@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
@@ -23,6 +24,7 @@ import {
 } from '@dnd-kit/sortable';
 
 const BoardPage = () => {
+  const { t } = useTranslation(['board', 'common']);
   const { boardId } = useParams();
   const navigate = useNavigate();
 
@@ -314,7 +316,7 @@ const BoardPage = () => {
       }
     } catch (err) {
       console.error('Error creating list', err);
-      alert(err.response?.data?.message || 'Error creating list');
+      alert(err.response?.data?.message || t('board:errors.creatingList'));
     }
   };
 
@@ -346,7 +348,7 @@ const BoardPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-blue-500 dark:bg-blue-900 flex items-center justify-center transition-colors">
-        <p className="text-white">Loading...</p>
+        <p className="text-white">{t('board:loading')}</p>
       </div>
     );
   }
@@ -368,7 +370,7 @@ const BoardPage = () => {
               onClick={() => navigate(-1)}
               className="text-white hover:opacity-80 text-sm mb-2 inline-block"
             >
-              ← Back
+              ← {t('board:back')}
             </button>
             <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
             {board?.description && (
@@ -402,14 +404,14 @@ const BoardPage = () => {
               {showNewListForm ? (
                 <div className="bg-gray-700 dark:bg-gray-800 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-3">
-                    Add a new list
+                    {t('board:addNewList')}
                   </h3>
                   <form onSubmit={handleCreateList} className="space-y-2">
                     <input
                       type="text"
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
-                      placeholder="List title"
+                      placeholder={t('board:listTitlePlaceholder')}
                       className="w-full px-3 py-2 bg-gray-600 dark:bg-gray-900 text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-trello-blue outline-none"
                       autoFocus
                     />
@@ -418,14 +420,14 @@ const BoardPage = () => {
                         type="submit"
                         className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
                       >
-                        Add
+                        {t('board:add')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowNewListForm(false)}
                         className="px-4 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-500 dark:hover:bg-gray-600 text-white rounded-lg text-sm transition"
                       >
-                        Cancel
+                        {t('board:cancel')}
                       </button>
                     </div>
                   </form>
@@ -435,7 +437,7 @@ const BoardPage = () => {
                   onClick={() => setShowNewListForm(true)}
                   className="w-80 bg-gray-700 dark:bg-gray-800 hover:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
                 >
-                  + Add another list
+                  + {t('board:addAnotherList')}
                 </button>
               )}
             </div>

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { loginSuccess, loginError } from '../store/index';
 import { authAPI } from '../utils/api';
 import DarkModeToggle from '../components/DarkModeToggle';
+import LanguageSelector from '../components/LanguageSelector';
 
 const Login = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -25,7 +28,7 @@ const Login = () => {
 
     // Validation
     if (isRegister && password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth:login.errors.passwordMismatch'));
       setLoading(false);
       return;
     }
@@ -76,7 +79,7 @@ const Login = () => {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        'An error occurred. Please try again.';
+        t('common:messages.error');
       setError(message);
       dispatch(loginError(message));
     } finally {
@@ -87,12 +90,13 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-900 dark:to-blue-950 flex items-center justify-center px-4 transition-colors relative">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex items-center gap-3">
+        <LanguageSelector />
         <DarkModeToggle />
       </div>
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
         <h1 className="text-2xl font-bold text-center mb-4 dark:text-white">
-          {isRegister ? 'Create an account' : 'Sign in to Planit'}
+          {isRegister ? t('auth:register.title') : t('auth:login.title')}
         </h1>
         {error && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
@@ -104,7 +108,7 @@ const Login = () => {
           {isRegister && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Username
+                {t('auth:register.username')}
               </label>
               <input
                 type="text"
@@ -112,14 +116,14 @@ const Login = () => {
                 onChange={e => setUsername(e.target.value)}
                 required={isRegister}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Your username"
+                placeholder={t('auth:register.usernamePlaceholder')}
               />
             </div>
           )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
+              {t('auth:login.email')}
             </label>
             <input
               type="email"
@@ -127,13 +131,13 @@ const Login = () => {
               onChange={e => setEmail(e.target.value)}
               required
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="you@example.com"
+              placeholder={t('auth:login.emailPlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
+              {t('auth:login.password')}
             </label>
             <input
               type="password"
@@ -142,14 +146,14 @@ const Login = () => {
               required
               minLength={6}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Your password"
+              placeholder={t('auth:register.passwordPlaceholder')}
             />
           </div>
 
           {isRegister && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Confirm Password
+                {t('auth:register.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -158,7 +162,7 @@ const Login = () => {
                 required={isRegister}
                 minLength={6}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Confirm password"
+                placeholder={t('auth:register.confirmPasswordPlaceholder')}
               />
             </div>
           )}
@@ -169,10 +173,12 @@ const Login = () => {
             className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
           >
             {loading
-              ? 'Please wait...'
+              ? isRegister
+                ? t('auth:register.loading')
+                : t('auth:login.loading')
               : isRegister
-                ? 'Create account'
-                : 'Sign in'}
+                ? t('auth:register.signUp')
+                : t('auth:login.signIn')}
           </button>
         </form>
 
@@ -182,8 +188,8 @@ const Login = () => {
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
             {isRegister
-              ? 'Already have an account? Sign in'
-              : "Don't have an account? Create one"}
+              ? t('auth:register.toggleToLogin')
+              : t('auth:login.toggleToRegister')}
           </button>
         </div>
       </div>

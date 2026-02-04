@@ -17,7 +17,8 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "success": "Operation successful",
-    "noData": "No data available"
+    "noData": "No data available",
+    "noDescription": "No description"
   },
   "labels": {
     "name": "Name",

@@ -1,6 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import BoardEditModal from '../BoardEditModal';
+
+const renderWithI18n = ui =>
+  render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>);
 
 describe('BoardEditModal', () => {
   const mockBoard = {
@@ -17,14 +22,14 @@ describe('BoardEditModal', () => {
   });
 
   it('renders nothing when board is null', () => {
-    const { container } = render(
+    const { container } = renderWithI18n(
       <BoardEditModal board={null} onClose={mockOnClose} onSave={mockOnSave} />
     );
     expect(container.firstChild).toBeNull();
   });
 
   it('renders modal with board data', () => {
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -40,7 +45,7 @@ describe('BoardEditModal', () => {
   });
 
   it('updates name input value on change', () => {
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -54,7 +59,7 @@ describe('BoardEditModal', () => {
   });
 
   it('updates description input value on change', () => {
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -70,7 +75,7 @@ describe('BoardEditModal', () => {
   });
 
   it('shows error when submitting with empty name', async () => {
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -94,7 +99,7 @@ describe('BoardEditModal', () => {
   it('calls onSave with trimmed values on valid submit', async () => {
     mockOnSave.mockResolvedValue({});
 
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -124,7 +129,7 @@ describe('BoardEditModal', () => {
   });
 
   it('calls onClose when cancel button is clicked', () => {
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -144,7 +149,7 @@ describe('BoardEditModal', () => {
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -169,7 +174,7 @@ describe('BoardEditModal', () => {
       response: { data: { message: errorMessage } },
     });
 
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}
@@ -190,7 +195,7 @@ describe('BoardEditModal', () => {
   it('displays generic error message when error has no response', async () => {
     mockOnSave.mockRejectedValue(new Error('Network error'));
 
-    render(
+    renderWithI18n(
       <BoardEditModal
         board={mockBoard}
         onClose={mockOnClose}

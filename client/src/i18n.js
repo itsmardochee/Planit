@@ -5,21 +5,45 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import commonEN from './locales/en/common.json';
 import dashboardEN from './locales/en/dashboard.json';
 import authEN from './locales/en/auth.json';
+import homeEN from './locales/en/home.json';
+import workspaceEN from './locales/en/workspace.json';
+import boardEN from './locales/en/board.json';
+import listsEN from './locales/en/lists.json';
+import modalsEN from './locales/en/modals.json';
+import cardsEN from './locales/en/cards.json';
 
 import commonFR from './locales/fr/common.json';
 import dashboardFR from './locales/fr/dashboard.json';
 import authFR from './locales/fr/auth.json';
+import homeFR from './locales/fr/home.json';
+import workspaceFR from './locales/fr/workspace.json';
+import boardFR from './locales/fr/board.json';
+import listsFR from './locales/fr/lists.json';
+import modalsFR from './locales/fr/modals.json';
+import cardsFR from './locales/fr/cards.json';
 
 const resources = {
   en: {
     common: commonEN,
     dashboard: dashboardEN,
     auth: authEN,
+    home: homeEN,
+    workspace: workspaceEN,
+    board: boardEN,
+    lists: listsEN,
+    modals: modalsEN,
+    cards: cardsEN,
   },
   fr: {
     common: commonFR,
     dashboard: dashboardFR,
     auth: authFR,
+    home: homeFR,
+    workspace: workspaceFR,
+    board: boardFR,
+    lists: listsFR,
+    modals: modalsFR,
+    cards: cardsFR,
   },
 };
 
@@ -30,7 +54,17 @@ i18n
     resources,
     fallbackLng: 'en', // Fallback language
     defaultNS: 'common', // Default namespace
-    ns: ['common', 'dashboard', 'auth'],
+    ns: [
+      'common',
+      'dashboard',
+      'auth',
+      'home',
+      'workspace',
+      'board',
+      'lists',
+      'modals',
+      'cards',
+    ],
 
     interpolation: {
       escapeValue: false, // React already protects from XSS

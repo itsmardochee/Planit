@@ -1,0 +1,36 @@
+{
+  "workspace": {
+    "title": "Modifier le workspace",
+    "nameLabel": "Nom du workspace *",
+    "namePlaceholder": "Saisir le nom du workspace",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Saisir la description du workspace (optionnel)",
+    "requiredError": "Le nom du workspace est requis",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "updateError": "Échec de la mise à jour du workspace"
+  },
+  "board": {
+    "title": "Modifier le board",
+    "nameLabel": "Nom du board *",
+    "namePlaceholder": "Saisir le nom du board",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Saisir la description du board (optionnel)",
+    "requiredError": "Le nom du board est requis",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "updateError": "Échec de la mise à jour du board"
+  },
+  "list": {
+    "title": "Modifier la liste",
+    "nameLabel": "Nom de la liste *",
+    "namePlaceholder": "Saisir le nom de la liste",
+    "requiredError": "Le nom de la liste est requis",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "updateError": "Échec de la mise à jour de la liste"
+  }
+}

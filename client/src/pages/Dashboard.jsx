@@ -43,7 +43,7 @@ const Dashboard = () => {
     };
 
     fetchWorkspaces();
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [isAuthenticated, navigate, dispatch, t]);
 
   const handleCreateWorkspace = async e => {
     e.preventDefault();
@@ -239,7 +239,8 @@ const Dashboard = () => {
                     {workspace.name}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {workspace.description || 'No description'}
+                    {workspace.description ||
+                      t('common:messages.noDescription')}
                   </p>
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                     {t('common:labels.createdAt')}{' '}

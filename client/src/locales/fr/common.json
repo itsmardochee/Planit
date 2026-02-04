@@ -17,7 +17,8 @@
     "loading": "Chargement...",
     "error": "Une erreur s'est produite",
     "success": "Opération réussie",
-    "noData": "Aucune donnée disponible"
+    "noData": "Aucune donnée disponible",
+    "noDescription": "Aucune description"
   },
   "labels": {
     "name": "Nom",

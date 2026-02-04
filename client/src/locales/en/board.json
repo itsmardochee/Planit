@@ -1,0 +1,13 @@
+{
+  "back": "Back",
+  "loading": "Loading...",
+  "addNewList": "Add a new list",
+  "listTitlePlaceholder": "List title",
+  "add": "Add",
+  "cancel": "Cancel",
+  "addAnotherList": "Add another list",
+  "errors": {
+    "loadingBoard": "Error loading board",
+    "creatingList": "Error creating list"
+  }
+}

@@ -1,6 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import ListEditModal from '../ListEditModal';
+
+const renderWithI18n = ui =>
+  render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>);
 
 describe('ListEditModal', () => {
   const mockList = {
@@ -16,14 +21,14 @@ describe('ListEditModal', () => {
   });
 
   it('renders nothing when list is null', () => {
-    const { container } = render(
+    const { container } = renderWithI18n(
       <ListEditModal list={null} onClose={mockOnClose} onSave={mockOnSave} />
     );
     expect(container.firstChild).toBeNull();
   });
 
   it('renders modal with list data', () => {
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -36,7 +41,7 @@ describe('ListEditModal', () => {
   });
 
   it('updates name input value on change', () => {
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -50,7 +55,7 @@ describe('ListEditModal', () => {
   });
 
   it('shows error when submitting with empty name', async () => {
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -74,7 +79,7 @@ describe('ListEditModal', () => {
   it('calls onSave with trimmed name on valid submit', async () => {
     mockOnSave.mockResolvedValue({});
 
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -98,7 +103,7 @@ describe('ListEditModal', () => {
   });
 
   it('calls onClose when cancel button is clicked', () => {
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -118,7 +123,7 @@ describe('ListEditModal', () => {
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -143,7 +148,7 @@ describe('ListEditModal', () => {
       response: { data: { message: errorMessage } },
     });
 
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
@@ -164,7 +169,7 @@ describe('ListEditModal', () => {
   it('displays generic error message when error has no response', async () => {
     mockOnSave.mockRejectedValue(new Error('Network error'));
 
-    render(
+    renderWithI18n(
       <ListEditModal
         list={mockList}
         onClose={mockOnClose}
