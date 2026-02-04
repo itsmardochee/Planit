@@ -1,0 +1,32 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "logout": "Logout",
+    "back": "Back"
+  },
+  "messages": {
+    "confirmDelete": "Are you sure you want to delete \"{{name}}\"? This will also delete all {{children}}. This action cannot be undone.",
+    "confirmDeleteWorkspace": "Are you sure you want to delete \"{{name}}\"? This will also delete all boards, lists, and cards in this workspace. This action cannot be undone.",
+    "confirmDeleteBoard": "Are you sure you want to delete \"{{name}}\"? This will also delete all lists and cards in this board. This action cannot be undone.",
+    "confirmDeleteList": "Are you sure you want to delete \"{{name}}\"? This will also delete all cards in this list. This action cannot be undone.",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation successful",
+    "noData": "No data available"
+  },
+  "labels": {
+    "name": "Name",
+    "description": "Description",
+    "createdAt": "Created on",
+    "language": "Language"
+  },
+  "languages": {
+    "en": "English",
+    "fr": "Français"
+  }
+}

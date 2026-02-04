@@ -7,6 +7,7 @@ import { store } from './store/index.js';
 import { theme } from './theme/theme.js';
 import { ToastProvider } from './components/ToastProvider.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
+import './i18n'; // Import i18n configuration
 import './index.css';
 import App from './App.jsx';
 

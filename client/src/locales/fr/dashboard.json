@@ -1,0 +1,15 @@
+{
+  "title": "Planit",
+  "welcome": "Bienvenue, {{username}}",
+  "myWorkspaces": "Mes Workspaces",
+  "newWorkspace": "Nouveau Workspace",
+  "createWorkspace": "Créer un nouveau workspace",
+  "workspaceName": "Nom du workspace",
+  "workspaceNamePlaceholder": "Mon nouveau workspace",
+  "noWorkspaces": "Aucun workspace pour le moment",
+  "errors": {
+    "loadingWorkspaces": "Erreur lors du chargement des workspaces",
+    "creatingWorkspace": "Erreur lors de la création du workspace",
+    "deletingWorkspace": "Erreur lors de la suppression du workspace"
+  }
+}
