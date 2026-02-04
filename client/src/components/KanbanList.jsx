@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -19,13 +21,41 @@ const KanbanList = ({
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
 
-  const { setNodeRef, isOver } = useDroppable({
+  // Make the list itself draggable
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: list._id,
+    data: {
+      type: 'list',
+      list,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `list-${list._id}`,
     data: {
       type: 'list',
       listId: list._id,
     },
   });
+
+  // Combine refs
+  const setNodeRef = node => {
+    setSortableRef(node);
+    setDroppableRef(node);
+  };
 
   const cards = list.cards || [];
 
@@ -58,15 +88,20 @@ const KanbanList = ({
   return (
     <div
       ref={setNodeRef}
+      style={style}
       className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow transition-all duration-200 ${
         isOver
           ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 scale-[1.02]'
           : ''
-      }`}
+      } ${isDragging ? 'cursor-grabbing' : ''}`}
     >
       {/* List Header */}
       <div className="mb-4 flex justify-between items-start">
-        <div>
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex-1 cursor-grab active:cursor-grabbing"
+        >
           <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
           <p className="text-xs text-gray-600">{cards.length} cards</p>
         </div>

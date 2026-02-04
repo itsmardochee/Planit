@@ -21,6 +21,7 @@ import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
 const BoardPage = () => {
@@ -118,6 +119,16 @@ const BoardPage = () => {
 
   const handleDragStart = event => {
     const { active } = event;
+    
+    // Check if dragging a list
+    if (active.data?.current?.type === 'list') {
+      setActiveCard(null);
+      setActiveSourceListId(null);
+      setOverId(null);
+      return;
+    }
+    
+    // Dragging a card
     const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
     const card = activeList?.cards.find(c => c._id === active.id);
     setActiveCard(card);
@@ -139,12 +150,31 @@ const BoardPage = () => {
   const handleDragEnd = async event => {
     const { active, over } = event;
 
-    const sourceListId = activeSourceListId;
     setActiveCard(null);
     setOverId(null);
+    const sourceListId = activeSourceListId;
     setActiveSourceListId(null);
 
     if (!over || active.id === over.id) {
+      return;
+    }
+
+    // Handle list reordering
+    if (active.data?.current?.type === 'list' && over.data?.current?.type === 'list') {
+      const oldIndex = lists.findIndex(l => l._id === active.id);
+      const newIndex = lists.findIndex(l => l._id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newLists = arrayMove(lists, oldIndex, newIndex);
+        setLists(newLists);
+        
+        try {
+          await listAPI.reorder(active.id, { position: newIndex });
+        } catch (err) {
+          console.error('Error reordering list', err);
+          await fetchBoardData();
+        }
+      }
       return;
     }
 
@@ -351,18 +381,23 @@ const BoardPage = () => {
         {/* Kanban Board */}
         <main className="py-6 px-4">
           <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 hover:scrollbar-thumb-blue-400">
-            {lists.map(list => (
-              <KanbanList
-                key={list._id}
-                list={list}
-                boardId={boardId}
-                onCardClick={card => handleOpenCardModal(card, list)}
-                onListUpdate={fetchBoardData}
-                onEditList={handleEditList}
-                activeCardId={activeCard?._id}
-                overId={overId}
-              />
-            ))}
+            <SortableContext
+              items={lists.map(l => l._id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {lists.map(list => (
+                <KanbanList
+                  key={list._id}
+                  list={list}
+                  boardId={boardId}
+                  onCardClick={card => handleOpenCardModal(card, list)}
+                  onListUpdate={fetchBoardData}
+                  onEditList={handleEditList}
+                  activeCardId={activeCard?._id}
+                  overId={overId}
+                />
+              ))}
+            </SortableContext>
 
             <div className="flex-shrink-0 w-80">
               {showNewListForm ? (
