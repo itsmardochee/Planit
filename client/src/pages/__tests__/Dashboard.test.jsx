@@ -90,9 +90,7 @@ describe('Dashboard Page', () => {
     const store = getStore();
     renderWithProviders(<Dashboard />, { store });
     await waitFor(() => {
-      expect(
-        screen.getByText(/no workspaces yet/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/no workspaces yet/i)).toBeInTheDocument();
     });
   });
 
@@ -118,9 +116,7 @@ describe('Dashboard Page', () => {
       name: /new workspace/i,
     });
     fireEvent.click(button);
-    expect(
-      screen.getByText(/create a new workspace/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/create a new workspace/i)).toBeInTheDocument();
   });
 
   it('navigates to workspace boards on click', async () => {
