@@ -222,11 +222,13 @@ Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for detailed guide
 ### Quick Deployment Guide
 
 **Step 1: Deploy Backend to Render**
+
 - Follow the comprehensive guide in [docs/DEPLOYMENT-RENDER.md](./docs/DEPLOYMENT-RENDER.md)
 - Set environment variables (`NODE_ENV`, `MONGO_URI`, `JWT_SECRET`, `API_URL`)
 - Test Swagger documentation at `https://your-service.onrender.com/api-docs`
 
 **Step 2: Deploy Frontend to Vercel**
+
 - Follow the guide in [docs/DEPLOYMENT-VERCEL.md](./docs/DEPLOYMENT-VERCEL.md)
 - Configure `VITE_API_URL` to point to your Render backend URL
 - Test the deployed application

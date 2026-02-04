@@ -4,6 +4,7 @@ import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
+import ListEditModal from '../components/ListEditModal';
 import {
   DndContext,
   PointerSensor,
@@ -11,7 +12,6 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  closestCorners,
   DragOverlay,
   pointerWithin,
   rectIntersection,
@@ -19,7 +19,7 @@ import {
 import {
   SortableContext,
   arrayMove,
-  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
 const BoardPage = () => {
@@ -34,8 +34,8 @@ const BoardPage = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardModal, setShowCardModal] = useState(false);
   const [activeCard, setActiveCard] = useState(null);
-  const [overId, setOverId] = useState(null);
   const [activeSourceListId, setActiveSourceListId] = useState(null);
+  const [editingList, setEditingList] = useState(null);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -116,33 +116,61 @@ const BoardPage = () => {
 
   const handleDragStart = event => {
     const { active } = event;
+
+    // Check if dragging a list
+    if (active.data?.current?.type === 'list') {
+      setActiveCard(null);
+      setActiveSourceListId(null);
+      return;
+    }
+
+    // Dragging a card
     const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
     const card = activeList?.cards.find(c => c._id === active.id);
     setActiveCard(card);
     setActiveSourceListId(activeList?._id || null);
-    setOverId(null);
   };
 
   const handleDragOver = event => {
     const { over } = event;
-    setOverId(over?.id || null);
+    if (!over) return;
   };
 
   const handleDragCancel = () => {
     setActiveCard(null);
-    setOverId(null);
     setActiveSourceListId(null);
   };
 
   const handleDragEnd = async event => {
     const { active, over } = event;
 
-    const sourceListId = activeSourceListId;
     setActiveCard(null);
-    setOverId(null);
+    const sourceListId = activeSourceListId;
     setActiveSourceListId(null);
 
     if (!over || active.id === over.id) {
+      return;
+    }
+
+    // Handle list reordering
+    if (
+      active.data?.current?.type === 'list' &&
+      over.data?.current?.type === 'list'
+    ) {
+      const oldIndex = lists.findIndex(l => l._id === active.id);
+      const newIndex = lists.findIndex(l => l._id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newLists = arrayMove(lists, oldIndex, newIndex);
+        setLists(newLists);
+
+        try {
+          await listAPI.reorder(active.id, { position: newIndex });
+        } catch (err) {
+          console.error('Error reordering list', err);
+          await fetchBoardData();
+        }
+      }
       return;
     }
 
@@ -166,7 +194,14 @@ const BoardPage = () => {
 
     // Check if dropping on a list container
     if (over.data?.current?.type === 'list') {
-      const listId = over.data.current.listId;
+      // Can be either listId (from droppable) or list object (from sortable)
+      const listId =
+        over.data.current.listId || over.data.current.list?._id || over.id;
+      destListIndex = lists.findIndex(l => l._id === listId);
+      destList = lists[destListIndex];
+    } else if (over.id.toString().startsWith('list-')) {
+      // Handle case where over.id is the droppable ID (list-xxx)
+      const listId = over.id.toString().replace('list-', '');
       destListIndex = lists.findIndex(l => l._id === listId);
       destList = lists[destListIndex];
     } else {
@@ -297,9 +332,20 @@ const BoardPage = () => {
     await fetchBoardData();
   };
 
+  const handleEditList = list => {
+    setEditingList(list);
+  };
+
+  const handleSaveList = async updatedData => {
+    const response = await listAPI.update(editingList._id, updatedData);
+    if (response.data.success) {
+      await fetchBoardData();
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-blue-500 flex items-center justify-center">
+      <div className="min-h-screen bg-blue-500 dark:bg-blue-900 flex items-center justify-center transition-colors">
         <p className="text-white">Loading...</p>
       </div>
     );
@@ -314,9 +360,9 @@ const BoardPage = () => {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600">
+      <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 transition-colors">
         {/* Header */}
-        <header className="bg-blue-800 shadow">
+        <header className="bg-blue-800 dark:bg-blue-950 shadow">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <button
               onClick={() => navigate(-1)}
@@ -326,7 +372,9 @@ const BoardPage = () => {
             </button>
             <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
             {board?.description && (
-              <p className="text-blue-100 mt-1">{board.description}</p>
+              <p className="text-blue-100 dark:text-blue-200 mt-1">
+                {board.description}
+              </p>
             )}
           </div>
         </header>
@@ -334,21 +382,25 @@ const BoardPage = () => {
         {/* Kanban Board */}
         <main className="py-6 px-4">
           <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 hover:scrollbar-thumb-blue-400">
-            {lists.map(list => (
-              <KanbanList
-                key={list._id}
-                list={list}
-                boardId={boardId}
-                onCardClick={card => handleOpenCardModal(card, list)}
-                onListUpdate={fetchBoardData}
-                activeCardId={activeCard?._id}
-                overId={overId}
-              />
-            ))}
+            <SortableContext
+              items={lists.map(l => l._id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {lists.map(list => (
+                <KanbanList
+                  key={list._id}
+                  list={list}
+                  boardId={boardId}
+                  onCardClick={card => handleOpenCardModal(card, list)}
+                  onListUpdate={fetchBoardData}
+                  onEditList={handleEditList}
+                />
+              ))}
+            </SortableContext>
 
             <div className="flex-shrink-0 w-80">
               {showNewListForm ? (
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-gray-700 dark:bg-gray-800 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-3">
                     Add a new list
                   </h3>
@@ -358,7 +410,7 @@ const BoardPage = () => {
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
                       placeholder="List title"
-                      className="w-full px-3 py-2 bg-gray-600 text-white rounded-lg placeholder-gray-400 focus:ring-2 focus:ring-trello-blue outline-none"
+                      className="w-full px-3 py-2 bg-gray-600 dark:bg-gray-900 text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-trello-blue outline-none"
                       autoFocus
                     />
                     <div className="flex gap-2">
@@ -371,7 +423,7 @@ const BoardPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowNewListForm(false)}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm transition"
+                        className="px-4 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-500 dark:hover:bg-gray-600 text-white rounded-lg text-sm transition"
                       >
                         Cancel
                       </button>
@@ -381,7 +433,7 @@ const BoardPage = () => {
               ) : (
                 <button
                   onClick={() => setShowNewListForm(true)}
-                  className="w-80 bg-gray-700 hover:bg-gray-600 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
+                  className="w-80 bg-gray-700 dark:bg-gray-800 hover:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
                 >
                   + Add another list
                 </button>
@@ -389,6 +441,13 @@ const BoardPage = () => {
             </div>
           </div>
         </main>
+
+        {/* List Edit Modal */}
+        <ListEditModal
+          list={editingList}
+          onClose={() => setEditingList(null)}
+          onSave={handleSaveList}
+        />
 
         {/* Card Modal */}
         {showCardModal && selectedCard && (

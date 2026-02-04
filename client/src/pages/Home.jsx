@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import DarkModeToggle from '../components/DarkModeToggle';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,14 +18,15 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-trello-blue via-blue-500 to-blue-600">
+    <div className="min-h-screen bg-gradient-to-br from-trello-blue via-blue-500 to-blue-600 dark:from-blue-900 dark:via-blue-950 dark:to-gray-900 transition-colors">
       {/* Navigation */}
       <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-white">Planit</h1>
-        <div className="space-x-4">
+        <div className="flex items-center space-x-4">
+          <DarkModeToggle />
           <button
             onClick={() => navigate('/login')}
-            className="px-6 py-2 bg-white text-trello-blue font-semibold rounded-lg hover:bg-gray-100 transition"
+            className="px-6 py-2 bg-white dark:bg-gray-800 text-trello-blue dark:text-blue-400 font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             Login
           </button>
@@ -45,13 +47,13 @@ const Home = () => {
         <div className="space-x-4">
           <button
             onClick={() => navigate('/login')}
-            className="px-8 py-3 bg-white text-trello-blue font-semibold rounded-lg hover:bg-gray-100 transition inline-block"
+            className="px-8 py-3 bg-white dark:bg-gray-800 text-trello-blue dark:text-blue-400 font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition inline-block"
           >
             Get Started Free
           </button>
           <button
             onClick={() => navigate('/login?tab=register')}
-            className="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-trello-blue transition inline-block"
+            className="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white dark:hover:bg-gray-800 hover:text-trello-blue dark:hover:text-blue-400 transition inline-block"
           >
             Sign Up
           </button>
