@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setBoards } from '../store/index';
 import { workspaceAPI, boardAPI } from '../utils/api';
+import BoardEditModal from '../components/BoardEditModal';
 
 const WorkspacePage = () => {
   const { workspaceId } = useParams();
@@ -13,6 +14,7 @@ const WorkspacePage = () => {
   const [loading, setLoading] = useState(true);
   const [showNewBoardForm, setShowNewBoardForm] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
+  const [editingBoard, setEditingBoard] = useState(null);
 
   useEffect(() => {
     const fetchWorkspaceAndBoards = async () => {
@@ -61,6 +63,30 @@ const WorkspacePage = () => {
 
   const handleBoardClick = boardId => {
     navigate(`/board/${boardId}`);
+  };
+
+  const handleEditBoard = (e, board) => {
+    e.stopPropagation();
+    setEditingBoard(board);
+  };
+
+  const handleSaveBoard = async updatedData => {
+    try {
+      const response = await boardAPI.update(editingBoard._id, updatedData);
+      if (response.data.success) {
+        const updatedBoard = response.data.data;
+        setLocalBoards(prevBoards =>
+          prevBoards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+        );
+        dispatch(
+          setBoards(
+            boards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+          )
+        );
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   if (loading) {
@@ -154,8 +180,14 @@ const WorkspacePage = () => {
                 <div
                   key={board._id}
                   onClick={() => handleBoardClick(board._id)}
-                  className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white"
+                  className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white relative"
                 >
+                  <button
+                    onClick={e => handleEditBoard(e, board)}
+                    className="absolute top-2 right-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
+                  >
+                    Edit
+                  </button>
                   <h3 className="text-lg font-semibold mb-2">{board.name}</h3>
                   <p className="text-sm opacity-90">
                     {board.description || 'No description'}
@@ -169,6 +201,12 @@ const WorkspacePage = () => {
           )}
         </div>
       </main>
+
+      <BoardEditModal
+        board={editingBoard}
+        onClose={() => setEditingBoard(null)}
+        onSave={handleSaveBoard}
+      />
     </div>
   );
 };
