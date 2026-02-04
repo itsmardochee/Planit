@@ -89,9 +89,9 @@ const KanbanList = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 shadow transition-all duration-200 ${
+      className={`flex-shrink-0 w-80 bg-gray-200 dark:bg-gray-800 rounded-lg p-4 shadow transition-all duration-200 ${
         isOver
-          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 scale-[1.02]'
+          ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 dark:bg-blue-900 scale-[1.02]'
           : ''
       } ${isDragging ? 'cursor-grabbing' : ''}`}
     >
@@ -102,13 +102,13 @@ const KanbanList = ({
           {...listeners}
           className="flex-1 cursor-grab active:cursor-grabbing"
         >
-          <h3 className="font-semibold text-gray-800 text-lg">{list.name}</h3>
-          <p className="text-xs text-gray-600">{cards.length} cards</p>
+          <h3 className="font-semibold text-gray-800 dark:text-white text-lg">{list.name}</h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400">{cards.length} cards</p>
         </div>
         {onEditList && (
           <button
             onClick={() => onEditList(list)}
-            className="text-gray-500 hover:text-gray-700 text-sm px-2 py-1 rounded hover:bg-gray-300 transition"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
           >
             Edit
           </button>
@@ -143,7 +143,7 @@ const KanbanList = ({
             value={newCardTitle}
             onChange={e => setNewCardTitle(e.target.value)}
             placeholder="Enter card title..."
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none text-sm"
             rows="2"
             autoFocus
           />
@@ -160,7 +160,7 @@ const KanbanList = ({
                 setShowNewCardForm(false);
                 setNewCardTitle('');
               }}
-              className="px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm transition"
+              className="px-3 py-2 bg-gray-400 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-700 text-white rounded-lg text-sm transition"
             >
               Cancel
             </button>
@@ -169,7 +169,7 @@ const KanbanList = ({
       ) : (
         <button
           onClick={() => setShowNewCardForm(true)}
-          className="w-full text-left px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+          className="w-full text-left px-3 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition"
         >
           + Add a card
         </button>

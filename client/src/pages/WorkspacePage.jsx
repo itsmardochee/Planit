@@ -98,21 +98,21 @@ const WorkspacePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-trello-blue hover:underline text-sm mb-2"
+            className="text-trello-blue dark:text-blue-400 hover:underline text-sm mb-2"
           >
             ← Back to workspaces
           </button>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
             {workspace?.name}
           </h1>
           {workspace?.description && (
-            <p className="text-gray-600 mt-1">{workspace.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">{workspace.description}</p>
           )}
         </div>
       </header>
@@ -121,11 +121,11 @@ const WorkspacePage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* New Board Form */}
         {showNewBoardForm && (
-          <div className="mb-8 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Create a new board</h2>
+          <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">Create a new board</h2>
             <form onSubmit={handleCreateBoard} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Board name
                 </label>
                 <input
@@ -133,7 +133,7 @@ const WorkspacePage = () => {
                   value={newBoardName}
                   onChange={e => setNewBoardName(e.target.value)}
                   placeholder="My new board"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue focus:border-transparent outline-none"
                   autoFocus
                 />
               </div>
@@ -147,7 +147,7 @@ const WorkspacePage = () => {
                 <button
                   type="button"
                   onClick={() => setShowNewBoardForm(false)}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white rounded-lg transition"
                 >
                   Cancel
                 </button>
@@ -159,7 +159,7 @@ const WorkspacePage = () => {
         {/* Boards Grid */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Boards</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Boards</h2>
             {!showNewBoardForm && (
               <button
                 onClick={() => setShowNewBoardForm(true)}
@@ -171,8 +171,8 @@ const WorkspacePage = () => {
           </div>
 
           {boards.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg">
-              <p className="text-gray-600">No boards yet</p>
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+              <p className="text-gray-600 dark:text-gray-400">No boards yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

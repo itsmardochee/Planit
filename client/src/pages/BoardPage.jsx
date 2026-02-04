@@ -198,7 +198,13 @@ const BoardPage = () => {
 
     // Check if dropping on a list container
     if (over.data?.current?.type === 'list') {
-      const listId = over.data.current.listId;
+      // Can be either listId (from droppable) or list object (from sortable)
+      const listId = over.data.current.listId || over.data.current.list?._id || over.id;
+      destListIndex = lists.findIndex(l => l._id === listId);
+      destList = lists[destListIndex];
+    } else if (over.id.toString().startsWith('list-')) {
+      // Handle case where over.id is the droppable ID (list-xxx)
+      const listId = over.id.toString().replace('list-', '');
       destListIndex = lists.findIndex(l => l._id === listId);
       destList = lists[destListIndex];
     } else {
@@ -346,7 +352,7 @@ const BoardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-blue-500 flex items-center justify-center">
+      <div className="min-h-screen bg-blue-500 dark:bg-blue-900 flex items-center justify-center transition-colors">
         <p className="text-white">Loading...</p>
       </div>
     );
@@ -361,9 +367,9 @@ const BoardPage = () => {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600">
+      <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 transition-colors">
         {/* Header */}
-        <header className="bg-blue-800 shadow">
+        <header className="bg-blue-800 dark:bg-blue-950 shadow">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <button
               onClick={() => navigate(-1)}
@@ -373,7 +379,7 @@ const BoardPage = () => {
             </button>
             <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
             {board?.description && (
-              <p className="text-blue-100 mt-1">{board.description}</p>
+              <p className="text-blue-100 dark:text-blue-200 mt-1">{board.description}</p>
             )}
           </div>
         </header>
@@ -401,7 +407,7 @@ const BoardPage = () => {
 
             <div className="flex-shrink-0 w-80">
               {showNewListForm ? (
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-gray-700 dark:bg-gray-800 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-3">
                     Add a new list
                   </h3>
@@ -411,7 +417,7 @@ const BoardPage = () => {
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
                       placeholder="List title"
-                      className="w-full px-3 py-2 bg-gray-600 text-white rounded-lg placeholder-gray-400 focus:ring-2 focus:ring-trello-blue outline-none"
+                      className="w-full px-3 py-2 bg-gray-600 dark:bg-gray-900 text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-trello-blue outline-none"
                       autoFocus
                     />
                     <div className="flex gap-2">
@@ -424,7 +430,7 @@ const BoardPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowNewListForm(false)}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm transition"
+                        className="px-4 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-500 dark:hover:bg-gray-600 text-white rounded-lg text-sm transition"
                       >
                         Cancel
                       </button>
@@ -434,7 +440,7 @@ const BoardPage = () => {
               ) : (
                 <button
                   onClick={() => setShowNewListForm(true)}
-                  className="w-80 bg-gray-700 hover:bg-gray-600 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
+                  className="w-80 bg-gray-700 dark:bg-gray-800 hover:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
                 >
                   + Add another list
                 </button>

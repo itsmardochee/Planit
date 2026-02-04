@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Provider } from 'react-redux';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 import * as apiModule from '../../utils/api';
 
 // Mock useNavigate globally before importing Dashboard
@@ -58,7 +59,9 @@ function renderWithProviders(ui, { store } = {}) {
   const testStore = store || getStore();
   return render(
     <Provider store={testStore}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </ThemeProvider>
     </Provider>
   );
 }
