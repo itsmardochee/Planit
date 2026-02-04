@@ -4,6 +4,7 @@ import { boardAPI, listAPI, cardAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
+import ListEditModal from '../components/ListEditModal';
 import {
   DndContext,
   PointerSensor,
@@ -36,6 +37,7 @@ const BoardPage = () => {
   const [activeCard, setActiveCard] = useState(null);
   const [overId, setOverId] = useState(null);
   const [activeSourceListId, setActiveSourceListId] = useState(null);
+  const [editingList, setEditingList] = useState(null);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -297,6 +299,21 @@ const BoardPage = () => {
     await fetchBoardData();
   };
 
+  const handleEditList = list => {
+    setEditingList(list);
+  };
+
+  const handleSaveList = async updatedData => {
+    try {
+      const response = await listAPI.update(editingList._id, updatedData);
+      if (response.data.success) {
+        await fetchBoardData();
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-blue-500 flex items-center justify-center">
@@ -341,6 +358,7 @@ const BoardPage = () => {
                 boardId={boardId}
                 onCardClick={card => handleOpenCardModal(card, list)}
                 onListUpdate={fetchBoardData}
+                onEditList={handleEditList}
                 activeCardId={activeCard?._id}
                 overId={overId}
               />
@@ -389,6 +407,13 @@ const BoardPage = () => {
             </div>
           </div>
         </main>
+
+        {/* List Edit Modal */}
+        <ListEditModal
+          list={editingList}
+          onClose={() => setEditingList(null)}
+          onSave={handleSaveList}
+        />
 
         {/* Card Modal */}
         {showCardModal && selectedCard && (
