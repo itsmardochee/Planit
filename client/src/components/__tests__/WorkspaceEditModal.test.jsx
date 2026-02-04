@@ -1,5 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach as vitestBeforeEach,
+} from 'vitest';
 import WorkspaceEditModal from '../WorkspaceEditModal';
 
 describe('WorkspaceEditModal', () => {
@@ -12,7 +18,7 @@ describe('WorkspaceEditModal', () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
-  beforeEach(() => {
+  vitestBeforeEach(() => {
     vi.clearAllMocks();
   });
 

@@ -75,22 +75,22 @@ const Dashboard = () => {
   };
 
   const handleSaveWorkspace = async updates => {
-    try {
-      const response = await workspaceAPI.update(editingWorkspace._id, updates);
-      const updatedWorkspaces = workspaces.map(w =>
-        w._id === editingWorkspace._id ? response.data.data : w
-      );
-      dispatch(setWorkspaces(updatedWorkspaces));
-      setError('');
-    } catch (err) {
-      throw err;
-    }
+    const response = await workspaceAPI.update(editingWorkspace._id, updates);
+    const updatedWorkspaces = workspaces.map(w =>
+      w._id === editingWorkspace._id ? response.data.data : w
+    );
+    dispatch(setWorkspaces(updatedWorkspaces));
+    setError('');
   };
 
   const handleDeleteWorkspace = async (e, workspaceId, workspaceName) => {
     e.stopPropagation();
-    
-    if (!window.confirm(`Are you sure you want to delete "${workspaceName}"? This will also delete all boards, lists, and cards in this workspace. This action cannot be undone.`)) {
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${workspaceName}"? This will also delete all boards, lists, and cards in this workspace. This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -111,8 +111,12 @@ const Dashboard = () => {
       <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-trello-blue dark:text-blue-400">Planit</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Welcome, {user?.username}</p>
+            <h1 className="text-2xl font-bold text-trello-blue dark:text-blue-400">
+              Planit
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Welcome, {user?.username}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <DarkModeToggle />
@@ -176,7 +180,9 @@ const Dashboard = () => {
         {/* Workspaces Grid */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">My Workspaces</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              My Workspaces
+            </h2>
             {!showNewWorkspaceForm && (
               <button
                 onClick={() => setShowNewWorkspaceForm(true)}
@@ -193,7 +199,9 @@ const Dashboard = () => {
             </div>
           ) : workspaces.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-              <p className="text-gray-600 dark:text-gray-400">No workspaces yet</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                No workspaces yet
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -212,7 +220,9 @@ const Dashboard = () => {
                       ✏️
                     </button>
                     <button
-                      onClick={e => handleDeleteWorkspace(e, workspace._id, workspace.name)}
+                      onClick={e =>
+                        handleDeleteWorkspace(e, workspace._id, workspace.name)
+                      }
                       className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
                       title="Delete workspace"
                     >

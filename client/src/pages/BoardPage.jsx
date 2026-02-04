@@ -12,7 +12,6 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  closestCorners,
   DragOverlay,
   pointerWithin,
   rectIntersection,
@@ -20,7 +19,6 @@ import {
 import {
   SortableContext,
   arrayMove,
-  verticalListSortingStrategy,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
@@ -36,7 +34,6 @@ const BoardPage = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardModal, setShowCardModal] = useState(false);
   const [activeCard, setActiveCard] = useState(null);
-  const [overId, setOverId] = useState(null);
   const [activeSourceListId, setActiveSourceListId] = useState(null);
   const [editingList, setEditingList] = useState(null);
 
@@ -119,31 +116,28 @@ const BoardPage = () => {
 
   const handleDragStart = event => {
     const { active } = event;
-    
+
     // Check if dragging a list
     if (active.data?.current?.type === 'list') {
       setActiveCard(null);
       setActiveSourceListId(null);
-      setOverId(null);
       return;
     }
-    
+
     // Dragging a card
     const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
     const card = activeList?.cards.find(c => c._id === active.id);
     setActiveCard(card);
     setActiveSourceListId(activeList?._id || null);
-    setOverId(null);
   };
 
   const handleDragOver = event => {
     const { over } = event;
-    setOverId(over?.id || null);
+    if (!over) return;
   };
 
   const handleDragCancel = () => {
     setActiveCard(null);
-    setOverId(null);
     setActiveSourceListId(null);
   };
 
@@ -151,7 +145,6 @@ const BoardPage = () => {
     const { active, over } = event;
 
     setActiveCard(null);
-    setOverId(null);
     const sourceListId = activeSourceListId;
     setActiveSourceListId(null);
 
@@ -160,14 +153,17 @@ const BoardPage = () => {
     }
 
     // Handle list reordering
-    if (active.data?.current?.type === 'list' && over.data?.current?.type === 'list') {
+    if (
+      active.data?.current?.type === 'list' &&
+      over.data?.current?.type === 'list'
+    ) {
       const oldIndex = lists.findIndex(l => l._id === active.id);
       const newIndex = lists.findIndex(l => l._id === over.id);
-      
+
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const newLists = arrayMove(lists, oldIndex, newIndex);
         setLists(newLists);
-        
+
         try {
           await listAPI.reorder(active.id, { position: newIndex });
         } catch (err) {
@@ -199,7 +195,8 @@ const BoardPage = () => {
     // Check if dropping on a list container
     if (over.data?.current?.type === 'list') {
       // Can be either listId (from droppable) or list object (from sortable)
-      const listId = over.data.current.listId || over.data.current.list?._id || over.id;
+      const listId =
+        over.data.current.listId || over.data.current.list?._id || over.id;
       destListIndex = lists.findIndex(l => l._id === listId);
       destList = lists[destListIndex];
     } else if (over.id.toString().startsWith('list-')) {
@@ -340,13 +337,9 @@ const BoardPage = () => {
   };
 
   const handleSaveList = async updatedData => {
-    try {
-      const response = await listAPI.update(editingList._id, updatedData);
-      if (response.data.success) {
-        await fetchBoardData();
-      }
-    } catch (error) {
-      throw error;
+    const response = await listAPI.update(editingList._id, updatedData);
+    if (response.data.success) {
+      await fetchBoardData();
     }
   };
 
@@ -379,7 +372,9 @@ const BoardPage = () => {
             </button>
             <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
             {board?.description && (
-              <p className="text-blue-100 dark:text-blue-200 mt-1">{board.description}</p>
+              <p className="text-blue-100 dark:text-blue-200 mt-1">
+                {board.description}
+              </p>
             )}
           </div>
         </header>
@@ -399,8 +394,6 @@ const BoardPage = () => {
                   onCardClick={card => handleOpenCardModal(card, list)}
                   onListUpdate={fetchBoardData}
                   onEditList={handleEditList}
-                  activeCardId={activeCard?._id}
-                  overId={overId}
                 />
               ))}
             </SortableContext>

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cardAPI } from '../utils/api';
 
-const CardModal = ({ card, boardId, onClose, onCardUpdate }) => {
+const CardModal = ({ card, onClose, onCardUpdate }) => {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [isSaving, setIsSaving] = useState(false);

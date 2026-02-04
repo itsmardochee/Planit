@@ -71,28 +71,28 @@ const WorkspacePage = () => {
   };
 
   const handleSaveBoard = async updatedData => {
-    try {
-      const response = await boardAPI.update(editingBoard._id, updatedData);
-      if (response.data.success) {
-        const updatedBoard = response.data.data;
-        setLocalBoards(prevBoards =>
-          prevBoards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
-        );
-        dispatch(
-          setBoards(
-            boards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
-          )
-        );
-      }
-    } catch (error) {
-      throw error;
+    const response = await boardAPI.update(editingBoard._id, updatedData);
+    if (response.data.success) {
+      const updatedBoard = response.data.data;
+      setLocalBoards(prevBoards =>
+        prevBoards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+      );
+      dispatch(
+        setBoards(
+          boards.map(b => (b._id === updatedBoard._id ? updatedBoard : b))
+        )
+      );
     }
   };
 
   const handleDeleteBoard = async (e, boardId, boardName) => {
     e.stopPropagation();
-    
-    if (!window.confirm(`Are you sure you want to delete "${boardName}"? This will also delete all lists and cards in this board. This action cannot be undone.`)) {
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${boardName}"? This will also delete all lists and cards in this board. This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -130,7 +130,9 @@ const WorkspacePage = () => {
             {workspace?.name}
           </h1>
           {workspace?.description && (
-            <p className="text-gray-600 dark:text-gray-300 mt-1">{workspace.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
+              {workspace.description}
+            </p>
           )}
         </div>
       </header>
@@ -140,7 +142,9 @@ const WorkspacePage = () => {
         {/* New Board Form */}
         {showNewBoardForm && (
           <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 dark:text-white">Create a new board</h2>
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">
+              Create a new board
+            </h2>
             <form onSubmit={handleCreateBoard} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -177,7 +181,9 @@ const WorkspacePage = () => {
         {/* Boards Grid */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Boards</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              Boards
+            </h2>
             {!showNewBoardForm && (
               <button
                 onClick={() => setShowNewBoardForm(true)}

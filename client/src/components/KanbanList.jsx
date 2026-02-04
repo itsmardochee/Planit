@@ -15,8 +15,6 @@ const KanbanList = ({
   onCardClick,
   onListUpdate,
   onEditList,
-  activeCardId,
-  overId,
 }) => {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
@@ -86,7 +84,11 @@ const KanbanList = ({
   };
 
   const handleDeleteList = async () => {
-    if (!window.confirm(`Are you sure you want to delete "${list.name}"? This will also delete all cards in this list. This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${list.name}"? This will also delete all cards in this list. This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -117,8 +119,12 @@ const KanbanList = ({
           {...listeners}
           className="flex-1 cursor-grab active:cursor-grabbing"
         >
-          <h3 className="font-semibold text-gray-800 dark:text-white text-lg">{list.name}</h3>
-          <p className="text-xs text-gray-600 dark:text-gray-400">{cards.length} cards</p>
+          <h3 className="font-semibold text-gray-800 dark:text-white text-lg">
+            {list.name}
+          </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            {cards.length} cards
+          </p>
         </div>
         <div className="flex gap-1">
           {onEditList && (
