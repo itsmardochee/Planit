@@ -4,6 +4,8 @@ import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '../../contexts/ThemeContext';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../../i18n';
 import Login from '../Login.jsx';
 import * as apiModule from '../../utils/api';
 
@@ -18,7 +20,9 @@ function renderWithProviders(ui, { store } = {}) {
   return render(
     <Provider store={testStore}>
       <ThemeProvider>
-        <MemoryRouter>{ui}</MemoryRouter>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter>{ui}</MemoryRouter>
+        </I18nextProvider>
       </ThemeProvider>
     </Provider>
   );
@@ -36,9 +40,13 @@ describe('Register Page', () => {
         name: /don't have an account\? create one/i,
       })
     );
-    expect(screen.getByPlaceholderText(/your username/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/johndoe|your username/i)
+    ).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/you@example.com/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/your password/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByPlaceholderText(/your password/i)[0]
+    ).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText(/confirm password/i)
     ).toBeInTheDocument();
@@ -64,9 +72,9 @@ describe('Register Page', () => {
       })
     );
 
-    const usernameInput = screen.getByPlaceholderText(/your username/i);
+    const usernameInput = screen.getByPlaceholderText(/johndoe|your username/i);
     const emailInput = screen.getByPlaceholderText(/you@example.com/i);
-    const passwordInput = screen.getByPlaceholderText(/your password/i);
+    const passwordInput = screen.getAllByPlaceholderText(/your password/i)[0];
     const confirmInput = screen.getByPlaceholderText(/confirm password/i);
 
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
@@ -91,9 +99,9 @@ describe('Register Page', () => {
       })
     );
 
-    const usernameInput = screen.getByPlaceholderText(/your username/i);
+    const usernameInput = screen.getByPlaceholderText(/johndoe|your username/i);
     const emailInput = screen.getByPlaceholderText(/you@example.com/i);
-    const passwordInput = screen.getByPlaceholderText(/your password/i);
+    const passwordInput = screen.getAllByPlaceholderText(/your password/i)[0];
     const confirmInput = screen.getByPlaceholderText(/confirm password/i);
 
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
