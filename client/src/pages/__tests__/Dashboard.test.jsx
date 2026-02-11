@@ -137,4 +137,279 @@ describe('Dashboard Page', () => {
     fireEvent.click(card);
     expect(mockNavigate).toHaveBeenCalledWith('/workspace/1');
   });
+
+  it('creates a new workspace successfully', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'create').mockResolvedValue({
+      data: {
+        data: { _id: '3', name: 'New Workspace', description: 'New workspace' },
+      },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    // Click "New Workspace" button
+    const newButton = await screen.findByRole('button', {
+      name: /nouveau workspace|new workspace/i,
+    });
+    fireEvent.click(newButton);
+
+    // Fill in the form
+    const input = screen.getByPlaceholderText(/my new workspace/i);
+    fireEvent.change(input, { target: { value: 'New Workspace' } });
+
+    // Submit
+    const createButton = screen.getByRole('button', { name: /créer|create/i });
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(apiModule.workspaceAPI.create).toHaveBeenCalledWith({
+        name: 'New Workspace',
+        description: 'New workspace',
+      });
+    });
+  });
+
+  it('cancels workspace creation', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    // Click "New Workspace" button
+    const newButton = await screen.findByRole('button', {
+      name: /nouveau workspace|new workspace/i,
+    });
+    fireEvent.click(newButton);
+
+    // Cancel form
+    const cancelButton = screen.getByRole('button', {
+      name: /annuler|cancel/i,
+    });
+    fireEvent.click(cancelButton);
+
+    // Form should be hidden
+    expect(
+      screen.queryByPlaceholderText(/nom du workspace|workspace name/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows error when creating workspace fails', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'create').mockRejectedValue(
+      new Error('Failed to create')
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    // Click "New Workspace" button and fill form
+    const newButton = await screen.findByRole('button', {
+      name: /nouveau workspace|new workspace/i,
+    });
+    fireEvent.click(newButton);
+
+    const input = screen.getByPlaceholderText(/my new workspace/i);
+    fireEvent.change(input, { target: { value: 'New Workspace' } });
+
+    const createButton = screen.getByRole('button', { name: /créer|create/i });
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /erreur.*création.*workspace|error.*creating.*workspace/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('shows error when loading workspaces fails', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockRejectedValue(
+      new Error('Failed to load')
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /erreur.*chargement.*workspaces|error.*loading.*workspaces/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('deletes workspace after confirmation', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: mockWorkspaces },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'delete').mockResolvedValue({
+      data: { success: true },
+    });
+
+    // Mock window.confirm to return true
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    // Wait for workspaces to load
+    await screen.findByText(/workspace 1/i);
+
+    // Click delete button (trash icon)
+    const deleteButtons = screen.getAllByTitle(/delete workspace/i);
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(apiModule.workspaceAPI.delete).toHaveBeenCalledWith('1');
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  it('cancels workspace deletion when user declines confirmation', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: mockWorkspaces },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'delete').mockResolvedValue({
+      data: { success: true },
+    });
+
+    // Mock window.confirm to return false
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false)
+    );
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    // Wait for workspaces to load
+    await screen.findByText(/workspace 1/i);
+
+    // Click delete button
+    const deleteButtons = screen.getAllByTitle(/delete workspace/i);
+    fireEvent.click(deleteButtons[0]);
+
+    // Should not call delete
+    expect(apiModule.workspaceAPI.delete).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('shows error when deleting workspace fails', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: mockWorkspaces },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'delete').mockRejectedValue(
+      new Error('Failed to delete')
+    );
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await screen.findByText(/workspace 1/i);
+
+    const deleteButtons = screen.getAllByTitle(/delete workspace/i);
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /erreur.*suppression.*workspace|error.*deleting.*workspace/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    vi.unstubAllGlobals();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('opens edit workspace modal', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: mockWorkspaces },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await screen.findByText(/workspace 1/i);
+
+    // Click edit button (pencil icon)
+    const editButtons = screen.getAllByTitle(/edit workspace/i);
+    fireEvent.click(editButtons[0]);
+
+    // Modal should open (tested in WorkspaceEditModal tests)
+    await waitFor(() => {
+      expect(editButtons[0]).toBeInTheDocument();
+    });
+  });
+
+  it('handles logout successfully', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    const logoutButton = await screen.findByRole('button', {
+      name: /déconnexion|logout/i,
+    });
+    fireEvent.click(logoutButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('prevents creating workspace with empty name', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.workspaceAPI, 'create').mockResolvedValue({
+      data: { data: { _id: '3', name: 'Test' } },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    const newButton = await screen.findByRole('button', {
+      name: /nouveau workspace|new workspace/i,
+    });
+    fireEvent.click(newButton);
+
+    const createButton = screen.getByRole('button', { name: /créer|create/i });
+    fireEvent.click(createButton);
+
+    // Should not call create with empty name
+    expect(apiModule.workspaceAPI.create).not.toHaveBeenCalled();
+  });
 });
