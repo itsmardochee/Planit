@@ -177,7 +177,7 @@ describe('WorkspacePage', () => {
     });
 
     const store = getStore();
-    const { rerender } = renderWithProviders(<WorkspacePage />, { store });
+    renderWithProviders(<WorkspacePage />, { store });
 
     // Wait for initial load
     await waitFor(() => {

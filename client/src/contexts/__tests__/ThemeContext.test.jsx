@@ -78,7 +78,7 @@ describe('ThemeContext', () => {
       const wrapper = ({ children }) => (
         <ThemeProvider>{children}</ThemeProvider>
       );
-      const { result, rerender } = renderHook(() => useTheme(), {
+      const { result } = renderHook(() => useTheme(), {
         wrapper,
       });
 

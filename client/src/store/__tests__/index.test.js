@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { configureStore } from '@reduxjs/toolkit';
 import {
   loginSuccess,
   loginRequest,
@@ -19,7 +18,7 @@ import {
 
 // Helper to create a fresh store for each test
 const createTestStore = async () => {
-  const { store: _, ...slices } = await import('../index');
+  await import('../index');
   const { configureStore, createSlice } = await import('@reduxjs/toolkit');
 
   // Re-create slices to get fresh reducers
