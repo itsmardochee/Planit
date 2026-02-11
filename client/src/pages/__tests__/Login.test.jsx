@@ -179,12 +179,15 @@ describe('Login Page', () => {
     const usernameInput = screen.getByPlaceholderText(/johndoe/i);
     const emailInput = screen.getByPlaceholderText(/you@example.com/i);
     const passwordInputs = screen.getAllByPlaceholderText(/your password/i);
-    const confirmPasswordInput = screen.getByPlaceholderText(/confirm password/i);
+    const confirmPasswordInput =
+      screen.getByPlaceholderText(/confirm password/i);
 
     fireEvent.change(usernameInput, { target: { value: 'NewUser' } });
     fireEvent.change(emailInput, { target: { value: 'newuser@example.com' } });
     fireEvent.change(passwordInputs[0], { target: { value: 'password123' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: 'password123' },
+    });
 
     const submitButton = screen.getByRole('button', {
       name: /create account|sign up/i,
@@ -219,7 +222,8 @@ describe('Login Page', () => {
     const usernameInput = screen.getByPlaceholderText(/johndoe/i);
     const emailInput = screen.getByPlaceholderText(/you@example.com/i);
     const passwordInputs = screen.getAllByPlaceholderText(/your password/i);
-    const confirmPasswordInput = screen.getByPlaceholderText(/confirm password/i);
+    const confirmPasswordInput =
+      screen.getByPlaceholderText(/confirm password/i);
 
     fireEvent.change(usernameInput, { target: { value: 'TestUser' } });
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });

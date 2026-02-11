@@ -128,8 +128,12 @@ describe('WorkspacePage', () => {
   });
 
   it('shows loading state initially', async () => {
-    vi.spyOn(apiModule.workspaceAPI, 'getById').mockImplementation(() => new Promise(() => {}));
-    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockImplementation(() => new Promise(() => {}));
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockImplementation(
+      () => new Promise(() => {})
+    );
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockImplementation(
+      () => new Promise(() => {})
+    );
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -138,11 +142,15 @@ describe('WorkspacePage', () => {
   });
 
   it('handles error loading workspace', async () => {
-    vi.spyOn(apiModule.workspaceAPI, 'getById').mockRejectedValue(new Error('Failed to load'));
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockRejectedValue(
+      new Error('Failed to load')
+    );
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -220,11 +228,15 @@ describe('WorkspacePage', () => {
     fireEvent.click(newButton);
 
     // Cancel form
-    const cancelButton = screen.getByRole('button', { name: /annuler|cancel/i });
+    const cancelButton = screen.getByRole('button', {
+      name: /annuler|cancel/i,
+    });
     fireEvent.click(cancelButton);
 
     // Form should be hidden
-    expect(screen.queryByPlaceholderText(/nom du board|board name/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText(/nom du board|board name/i)
+    ).not.toBeInTheDocument();
   });
 
   it('shows error alert when creating board fails', async () => {
@@ -237,7 +249,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'create').mockRejectedValue({
       response: { data: { message: 'Failed to create board' } },
     });
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     vi.stubGlobal('alert', vi.fn());
 
     const store = getStore();
@@ -306,7 +320,10 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
-    vi.stubGlobal('confirm', vi.fn(() => true));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -315,7 +332,9 @@ describe('WorkspacePage', () => {
       expect(screen.getByText('Board 1')).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole('button', { name: /supprimer|delete/i });
+    const deleteButton = screen.getByRole('button', {
+      name: /supprimer|delete/i,
+    });
     fireEvent.click(deleteButton);
 
     await waitFor(() => {
@@ -335,7 +354,10 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
-    vi.stubGlobal('confirm', vi.fn(() => false));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false)
+    );
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -344,7 +366,9 @@ describe('WorkspacePage', () => {
       expect(screen.getByText('Board 1')).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole('button', { name: /supprimer|delete/i });
+    const deleteButton = screen.getByRole('button', {
+      name: /supprimer|delete/i,
+    });
     fireEvent.click(deleteButton);
 
     // Should not call delete
@@ -363,8 +387,13 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockRejectedValue({
       response: { data: { message: 'Failed to delete' } },
     });
-    vi.stubGlobal('confirm', vi.fn(() => true));
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     vi.stubGlobal('alert', vi.fn());
 
     const store = getStore();
@@ -374,7 +403,9 @@ describe('WorkspacePage', () => {
       expect(screen.getByText('Board 1')).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole('button', { name: /supprimer|delete/i });
+    const deleteButton = screen.getByRole('button', {
+      name: /supprimer|delete/i,
+    });
     fireEvent.click(deleteButton);
 
     await waitFor(() => {

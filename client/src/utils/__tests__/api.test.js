@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 describe('API Utils', () => {
   let api, authAPI, workspaceAPI, boardAPI, listAPI, cardAPI;
@@ -28,6 +28,10 @@ describe('API Utils', () => {
     api.post = vi.fn();
     api.put = vi.fn();
     api.delete = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('authAPI', () => {
