@@ -448,3 +448,66 @@ describe('Redux Store', () => {
     });
   });
 });
+
+// Tests for exported actions and store (improves coverage)
+describe('Store Exports', () => {
+  let store;
+
+  beforeEach(async () => {
+    localStorage.clear();
+    // Import the actual exported store
+    const storeModule = await import('../index');
+    store = storeModule.store;
+  });
+
+  it('should export all action creators', () => {
+    expect(loginSuccess).toBeDefined();
+    expect(loginRequest).toBeDefined();
+    expect(loginError).toBeDefined();
+    expect(logout).toBeDefined();
+    expect(setWorkspaces).toBeDefined();
+    expect(setCurrentWorkspace).toBeDefined();
+    expect(addWorkspace).toBeDefined();
+    expect(setBoards).toBeDefined();
+    expect(setCurrentBoard).toBeDefined();
+    expect(addBoard).toBeDefined();
+    expect(setLists).toBeDefined();
+    expect(addList).toBeDefined();
+    expect(setCards).toBeDefined();
+    expect(addCard).toBeDefined();
+  });
+
+  it('should have working store with all reducers', () => {
+    expect(store).toBeDefined();
+    expect(store.getState).toBeDefined();
+    expect(store.dispatch).toBeDefined();
+
+    const state = store.getState();
+    expect(state.auth).toBeDefined();
+    expect(state.workspaces).toBeDefined();
+    expect(state.boards).toBeDefined();
+    expect(state.lists).toBeDefined();
+    expect(state.cards).toBeDefined();
+  });
+
+  it('should dispatch actions to the real store', () => {
+    // Dispatch real actions to the real store
+    store.dispatch(setLists([{ id: 1, name: 'List 1' }]));
+    store.dispatch(addList({ id: 2, name: 'List 2' }));
+
+    const listsState = store.getState().lists;
+    expect(listsState.items).toHaveLength(2);
+    expect(listsState.items[0].name).toBe('List 1');
+    expect(listsState.items[1].name).toBe('List 2');
+  });
+
+  it('should dispatch card actions to the real store', () => {
+    store.dispatch(setCards([{ id: 'c1', title: 'Card 1' }]));
+    store.dispatch(addCard({ id: 'c2', title: 'Card 2' }));
+
+    const cardsState = store.getState().cards;
+    expect(cardsState.items).toHaveLength(2);
+    expect(cardsState.items[0].title).toBe('Card 1');
+    expect(cardsState.items[1].title).toBe('Card 2');
+  });
+});
