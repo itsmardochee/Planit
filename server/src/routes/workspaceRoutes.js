@@ -6,9 +6,15 @@ import {
   updateWorkspace,
   deleteWorkspace,
 } from '../controllers/workspaceController.js';
+import {
+  inviteMember,
+  getWorkspaceMembers,
+  removeMember,
+} from '../controllers/workspaceMemberController.js';
 
 const router = express.Router();
 
+// Workspace CRUD operations
 // @route   POST /api/workspaces
 // @desc    Create new workspace
 // @access  Private
@@ -33,5 +39,21 @@ router.put('/:id', updateWorkspace);
 // @desc    Delete workspace
 // @access  Private
 router.delete('/:id', deleteWorkspace);
+
+// Workspace membership operations
+// @route   POST /api/workspaces/:id/invite
+// @desc    Invite a user to workspace
+// @access  Private (workspace owner only)
+router.post('/:id/invite', inviteMember);
+
+// @route   GET /api/workspaces/:id/members
+// @desc    Get all members of a workspace
+// @access  Private
+router.get('/:id/members', getWorkspaceMembers);
+
+// @route   DELETE /api/workspaces/:id/members/:userId
+// @desc    Remove a member from workspace
+// @access  Private (workspace owner or the member themselves)
+router.delete('/:id/members/:userId', removeMember);
 
 export default router;

@@ -444,6 +444,10 @@ const options = {
         description: 'Workspace management endpoints',
       },
       {
+        name: 'Workspace Members',
+        description: 'Workspace membership and collaboration endpoints',
+      },
+      {
         name: 'Boards',
         description: 'Board management endpoints',
       },
