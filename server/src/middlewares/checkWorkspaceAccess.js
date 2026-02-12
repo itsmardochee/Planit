@@ -37,7 +37,7 @@ const checkWorkspaceAccess = async (req, res, next) => {
 
         // Try to resolve workspace from different models in cascade
         // Priority: Card -> List -> Board -> Workspace
-        let card = await Card.findById(possibleId);
+        const card = await Card.findById(possibleId);
         if (card) {
           // Card doesn't have workspaceId, get it via List
           const list = await List.findById(card.listId);
@@ -51,11 +51,11 @@ const checkWorkspaceAccess = async (req, res, next) => {
             });
           }
         } else {
-          let list = await List.findById(possibleId);
+          const list = await List.findById(possibleId);
           if (list) {
             workspaceId = list.workspaceId.toString();
           } else {
-            let board = await Board.findById(possibleId);
+            const board = await Board.findById(possibleId);
             if (board) {
               workspaceId = board.workspaceId.toString();
             } else {

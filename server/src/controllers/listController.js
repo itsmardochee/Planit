@@ -5,7 +5,6 @@ import Card from '../models/Card.js';
 import {
   ValidationError,
   NotFoundError,
-  ForbiddenError,
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 

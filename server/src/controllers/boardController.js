@@ -1,12 +1,10 @@
 import mongoose from 'mongoose';
 import Board from '../models/Board.js';
-import Workspace from '../models/Workspace.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
 import {
   ValidationError,
   NotFoundError,
-  ForbiddenError,
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 

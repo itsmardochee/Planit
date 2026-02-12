@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
+import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
@@ -113,12 +114,13 @@ export const createWorkspace = async (req, res) => {
  * /api/workspaces:
  *   get:
  *     summary: Get all workspaces for authenticated user
+ *     description: Returns all workspaces owned by the user or where the user is a member
  *     tags: [Workspaces]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of workspaces
+ *         description: List of workspaces (owned and member workspaces combined)
  *         content:
  *           application/json:
  *             schema:
@@ -137,13 +139,42 @@ export const createWorkspace = async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 /**
- * @desc    Get all workspaces for authenticated user
+ * @desc    Get all workspaces for authenticated user (owned + member workspaces)
  * @route   GET /api/workspaces
  * @access  Private
  */
 export const getWorkspaces = async (req, res) => {
   try {
-    const workspaces = await Workspace.find({ userId: req.user._id });
+    // Get workspaces owned by user
+    const ownedWorkspaces = await Workspace.find({ userId: req.user._id });
+
+    // Get workspaces where user is a member
+    const memberships = await WorkspaceMember.find({ userId: req.user._id });
+    const memberWorkspaceIds = memberships.map((m) => m.workspaceId);
+
+    // Get workspace details for member workspaces
+    const memberWorkspaces = await Workspace.find({
+      _id: { $in: memberWorkspaceIds },
+    });
+
+    // Combine and deduplicate workspaces
+    const workspaceMap = new Map();
+
+    // Add owned workspaces first
+    ownedWorkspaces.forEach((ws) => {
+      workspaceMap.set(ws._id.toString(), ws);
+    });
+
+    // Add member workspaces (won't overwrite if already exists)
+    memberWorkspaces.forEach((ws) => {
+      const id = ws._id.toString();
+      if (!workspaceMap.has(id)) {
+        workspaceMap.set(id, ws);
+      }
+    });
+
+    // Convert map to array
+    const workspaces = Array.from(workspaceMap.values());
 
     res.status(200).json({
       success: true,
