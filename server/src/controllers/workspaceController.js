@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
+import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
@@ -113,12 +114,13 @@ export const createWorkspace = async (req, res) => {
  * /api/workspaces:
  *   get:
  *     summary: Get all workspaces for authenticated user
+ *     description: Returns all workspaces owned by the user or where the user is a member
  *     tags: [Workspaces]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of workspaces
+ *         description: List of workspaces (owned and member workspaces combined)
  *         content:
  *           application/json:
  *             schema:
@@ -137,13 +139,42 @@ export const createWorkspace = async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 /**
- * @desc    Get all workspaces for authenticated user
+ * @desc    Get all workspaces for authenticated user (owned + member workspaces)
  * @route   GET /api/workspaces
  * @access  Private
  */
 export const getWorkspaces = async (req, res) => {
   try {
-    const workspaces = await Workspace.find({ userId: req.user._id });
+    // Get workspaces owned by user
+    const ownedWorkspaces = await Workspace.find({ userId: req.user._id });
+
+    // Get workspaces where user is a member
+    const memberships = await WorkspaceMember.find({ userId: req.user._id });
+    const memberWorkspaceIds = memberships.map(m => m.workspaceId);
+
+    // Get workspace details for member workspaces
+    const memberWorkspaces = await Workspace.find({
+      _id: { $in: memberWorkspaceIds },
+    });
+
+    // Combine and deduplicate workspaces
+    const workspaceMap = new Map();
+
+    // Add owned workspaces first
+    ownedWorkspaces.forEach(ws => {
+      workspaceMap.set(ws._id.toString(), ws);
+    });
+
+    // Add member workspaces (won't overwrite if already exists)
+    memberWorkspaces.forEach(ws => {
+      const id = ws._id.toString();
+      if (!workspaceMap.has(id)) {
+        workspaceMap.set(id, ws);
+      }
+    });
+
+    // Convert map to array
+    const workspaces = Array.from(workspaceMap.values());
 
     res.status(200).json({
       success: true,
@@ -211,31 +242,10 @@ export const getWorkspaces = async (req, res) => {
  */
 export const getWorkspaceById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
-    }
-
-    const workspace = await Workspace.findOne({
-      _id: id,
-      userId: req.user._id,
-    });
-
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
-    }
-
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
     res.status(200).json({
       success: true,
-      data: workspace,
+      data: req.workspace,
     });
   } catch (error) {
     res.status(500).json({
@@ -314,16 +324,16 @@ export const getWorkspaceById = async (req, res) => {
  */
 export const updateWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, description } = req.body;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
+    // req.workspace is already validated by checkWorkspaceAccess middleware
+    // Only workspace owner can update
+    if (!req.isWorkspaceOwner) {
+      return res.status(403).json({
         success: false,
-        message: 'Invalid workspace ID format',
+        message: 'Only workspace owner can update workspace',
       });
     }
+
+    const { name, description } = req.body;
 
     // Prepare update data with trimmed values
     const updateData = {};
@@ -358,19 +368,12 @@ export const updateWorkspace = async (req, res) => {
       updateData.description = trimmedDescription;
     }
 
-    // Find and update workspace
-    const workspace = await Workspace.findOneAndUpdate(
-      { _id: id, userId: req.user._id },
+    // Find and update workspace (already validated by middleware)
+    const workspace = await Workspace.findByIdAndUpdate(
+      req.workspace._id,
       { $set: updateData },
       { new: true, runValidators: true }
     );
-
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
-    }
 
     res.status(200).json({
       success: true,
@@ -445,31 +448,19 @@ export const updateWorkspace = async (req, res) => {
  */
 export const deleteWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
+    // req.workspace is already validated by checkWorkspaceAccess middleware
+    // Only workspace owner can delete
+    if (!req.isWorkspaceOwner) {
+      return res.status(403).json({
         success: false,
-        message: 'Invalid workspace ID format',
+        message: 'Only workspace owner can delete workspace',
       });
     }
 
-    // Find workspace first to verify ownership
-    const workspace = await Workspace.findOne({
-      _id: id,
-      userId: req.user._id,
-    });
-
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
-    }
+    const workspaceId = req.workspace._id;
 
     // Cascade delete: Get all boards in this workspace
-    const boards = await Board.find({ workspaceId: id });
+    const boards = await Board.find({ workspaceId });
     const boardIds = boards.map(board => board._id);
 
     // Delete all cards associated with those boards
@@ -479,10 +470,13 @@ export const deleteWorkspace = async (req, res) => {
     await List.deleteMany({ boardId: { $in: boardIds } });
 
     // Delete all boards in this workspace
-    await Board.deleteMany({ workspaceId: id });
+    await Board.deleteMany({ workspaceId });
+
+    // Delete all workspace members
+    await WorkspaceMember.deleteMany({ workspaceId });
 
     // Finally, delete the workspace itself
-    await Workspace.findByIdAndDelete(id);
+    await Workspace.findByIdAndDelete(workspaceId);
 
     res.status(200).json({
       success: true,

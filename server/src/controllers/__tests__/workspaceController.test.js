@@ -7,6 +7,7 @@ import workspaceRoutes from '../../routes/workspaceRoutes.js';
 import auth from '../../middlewares/auth.js';
 import User from '../../models/User.js';
 import Workspace from '../../models/Workspace.js';
+import WorkspaceMember from '../../models/WorkspaceMember.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
@@ -333,6 +334,62 @@ describe('GET /api/workspaces', () => {
       expect(response.body.data[0].createdAt).toBeDefined();
       expect(response.body.data[0].updatedAt).toBeDefined();
     });
+
+    it('should return workspaces where user is a member', async () => {
+      // Workspace owned by testUser
+      await Workspace.create({
+        name: 'My Workspace',
+        userId: testUser._id,
+      });
+
+      // Workspace owned by otherUser where testUser is a member
+      const sharedWorkspace = await Workspace.create({
+        name: 'Shared Workspace',
+        userId: otherUser._id,
+      });
+
+      await WorkspaceMember.create({
+        workspaceId: sharedWorkspace._id,
+        userId: testUser._id,
+        role: 'member',
+        invitedBy: otherUser._id,
+      });
+
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+
+      const workspaceNames = response.body.data.map(w => w.name).sort();
+      expect(workspaceNames).toEqual(['My Workspace', 'Shared Workspace']);
+    });
+
+    it('should not return duplicate workspaces', async () => {
+      // Create workspace owned by testUser
+      const workspace = await Workspace.create({
+        name: 'My Workspace',
+        userId: testUser._id,
+      });
+
+      // Create membership entry for owner (shouldn't happen but test for it)
+      await WorkspaceMember.create({
+        workspaceId: workspace._id,
+        userId: testUser._id,
+        role: 'owner',
+        invitedBy: testUser._id,
+      });
+
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].name).toBe('My Workspace');
+    });
   });
 });
 
@@ -440,7 +497,7 @@ describe('GET /api/workspaces/:id', () => {
         .get(`/api/workspaces/${otherWorkspace._id}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 
@@ -632,7 +689,7 @@ describe('PUT /api/workspaces/:id', () => {
           name: 'Updated Workspace',
         });
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 
@@ -760,7 +817,7 @@ describe('DELETE /api/workspaces/:id', () => {
         .delete(`/api/workspaces/${otherWorkspace._id}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 

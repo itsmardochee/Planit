@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setBoards } from '../store/index';
-import { workspaceAPI, boardAPI } from '../utils/api';
+import { workspaceAPI, boardAPI, memberAPI } from '../utils/api';
 import BoardEditModal from '../components/BoardEditModal';
+import MemberList from '../components/MemberList';
+import InviteMembers from '../components/InviteMembers';
 
 const WorkspacePage = () => {
   const { t } = useTranslation(['workspace', 'common']);
   const { workspaceId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const currentUser = useSelector(state => state.auth.user);
   const [workspace, setWorkspace] = useState(null);
   const [boards, setLocalBoards] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewBoardForm, setShowNewBoardForm] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [editingBoard, setEditingBoard] = useState(null);
 
@@ -29,6 +34,10 @@ const WorkspacePage = () => {
         const boardsData = boardsResponse.data.data;
         setLocalBoards(boardsData);
         dispatch(setBoards(boardsData));
+
+        // Fetch members
+        const membersResponse = await memberAPI.getByWorkspace(workspaceId);
+        setMembers(membersResponse.data.data || []);
       } catch (err) {
         console.error('Error loading workspace', err);
       } finally {
@@ -109,6 +118,27 @@ const WorkspacePage = () => {
     }
   };
 
+  const handleMemberRemoved = async () => {
+    // Refresh members list after removing a member
+    try {
+      const membersResponse = await memberAPI.getByWorkspace(workspaceId);
+      setMembers(membersResponse.data.data || []);
+    } catch (err) {
+      console.error('Error refreshing members', err);
+    }
+  };
+
+  const handleMemberInvited = async () => {
+    // Refresh members list after inviting a member
+    try {
+      const membersResponse = await memberAPI.getByWorkspace(workspaceId);
+      setMembers(membersResponse.data.data || []);
+      setShowInviteModal(false);
+    } catch (err) {
+      console.error('Error refreshing members', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -141,6 +171,28 @@ const WorkspacePage = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Members Section */}
+        <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold dark:text-white">
+              {t('workspace:members', 'Members')}
+            </h2>
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="bg-trello-blue hover:bg-blue-600 text-white px-4 py-2 rounded transition flex items-center gap-2"
+            >
+              <span>+</span>
+              {t('workspace:inviteMembers', 'Invite Members')}
+            </button>
+          </div>
+          <MemberList
+            members={members}
+            workspaceId={workspaceId}
+            currentUserId={currentUser?._id}
+            onMemberRemoved={handleMemberRemoved}
+          />
+        </div>
+
         {/* New Board Form */}
         {showNewBoardForm && (
           <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -243,6 +295,13 @@ const WorkspacePage = () => {
         board={editingBoard}
         onClose={() => setEditingBoard(null)}
         onSave={handleSaveBoard}
+      />
+
+      <InviteMembers
+        open={showInviteModal}
+        workspaceId={workspaceId}
+        onClose={() => setShowInviteModal(false)}
+        onMemberInvited={handleMemberInvited}
       />
     </div>
   );
