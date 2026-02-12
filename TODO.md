@@ -11,12 +11,14 @@
 
 #### Backend
 
-- [ ] Ajouter champ `assignedTo: [userId]` dans le modèle `Card`
-- [ ] Créer endpoint `POST /api/cards/:id/assign` pour assigner un membre
-- [ ] Créer endpoint `DELETE /api/cards/:id/unassign/:userId` pour retirer un membre
-- [ ] Valider que l'utilisateur assigné est membre du workspace
-- [ ] Tests unitaires pour l'assignation/retrait de membres
-- [ ] Mettre à jour Swagger documentation
+- [x] Ajouter champ `assignedTo: [userId]` dans le modèle `Card`
+- [x] Créer endpoint `POST /api/cards/:id/assign` pour assigner un membre
+- [x] Créer endpoint `DELETE /api/cards/:id/unassign/:userId` pour retirer un membre
+- [x] Valider que l'utilisateur assigné est membre du workspace
+- [x] Tests unitaires pour l'assignation/retrait de membres (22 tests)
+- [x] Mettre à jour Swagger documentation
+
+**Status:** ✅ Backend complet - 452 tests passing
 
 #### Frontend
 
