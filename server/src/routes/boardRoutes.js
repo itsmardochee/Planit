@@ -6,17 +6,20 @@ import {
   updateBoard,
   deleteBoard,
 } from '../controllers/boardController.js';
+import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
 const workspaceBoardRouter = express.Router({ mergeParams: true });
 const boardRouter = express.Router();
 
 // Routes for /api/workspaces/:workspaceId/boards
-workspaceBoardRouter.post('/', createBoard);
-workspaceBoardRouter.get('/', getBoards);
+// checkWorkspaceAccess verifies user is owner or member
+workspaceBoardRouter.post('/', checkWorkspaceAccess, createBoard);
+workspaceBoardRouter.get('/', checkWorkspaceAccess, getBoards);
 
 // Routes for /api/boards/:id
-boardRouter.get('/:id', getBoard);
-boardRouter.put('/:id', updateBoard);
-boardRouter.delete('/:id', deleteBoard);
+// checkWorkspaceAccess resolves workspace from board._id
+boardRouter.get('/:id', checkWorkspaceAccess, getBoard);
+boardRouter.put('/:id', checkWorkspaceAccess, updateBoard);
+boardRouter.delete('/:id', checkWorkspaceAccess, deleteBoard);
 
 export { workspaceBoardRouter, boardRouter };

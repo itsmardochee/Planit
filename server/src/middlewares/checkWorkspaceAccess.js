@@ -16,34 +16,40 @@ import Board from '../models/Board.js';
  */
 const checkWorkspaceAccess = async (req, res, next) => {
   try {
-    // Get workspace ID from various possible parameter names
-    let workspaceId = req.params.workspaceId || req.params.id;
+    let workspaceId = req.params.workspaceId;
 
-    // If boardId is provided, resolve workspace from board
-    if (!workspaceId && req.params.boardId) {
-      if (!mongoose.Types.ObjectId.isValid(req.params.boardId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid board ID format',
-        });
+    // If no workspaceId in params, try to resolve from boardId or id parameter
+    if (!workspaceId) {
+      // Check if we have a boardId or id parameter (for /api/boards/:id routes)
+      const possibleBoardId = req.params.boardId || req.params.id;
+
+      if (possibleBoardId) {
+        // Validate ID format
+        if (!mongoose.Types.ObjectId.isValid(possibleBoardId)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid ID format',
+          });
+        }
+
+        // Try to find a board with this ID
+        const board = await Board.findById(possibleBoardId);
+
+        if (board) {
+          // Found a board - use its workspaceId
+          workspaceId = board.workspaceId.toString();
+        } else {
+          // Not a board - assume it's a workspace ID (for /api/workspaces/:id routes)
+          workspaceId = possibleBoardId;
+        }
       }
-
-      const board = await Board.findById(req.params.boardId);
-      if (!board) {
-        return res.status(404).json({
-          success: false,
-          message: 'Board not found',
-        });
-      }
-
-      workspaceId = board.workspaceId.toString();
     }
 
     // Validate workspace ID
     if (!workspaceId) {
       return res.status(400).json({
         success: false,
-        message: 'Workspace ID is required',
+        message: 'Workspace ID or Board ID is required',
       });
     }
 

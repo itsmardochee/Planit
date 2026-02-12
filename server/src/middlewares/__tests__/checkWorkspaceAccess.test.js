@@ -300,7 +300,7 @@ describe('checkWorkspaceAccess Middleware', () => {
   describe('Board-level access via boardId', () => {
     it('should resolve workspace from boardId parameter', async () => {
       const Board = (await import('../../models/Board.js')).default;
-      
+
       const board = await Board.create({
         name: 'Test Board',
         workspaceId: workspace._id,
