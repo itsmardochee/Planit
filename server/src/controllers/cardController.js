@@ -1,10 +1,7 @@
 import mongoose from 'mongoose';
 import Card from '../models/Card.js';
 import List from '../models/List.js';
-import {
-  ValidationError,
-  NotFoundError,
-} from '../utils/errors.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
 /**

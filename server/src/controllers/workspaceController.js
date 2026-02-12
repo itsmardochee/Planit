@@ -150,7 +150,7 @@ export const getWorkspaces = async (req, res) => {
 
     // Get workspaces where user is a member
     const memberships = await WorkspaceMember.find({ userId: req.user._id });
-    const memberWorkspaceIds = memberships.map((m) => m.workspaceId);
+    const memberWorkspaceIds = memberships.map(m => m.workspaceId);
 
     // Get workspace details for member workspaces
     const memberWorkspaces = await Workspace.find({
@@ -161,12 +161,12 @@ export const getWorkspaces = async (req, res) => {
     const workspaceMap = new Map();
 
     // Add owned workspaces first
-    ownedWorkspaces.forEach((ws) => {
+    ownedWorkspaces.forEach(ws => {
       workspaceMap.set(ws._id.toString(), ws);
     });
 
     // Add member workspaces (won't overwrite if already exists)
-    memberWorkspaces.forEach((ws) => {
+    memberWorkspaces.forEach(ws => {
       const id = ws._id.toString();
       if (!workspaceMap.has(id)) {
         workspaceMap.set(id, ws);

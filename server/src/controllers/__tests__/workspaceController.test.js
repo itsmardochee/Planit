@@ -363,7 +363,7 @@ describe('GET /api/workspaces', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveLength(2);
 
-      const workspaceNames = response.body.data.map((w) => w.name).sort();
+      const workspaceNames = response.body.data.map(w => w.name).sort();
       expect(workspaceNames).toEqual(['My Workspace', 'Shared Workspace']);
     });
 

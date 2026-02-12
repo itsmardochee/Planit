@@ -2,10 +2,7 @@ import mongoose from 'mongoose';
 import List from '../models/List.js';
 import Board from '../models/Board.js';
 import Card from '../models/Card.js';
-import {
-  ValidationError,
-  NotFoundError,
-} from '../utils/errors.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
 /**
