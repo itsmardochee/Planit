@@ -8,42 +8,37 @@ import * as apiModule from '../../utils/api';
 // TDD Red Phase: Tests for InviteMembers modal
 
 describe('InviteMembers Modal', () => {
-  const mockWorkspace = {
-    _id: '123',
-    name: 'Test Workspace',
-  };
-
+  const mockWorkspaceId = '123';
   const mockOnClose = vi.fn();
-  const mockOnInviteSuccess = vi.fn();
+  const mockOnMemberInvited = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders modal with workspace name', () => {
+  it('renders modal header', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
 
     expect(screen.getAllByText(/invite members/i)[0]).toBeInTheDocument();
-    expect(
-      screen.getByText(new RegExp(mockWorkspace.name, 'i'))
-    ).toBeInTheDocument();
   });
 
-  it('does not render when workspace is null', () => {
+  it('does not render when open is false', () => {
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={null}
+          open={false}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -55,9 +50,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -70,9 +66,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -86,9 +83,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -111,9 +109,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -130,7 +129,7 @@ describe('InviteMembers Modal', () => {
       expect(mockInvite).toHaveBeenCalledWith('123', {
         email: 'newmember@example.com',
       });
-      expect(mockOnInviteSuccess).toHaveBeenCalled();
+      expect(mockOnMemberInvited).toHaveBeenCalled();
     });
   });
 
@@ -138,9 +137,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -166,9 +166,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -192,9 +193,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -207,9 +209,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );
@@ -228,9 +231,10 @@ describe('InviteMembers Modal', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <InviteMembers
-          workspace={mockWorkspace}
+          open={true}
+          workspaceId={mockWorkspaceId}
           onClose={mockOnClose}
-          onInviteSuccess={mockOnInviteSuccess}
+          onMemberInvited={mockOnMemberInvited}
         />
       </I18nextProvider>
     );

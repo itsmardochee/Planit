@@ -9,18 +9,17 @@ import {
   Button,
   Alert,
   Box,
-  Typography,
 } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 import { memberAPI } from '../utils/api';
 
-const InviteMembers = ({ workspace, onClose, onInviteSuccess }) => {
+const InviteMembers = ({ open, workspaceId, onClose, onMemberInvited }) => {
   const { t } = useTranslation(['workspace', 'common']);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!workspace) {
+  if (!open) {
     return null;
   }
 
@@ -45,10 +44,10 @@ const InviteMembers = ({ workspace, onClose, onInviteSuccess }) => {
     setLoading(true);
 
     try {
-      await memberAPI.invite(workspace._id, { email });
+      await memberAPI.invite(workspaceId, { email });
       setEmail(''); // Clear input on success
-      if (onInviteSuccess) {
-        onInviteSuccess();
+      if (onMemberInvited) {
+        onMemberInvited();
       }
     } catch (err) {
       const message =
@@ -68,19 +67,11 @@ const InviteMembers = ({ workspace, onClose, onInviteSuccess }) => {
   };
 
   return (
-    <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Typography variant="h6">
-          {t('workspace:members.inviteMembers', {
-            defaultValue: 'Invite Members',
-          })}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t('workspace:members.inviteToWorkspace', {
-            workspaceName: workspace.name,
-            defaultValue: `Invite members to ${workspace.name}`,
-          })}
-        </Typography>
+        {t('workspace:members.inviteMembers', {
+          defaultValue: 'Invite Members',
+        })}
       </DialogTitle>
 
       <DialogContent>
