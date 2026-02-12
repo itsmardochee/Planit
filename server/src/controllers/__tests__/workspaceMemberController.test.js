@@ -408,17 +408,19 @@ describe('GET /api/workspaces/:id/members', () => {
   });
 
   describe('Business Logic', () => {
-    it('should return empty array when workspace has no members', async () => {
+    it('should return owner when workspace has no invited members', async () => {
       const response = await request(app)
         .get(`/api/workspaces/${testWorkspace._id}/members`)
         .set('Authorization', `Bearer ${ownerToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toEqual([]);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].role).toBe('owner');
+      expect(response.body.data[0].userId.username).toBe('owner');
     });
 
-    it('should return all members of the workspace', async () => {
+    it('should return owner and all invited members of the workspace', async () => {
       await WorkspaceMember.create({
         workspaceId: testWorkspace._id,
         userId: member1._id,
@@ -439,7 +441,19 @@ describe('GET /api/workspaces/:id/members', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data).toHaveLength(3);
+
+      // First member should be owner
+      expect(response.body.data[0].role).toBe('owner');
+      expect(response.body.data[0].userId.username).toBe('owner');
+
+      // Remaining members should be member1 and member2 (order may vary due to sort)
+      const invitedRoles = [
+        response.body.data[1].role,
+        response.body.data[2].role,
+      ];
+      expect(invitedRoles).toContain('member');
+      expect(invitedRoles).toContain('admin');
     });
 
     it('should populate user information in members list', async () => {
@@ -455,12 +469,15 @@ describe('GET /api/workspaces/:id/members', () => {
         .set('Authorization', `Bearer ${ownerToken}`);
 
       expect(response.status).toBe(200);
+      // First member is owner, second is invited member
       expect(response.body.data[0].userId).toBeDefined();
-      expect(response.body.data[0].userId.username).toBe('member1');
-      expect(response.body.data[0].userId.email).toBe('member1@example.com');
+      expect(response.body.data[0].userId.username).toBe('owner');
+      expect(response.body.data[1].userId).toBeDefined();
+      expect(response.body.data[1].userId.username).toBe('member1');
+      expect(response.body.data[1].userId.email).toBe('member1@example.com');
     });
 
-    it('should populate invitedBy information', async () => {
+    it('should populate invitedBy information for invited members', async () => {
       await WorkspaceMember.create({
         workspaceId: testWorkspace._id,
         userId: member1._id,
@@ -473,8 +490,10 @@ describe('GET /api/workspaces/:id/members', () => {
         .set('Authorization', `Bearer ${ownerToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data[0].invitedBy).toBeDefined();
-      expect(response.body.data[0].invitedBy.username).toBe('owner');
+      // data[0] is owner (no invitedBy), data[1] is invited member
+      expect(response.body.data[0].invitedBy).toBeNull();
+      expect(response.body.data[1].invitedBy).toBeDefined();
+      expect(response.body.data[1].invitedBy.username).toBe('owner');
     });
   });
 });

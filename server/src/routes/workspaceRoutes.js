@@ -11,6 +11,7 @@ import {
   getWorkspaceMembers,
   removeMember,
 } from '../controllers/workspaceMemberController.js';
+import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
 const router = express.Router();
 
@@ -27,18 +28,18 @@ router.get('/', getWorkspaces);
 
 // @route   GET /api/workspaces/:id
 // @desc    Get workspace by id
-// @access  Private
-router.get('/:id', getWorkspaceById);
+// @access  Private (owner or member)
+router.get('/:id', checkWorkspaceAccess, getWorkspaceById);
 
 // @route   PUT /api/workspaces/:id
 // @desc    Update workspace
-// @access  Private
-router.put('/:id', updateWorkspace);
+// @access  Private (owner only)
+router.put('/:id', checkWorkspaceAccess, updateWorkspace);
 
 // @route   DELETE /api/workspaces/:id
 // @desc    Delete workspace
-// @access  Private
-router.delete('/:id', deleteWorkspace);
+// @access  Private (owner only)
+router.delete('/:id', checkWorkspaceAccess, deleteWorkspace);
 
 // Workspace membership operations
 // @route   POST /api/workspaces/:id/invite

@@ -342,9 +342,27 @@ export const getWorkspaceMembers = async (req, res) => {
       .populate('invitedBy', 'username email')
       .sort({ createdAt: -1 });
 
+    // Add the workspace owner to the members list
+    const owner = await User.findById(workspace.userId).select(
+      'username email'
+    );
+    const ownerMember = {
+      _id: workspace._id, // Use workspace ID as unique identifier
+      workspaceId: workspace._id,
+      userId: owner,
+      role: 'owner',
+      invitedBy: null,
+      invitedAt: workspace.createdAt,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
+    };
+
+    // Prepend owner to the members list
+    const allMembers = [ownerMember, ...members];
+
     res.status(200).json({
       success: true,
-      data: members,
+      data: allMembers,
     });
   } catch (error) {
     res.status(500).json({

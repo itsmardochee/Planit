@@ -497,7 +497,7 @@ describe('GET /api/workspaces/:id', () => {
         .get(`/api/workspaces/${otherWorkspace._id}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 
@@ -689,7 +689,7 @@ describe('PUT /api/workspaces/:id', () => {
           name: 'Updated Workspace',
         });
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 
@@ -817,7 +817,7 @@ describe('DELETE /api/workspaces/:id', () => {
         .delete(`/api/workspaces/${otherWorkspace._id}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
     });
 

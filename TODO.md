@@ -37,7 +37,7 @@
 - [x] Créer endpoint `POST /api/workspaces/:id/invite` pour inviter un membre
 - [x] Créer endpoint `GET /api/workspaces/:id/members` pour lister les membres
 - [x] Créer endpoint `DELETE /api/workspaces/:id/members/:userId` pour retirer un membre
-- [ ] Implémenter système d'invitation par email (optionnel: token d'invitation)
+- [x] Implémenter invitation par email/username (UX améliorée - accepte email OU username)
 - [x] Middleware pour vérifier les permissions (isWorkspaceMember)
 - [x] Modifier controllers pour filtrer par membership, pas seulement userId
 - [x] Tests pour les endpoints de membership
@@ -48,12 +48,14 @@
 
 #### Frontend
 
-- [ ] Créer page/modal `InviteMembers` pour inviter des utilisateurs
-- [ ] Afficher la liste des membres du workspace
-- [ ] Créer composant `MemberList` avec avatars et rôles
-- [ ] Filtrer les dashboards pour afficher tous les workspaces où l'utilisateur est membre
-- [ ] Ajouter indicateur visuel pour workspaces partagés
-- [ ] Tests pour les composants de membership
+- [x] Créer page/modal `InviteMembers` pour inviter des utilisateurs
+- [x] Afficher la liste des membres du workspace
+- [x] Créer composant `MemberList` avec avatars et rôles
+- [x] Filtrer les dashboards pour afficher tous les workspaces où l'utilisateur est membre
+- [x] Ajouter indicateur visuel pour workspaces partagés
+- [x] Tests pour les composants de membership
+
+**Status:** ✅ Frontend complet - PR #133 prête pour merge
 
 ---
 
