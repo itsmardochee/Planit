@@ -33,15 +33,18 @@
 
 #### Backend
 
-- [ ] Créer modèle `WorkspaceMember` (workspaceId, userId, role, invitedAt)
-- [ ] Créer endpoint `POST /api/workspaces/:id/invite` pour inviter un membre
-- [ ] Créer endpoint `GET /api/workspaces/:id/members` pour lister les membres
-- [ ] Créer endpoint `DELETE /api/workspaces/:id/members/:userId` pour retirer un membre
+- [x] Créer modèle `WorkspaceMember` (workspaceId, userId, role, invitedAt)
+- [x] Créer endpoint `POST /api/workspaces/:id/invite` pour inviter un membre
+- [x] Créer endpoint `GET /api/workspaces/:id/members` pour lister les membres
+- [x] Créer endpoint `DELETE /api/workspaces/:id/members/:userId` pour retirer un membre
 - [ ] Implémenter système d'invitation par email (optionnel: token d'invitation)
-- [ ] Middleware pour vérifier les permissions (isWorkspaceMember)
-- [ ] Modifier controllers pour filtrer par membership, pas seulement userId
-- [ ] Tests pour les endpoints de membership
-- [ ] Cascade delete: supprimer les membres quand workspace est supprimé
+- [x] Middleware pour vérifier les permissions (isWorkspaceMember)
+- [x] Modifier controllers pour filtrer par membership, pas seulement userId
+- [x] Tests pour les endpoints de membership
+- [x] Cascade delete: supprimer les membres quand workspace est supprimé
+- [x] GET /api/workspaces retourne aussi les workspaces où l'utilisateur est membre
+
+**Status:** ✅ Backend complet
 
 #### Frontend
 
