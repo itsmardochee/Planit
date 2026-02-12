@@ -25,19 +25,25 @@ import User from '../models/User.js';
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - userId
  *             properties:
- *               userId:
+ *               email:
  *                 type: string
- *                 description: ID of the user to invite
- *                 example: 507f1f77bcf86cd799439011
+ *                 format: email
+ *                 description: Email of the user to invite
+ *                 example: john@example.com
+ *               username:
+ *                 type: string
+ *                 description: Username of the user to invite (alternative to email)
+ *                 example: john_doe
  *               role:
  *                 type: string
  *                 enum: [owner, admin, member, viewer]
  *                 default: member
  *                 description: Role to assign to the invited user
  *                 example: member
+ *             oneOf:
+ *               - required: [email]
+ *               - required: [username]
  *     responses:
  *       201:
  *         description: User invited successfully
@@ -110,7 +116,7 @@ import User from '../models/User.js';
 export const inviteMember = async (req, res) => {
   try {
     const { id: workspaceId } = req.params;
-    const { userId, role = 'member' } = req.body;
+    const { email, username, role = 'member' } = req.body;
 
     // Validate workspaceId
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
@@ -120,18 +126,11 @@ export const inviteMember = async (req, res) => {
       });
     }
 
-    // Validate userId
-    if (!userId) {
+    // Validate that at least email or username is provided
+    if (!email && !username) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide userId',
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid user ID format',
+        message: 'Please provide email or username',
       });
     }
 
@@ -161,14 +160,18 @@ export const inviteMember = async (req, res) => {
       });
     }
 
-    // Check if invited user exists
-    const invitedUser = await User.findById(userId);
+    // Find user by email or username
+    const query = email ? { email } : { username };
+    const invitedUser = await User.findOne(query);
+
     if (!invitedUser) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: `User not found with ${email ? 'email' : 'username'}: ${email || username}`,
       });
     }
+
+    const userId = invitedUser._id;
 
     // Check if user is already a member
     const existingMember = await WorkspaceMember.findOne({

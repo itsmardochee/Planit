@@ -68,7 +68,7 @@ describe('POST /api/workspaces/:id/invite', () => {
   });
 
   describe('Input Validation', () => {
-    it('should fail when userId is missing', async () => {
+    it('should fail when neither email nor username is provided', async () => {
       const response = await request(app)
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -78,21 +78,35 @@ describe('POST /api/workspaces/:id/invite', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('userId');
+      expect(response.body.message).toContain('email or username');
     });
 
-    it('should fail when userId is invalid ObjectId', async () => {
+    it('should fail when user with given email does not exist', async () => {
       const response = await request(app)
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: 'invalid-id',
+          email: 'nonexistent@example.com',
           role: 'member',
         });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('Invalid');
+      expect(response.body.message).toContain('User not found');
+    });
+
+    it('should fail when user with given username does not exist', async () => {
+      const response = await request(app)
+        .post(`/api/workspaces/${testWorkspace._id}/invite`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          username: 'nonexistent_username',
+          role: 'member',
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('User not found');
     });
 
     it('should fail when workspaceId is invalid ObjectId', async () => {
@@ -100,7 +114,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post('/api/workspaces/invalid-id/invite')
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'member',
         });
 
@@ -114,7 +128,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'super-admin',
         });
 
@@ -128,7 +142,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
         });
 
       expect(response.status).toBe(201);
@@ -156,7 +170,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${fakeId}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'member',
         });
 
@@ -182,7 +196,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${otherToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'member',
         });
 
@@ -198,7 +212,26 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
+          role: 'member',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data.workspaceId).toBe(testWorkspace._id.toString());
+      expect(response.body.data.userId).toBe(invitedUser._id.toString());
+      expect(response.body.data.role).toBe('member');
+      expect(response.body.data.invitedBy).toBe(ownerUser._id.toString());
+      expect(response.body.data.invitedAt).toBeDefined();
+    });
+
+    it('should successfully invite a user by username', async () => {
+      const response = await request(app)
+        .post(`/api/workspaces/${testWorkspace._id}/invite`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          username: invitedUser.username,
           role: 'member',
         });
 
@@ -217,7 +250,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'admin',
         });
 
@@ -232,7 +265,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'member',
         });
 
@@ -241,7 +274,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'admin',
         });
 
@@ -251,12 +284,11 @@ describe('POST /api/workspaces/:id/invite', () => {
     });
 
     it('should fail when invited user does not exist', async () => {
-      const fakeUserId = new mongoose.Types.ObjectId();
       const response = await request(app)
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: fakeUserId.toString(),
+          email: 'nonexistent@example.com',
           role: 'member',
         });
 
@@ -270,7 +302,7 @@ describe('POST /api/workspaces/:id/invite', () => {
         .post(`/api/workspaces/${testWorkspace._id}/invite`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          userId: invitedUser._id.toString(),
+          email: invitedUser.email,
           role: 'member',
         });
 
