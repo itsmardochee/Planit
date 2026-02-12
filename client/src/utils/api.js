@@ -80,3 +80,12 @@ export const cardAPI = {
   reorder: (cardId, data) => api.put(`/cards/${cardId}/reorder`, data),
   delete: cardId => api.delete(`/cards/${cardId}`),
 };
+
+// Member API calls (Workspace Members)
+export const memberAPI = {
+  getByWorkspace: workspaceId => api.get(`/workspaces/${workspaceId}/members`),
+  invite: (workspaceId, data) =>
+    api.post(`/workspaces/${workspaceId}/invite`, data),
+  remove: (workspaceId, userId) =>
+    api.delete(`/workspaces/${workspaceId}/members/${userId}`),
+};

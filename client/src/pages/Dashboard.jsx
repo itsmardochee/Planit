@@ -238,6 +238,12 @@ const Dashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 pr-8">
                     {workspace.name}
                   </h3>
+                  {/* Shared workspace indicator */}
+                  {workspace.userId !== user?._id && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 mb-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                      👥 {t('dashboard:sharedWorkspace', 'Shared')}
+                    </span>
+                  )}
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {workspace.description ||
                       t('common:messages.noDescription')}

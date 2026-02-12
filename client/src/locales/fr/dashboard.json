@@ -7,6 +7,7 @@
   "workspaceName": "Nom du workspace",
   "workspaceNamePlaceholder": "Mon nouveau workspace",
   "noWorkspaces": "Aucun workspace pour le moment",
+  "sharedWorkspace": "Partagé",
   "errors": {
     "loadingWorkspaces": "Erreur lors du chargement des workspaces",
     "creatingWorkspace": "Erreur lors de la création du workspace",
