@@ -67,26 +67,28 @@ import logger from '../utils/logger.js';
 /**
  * @desc    Create new list in a board
  * @route   POST /api/boards/:boardId/lists
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const createList = async (req, res, next) => {
   try {
     const { boardId } = req.params;
     const { name, description, position } = req.body;
 
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from boardId)
+
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(boardId)) {
       throw new ValidationError('Invalid board ID format');
     }
 
-    // Check if board exists and belongs to user
+    // Check if board exists
     const board = await Board.findById(boardId);
     if (!board) {
       throw new NotFoundError('Board not found');
     }
-    if (board.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this board');
-    }
+
+    // No need to check board.userId - workspace access is already verified by middleware
 
     // Trim and validate name
     const trimmedName = name?.trim();
@@ -167,11 +169,13 @@ export const createList = async (req, res, next) => {
 /**
  * @desc    Get all lists for a board
  * @route   GET /api/boards/:boardId/lists
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getLists = async (req, res, next) => {
   try {
     const { boardId } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(boardId)) {
       throw new ValidationError('Invalid board ID format');
@@ -181,11 +185,11 @@ export const getLists = async (req, res, next) => {
     if (!board) {
       throw new NotFoundError('Board not found');
     }
-    if (board.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this board');
-    }
 
-    const lists = await List.find({ boardId, userId: req.user._id }).sort({
+    // No need to check board.userId - workspace access is already verified by middleware
+
+    // Return ALL lists in the board (workspace-scoped, not user-scoped)
+    const lists = await List.find({ boardId }).sort({
       position: 1,
     });
 
@@ -232,11 +236,14 @@ export const getLists = async (req, res, next) => {
 /**
  * @desc    Get single list by ID
  * @route   GET /api/lists/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getList = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from listId)
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid list ID format');
@@ -246,9 +253,8 @@ export const getList = async (req, res, next) => {
     if (!list) {
       throw new NotFoundError('List not found');
     }
-    if (list.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this list');
-    }
+
+    // No need to check list.userId - workspace access is already verified by middleware
 
     logger.info(`Retrieved list ${id}`);
     res.status(200).json({ success: true, data: list });
@@ -312,12 +318,14 @@ export const getList = async (req, res, next) => {
 /**
  * @desc    Update a list
  * @route   PUT /api/lists/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const updateList = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description, position } = req.body;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid list ID format');
@@ -327,9 +335,8 @@ export const updateList = async (req, res, next) => {
     if (!existing) {
       throw new NotFoundError('List not found');
     }
-    if (existing.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to update this list');
-    }
+
+    // No need to check existing.userId - workspace access is already verified by middleware
 
     const updateData = {};
 
@@ -421,12 +428,14 @@ export const updateList = async (req, res, next) => {
 /**
  * @desc    Update list position for reordering
  * @route   PUT /api/lists/:id/reorder
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const reorderList = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { position } = req.body;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid list ID format');
@@ -445,9 +454,7 @@ export const reorderList = async (req, res, next) => {
       throw new NotFoundError('List not found');
     }
 
-    if (list.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to reorder this list');
-    }
+    // No need to check list.userId - workspace access is already verified by middleware
 
     const oldPosition = list.position;
     const newPosition = position;
@@ -533,11 +540,13 @@ export const reorderList = async (req, res, next) => {
 /**
  * @desc    Delete a list
  * @route   DELETE /api/lists/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const deleteList = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid list ID format');
@@ -547,9 +556,8 @@ export const deleteList = async (req, res, next) => {
     if (!list) {
       throw new NotFoundError('List not found');
     }
-    if (list.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to delete this list');
-    }
+
+    // No need to check list.userId - workspace access is already verified by middleware
 
     await List.findByIdAndDelete(id);
 

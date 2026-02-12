@@ -7,18 +7,21 @@ import {
   reorderCard,
   deleteCard,
 } from '../controllers/cardController.js';
+import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
 const listCardRouter = express.Router({ mergeParams: true });
 const cardRouter = express.Router();
 
 // Routes for /api/lists/:listId/cards
-listCardRouter.post('/', createCard);
-listCardRouter.get('/', getCards);
+// checkWorkspaceAccess verifies user is owner or member
+listCardRouter.post('/', checkWorkspaceAccess, createCard);
+listCardRouter.get('/', checkWorkspaceAccess, getCards);
 
 // Routes for /api/cards/:id
-cardRouter.get('/:id', getCard);
-cardRouter.put('/:id', updateCard);
-cardRouter.put('/:id/reorder', reorderCard);
-cardRouter.delete('/:id', deleteCard);
+// checkWorkspaceAccess resolves workspace from card._id
+cardRouter.get('/:id', checkWorkspaceAccess, getCard);
+cardRouter.put('/:id', checkWorkspaceAccess, updateCard);
+cardRouter.put('/:id/reorder', checkWorkspaceAccess, reorderCard);
+cardRouter.delete('/:id', checkWorkspaceAccess, deleteCard);
 
 export { listCardRouter, cardRouter };

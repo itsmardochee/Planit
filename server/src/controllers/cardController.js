@@ -66,26 +66,28 @@ import logger from '../utils/logger.js';
 /**
  * @desc    Create new card in a list
  * @route   POST /api/lists/:listId/cards
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const createCard = async (req, res, next) => {
   try {
     const { listId } = req.params;
     const { title, description, position } = req.body;
 
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from listId)
+
     // Validate list ID format
     if (!mongoose.Types.ObjectId.isValid(listId)) {
       throw new ValidationError('Invalid list ID format');
     }
 
-    // Check if list exists and belongs to user
+    // Check if list exists
     const list = await List.findById(listId);
     if (!list) {
       throw new NotFoundError('List not found');
     }
-    if (list.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this list');
-    }
+
+    // No need to check list.userId - workspace access is already verified by middleware
 
     // Trim and validate title
     const trimmedTitle = title?.trim();
@@ -166,11 +168,13 @@ export const createCard = async (req, res, next) => {
 /**
  * @desc    Get all cards for a list
  * @route   GET /api/lists/:listId/cards
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getCards = async (req, res, next) => {
   try {
     const { listId } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(listId)) {
       throw new ValidationError('Invalid list ID format');
@@ -180,11 +184,11 @@ export const getCards = async (req, res, next) => {
     if (!list) {
       throw new NotFoundError('List not found');
     }
-    if (list.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this list');
-    }
 
-    const cards = await Card.find({ listId, userId: req.user._id }).sort({
+    // No need to check list.userId - workspace access is already verified by middleware
+
+    // Return ALL cards in the list (workspace-scoped, not user-scoped)
+    const cards = await Card.find({ listId }).sort({
       position: 1,
     });
 
@@ -231,11 +235,14 @@ export const getCards = async (req, res, next) => {
 /**
  * @desc    Get single card by ID
  * @route   GET /api/cards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getCard = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from cardId)
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid card ID format');
@@ -245,9 +252,8 @@ export const getCard = async (req, res, next) => {
     if (!card) {
       throw new NotFoundError('Card not found');
     }
-    if (card.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this card');
-    }
+
+    // No need to check card.userId - workspace access is already verified by middleware
 
     logger.info(`Retrieved card ${id}`);
     res.status(200).json({ success: true, data: card });
@@ -307,12 +313,14 @@ export const getCard = async (req, res, next) => {
 /**
  * @desc    Update card
  * @route   PUT /api/cards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const updateCard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid card ID format');
@@ -322,9 +330,8 @@ export const updateCard = async (req, res, next) => {
     if (!card) {
       throw new NotFoundError('Card not found');
     }
-    if (card.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to update this card');
-    }
+
+    // No need to check card.userId - workspace access is already verified by middleware
 
     // Update title if provided
     if (title !== undefined) {
@@ -388,11 +395,13 @@ export const updateCard = async (req, res, next) => {
 /**
  * @desc    Delete card
  * @route   DELETE /api/cards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const deleteCard = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid card ID format');
@@ -402,9 +411,8 @@ export const deleteCard = async (req, res, next) => {
     if (!card) {
       throw new NotFoundError('Card not found');
     }
-    if (card.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to delete this card');
-    }
+
+    // No need to check card.userId - workspace access is already verified by middleware
 
     const deletedPosition = card.position;
     const listId = card.listId;
@@ -485,12 +493,14 @@ export const deleteCard = async (req, res, next) => {
 /**
  * @desc    Reorder card within its list or move to another list
  * @route   PUT /api/cards/:id/reorder
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const reorderCard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { position, listId: newListId } = req.body;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     // Validate card ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -502,14 +512,13 @@ export const reorderCard = async (req, res, next) => {
       throw new ValidationError('position must be a non-negative integer');
     }
 
-    // Find card and verify ownership
+    // Find card
     const card = await Card.findById(id);
     if (!card) {
       throw new NotFoundError('Card not found');
     }
-    if (card.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to reorder this card');
-    }
+
+    // No need to check card.userId - workspace access is already verified by middleware
 
     const oldPosition = card.position;
     const oldListId = card.listId.toString();
@@ -522,7 +531,7 @@ export const reorderCard = async (req, res, next) => {
         .json({ success: false, message: 'Invalid list ID format' });
     }
 
-    // If moving to a different list, verify the new list exists and belongs to user
+    // If moving to a different list, verify the new list exists
     if (newListId && newListId !== oldListId) {
       const targetList = await List.findById(newListId);
       if (!targetList) {
@@ -530,10 +539,12 @@ export const reorderCard = async (req, res, next) => {
           .status(404)
           .json({ success: false, message: 'Target list not found' });
       }
-      if (targetList.userId.toString() !== req.user._id.toString()) {
+
+      // Verify target list is in the SAME workspace
+      if (targetList.workspaceId.toString() !== req.workspace._id.toString()) {
         return res.status(403).json({
           success: false,
-          message: 'Not authorized to access target list',
+          message: 'Cannot move card to a list in a different workspace',
         });
       }
 

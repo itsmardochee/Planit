@@ -105,17 +105,25 @@ describe('Board Access - Workspace Members', () => {
     });
 
     // Create tokens
-    ownerToken = jwt.sign({ id: owner._id.toString() }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    ownerToken = jwt.sign(
+      { id: owner._id.toString() },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '7d',
+      }
+    );
     memberToken = jwt.sign(
       { id: member._id.toString() },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    adminToken = jwt.sign({ id: admin._id.toString() }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    adminToken = jwt.sign(
+      { id: admin._id.toString() },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '7d',
+      }
+    );
     viewerToken = jwt.sign(
       { id: viewer._id.toString() },
       process.env.JWT_SECRET,
