@@ -1218,3 +1218,534 @@ describe('PUT /api/cards/:id/reorder', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('POST /api/cards/:id/assign', () => {
+  let mongoServer;
+  let testUser;
+  let memberUser;
+  let testWorkspace;
+  let testBoard;
+  let testList;
+  let testCard;
+  let authToken;
+  let memberToken;
+
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    process.env.JWT_SECRET = 'test_secret_key';
+  }, 30000);
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+    delete process.env.JWT_SECRET;
+  });
+
+  beforeEach(async () => {
+    testUser = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    memberUser = await User.create({
+      username: 'memberuser',
+      email: 'member@example.com',
+      password: 'password123',
+    });
+
+    testWorkspace = await Workspace.create({
+      name: 'Test Workspace',
+      userId: testUser._id,
+    });
+
+    testBoard = await Board.create({
+      name: 'Test Board',
+      workspaceId: testWorkspace._id,
+      userId: testUser._id,
+    });
+
+    testList = await List.create({
+      name: 'Test List',
+      boardId: testBoard._id,
+      workspaceId: testWorkspace._id,
+      userId: testUser._id,
+      position: 0,
+    });
+
+    testCard = await Card.create({
+      title: 'Test Card',
+      listId: testList._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 0,
+    });
+
+    authToken = jwt.sign({ id: testUser._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    memberToken = jwt.sign({ id: memberUser._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+  });
+
+  afterEach(async () => {
+    await User.deleteMany({});
+    await Workspace.deleteMany({});
+    await Board.deleteMany({});
+    await List.deleteMany({});
+    await Card.deleteMany({});
+  });
+
+  describe('Authentication', () => {
+    it('should fail without authentication token', async () => {
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Authorization', () => {
+    it('should fail when user is not workspace member', async () => {
+      const otherUser = await User.create({
+        username: 'otheruser',
+        email: 'other@example.com',
+        password: 'password123',
+      });
+
+      const otherToken = jwt.sign(
+        { id: otherUser._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '7d',
+        }
+      );
+
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should fail when card does not exist', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      const res = await request(app)
+        .post(`/api/cards/${fakeId}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should fail with invalid card ID format', async () => {
+      const res = await request(app)
+        .post(`/api/cards/invalid-id/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should fail when userId is missing', async () => {
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should fail with invalid userId format', async () => {
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: 'invalid-id',
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should fail when user to assign does not exist', async () => {
+      const fakeUserId = new mongoose.Types.ObjectId();
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: fakeUserId.toString(),
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toContain('User not found');
+    });
+  });
+
+  describe('Business Logic', () => {
+    it('should successfully assign workspace member to card', async () => {
+      // Add memberUser to workspace first
+      const WorkspaceMember = mongoose.model('WorkspaceMember');
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: memberUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.assignedTo).toContainEqual(
+        expect.objectContaining({
+          _id: memberUser._id.toString(),
+        })
+      );
+    });
+
+    it('should allow workspace owner to assign themselves', async () => {
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: testUser._id.toString(),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.assignedTo).toHaveLength(1);
+    });
+
+    it('should fail when assigning non-workspace member', async () => {
+      const nonMember = await User.create({
+        username: 'nonmember',
+        email: 'nonmember@example.com',
+        password: 'password123',
+      });
+
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: nonMember._id.toString(),
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('not a member of the workspace');
+    });
+
+    it('should prevent duplicate assignment', async () => {
+      const WorkspaceMember = mongoose.model('WorkspaceMember');
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: memberUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      // First assignment
+      await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      // Duplicate assignment
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('already assigned');
+    });
+
+    it('should populate assigned user information', async () => {
+      const WorkspaceMember = mongoose.model('WorkspaceMember');
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: memberUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.assignedTo[0]).toHaveProperty(
+        'username',
+        'memberuser'
+      );
+      expect(res.body.data.assignedTo[0]).toHaveProperty(
+        'email',
+        'member@example.com'
+      );
+    });
+
+    it('should allow workspace member to assign themselves', async () => {
+      const WorkspaceMember = mongoose.model('WorkspaceMember');
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: memberUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      const res = await request(app)
+        .post(`/api/cards/${testCard._id}/assign`)
+        .set('Authorization', `Bearer ${memberToken}`)
+        .send({
+          userId: memberUser._id.toString(),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+  });
+});
+
+describe('DELETE /api/cards/:id/unassign/:userId', () => {
+  let mongoServer;
+  let testUser;
+  let memberUser;
+  let testWorkspace;
+  let testBoard;
+  let testList;
+  let testCard;
+  let authToken;
+
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    process.env.JWT_SECRET = 'test_secret_key';
+  }, 30000);
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+    delete process.env.JWT_SECRET;
+  });
+
+  beforeEach(async () => {
+    testUser = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    memberUser = await User.create({
+      username: 'memberuser',
+      email: 'member@example.com',
+      password: 'password123',
+    });
+
+    testWorkspace = await Workspace.create({
+      name: 'Test Workspace',
+      userId: testUser._id,
+    });
+
+    testBoard = await Board.create({
+      name: 'Test Board',
+      workspaceId: testWorkspace._id,
+      userId: testUser._id,
+    });
+
+    testList = await List.create({
+      name: 'Test List',
+      boardId: testBoard._id,
+      workspaceId: testWorkspace._id,
+      userId: testUser._id,
+      position: 0,
+    });
+
+    const WorkspaceMember = mongoose.model('WorkspaceMember');
+    await WorkspaceMember.create({
+      workspaceId: testWorkspace._id,
+      userId: memberUser._id,
+      role: 'member',
+      invitedBy: testUser._id,
+    });
+
+    testCard = await Card.create({
+      title: 'Test Card',
+      listId: testList._id,
+      boardId: testBoard._id,
+      userId: testUser._id,
+      position: 0,
+      assignedTo: [memberUser._id],
+    });
+
+    authToken = jwt.sign({ id: testUser._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+  });
+
+  afterEach(async () => {
+    await User.deleteMany({});
+    await Workspace.deleteMany({});
+    await Board.deleteMany({});
+    await List.deleteMany({});
+    await Card.deleteMany({});
+    const WorkspaceMember = mongoose.model('WorkspaceMember');
+    await WorkspaceMember.deleteMany({});
+  });
+
+  describe('Authentication', () => {
+    it('should fail without authentication token', async () => {
+      const res = await request(app).delete(
+        `/api/cards/${testCard._id}/unassign/${memberUser._id}`
+      );
+
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Authorization', () => {
+    it('should fail when user is not workspace member', async () => {
+      const otherUser = await User.create({
+        username: 'otheruser',
+        email: 'other@example.com',
+        password: 'password123',
+      });
+
+      const otherToken = jwt.sign(
+        { id: otherUser._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '7d',
+        }
+      );
+
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${otherToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should fail when card does not exist', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      const res = await request(app)
+        .delete(`/api/cards/${fakeId}/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should fail with invalid card ID format', async () => {
+      const res = await request(app)
+        .delete(`/api/cards/invalid-id/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should fail with invalid userId format', async () => {
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/invalid-id`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('Business Logic', () => {
+    it('should successfully unassign user from card', async () => {
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.assignedTo).toHaveLength(0);
+    });
+
+    it('should fail when user is not assigned to card', async () => {
+      const otherMember = await User.create({
+        username: 'othermember',
+        email: 'othermember@example.com',
+        password: 'password123',
+      });
+
+      const WorkspaceMember = mongoose.model('WorkspaceMember');
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: otherMember._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/${otherMember._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('not assigned');
+    });
+
+    it('should allow user to unassign themselves', async () => {
+      const memberToken = jwt.sign(
+        { id: memberUser._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '7d',
+        }
+      );
+
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${memberToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should support multiple assignments and unassign one', async () => {
+      // Assign testUser as well
+      await Card.findByIdAndUpdate(testCard._id, {
+        assignedTo: [memberUser._id, testUser._id],
+      });
+
+      const res = await request(app)
+        .delete(`/api/cards/${testCard._id}/unassign/${memberUser._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.assignedTo).toHaveLength(1);
+      expect(res.body.data.assignedTo[0]._id).toBe(testUser._id.toString());
+    });
+  });
+});

@@ -1,20 +1,49 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cardAPI } from '../utils/api';
+import MemberSelector from './MemberSelector';
 
-const CardModal = ({ card, onClose, onCardUpdate }) => {
+const CardModal = ({ card, members, onClose, onCardUpdate }) => {
   const { t } = useTranslation(['cards', 'common']);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [assignedMembers, setAssignedMembers] = useState(card.assignedTo || []);
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
+
+      // Update title and description
       await cardAPI.update(card._id, {
         title,
         description,
       });
+
+      // Process member assignment changes
+      const initialMemberIds = (card.assignedTo || []).map(m => m._id);
+      const currentMemberIds = assignedMembers.map(m => m._id);
+
+      // Find members to add (in current but not in initial)
+      const toAdd = currentMemberIds.filter(
+        id => !initialMemberIds.includes(id)
+      );
+
+      // Find members to remove (in initial but not in current)
+      const toRemove = initialMemberIds.filter(
+        id => !currentMemberIds.includes(id)
+      );
+
+      // Execute assignment API calls
+      for (const userId of toAdd) {
+        await cardAPI.assign(card._id, userId);
+      }
+
+      // Execute unassignment API calls
+      for (const userId of toRemove) {
+        await cardAPI.unassign(card._id, userId);
+      }
+
       onCardUpdate();
       onClose();
     } catch (err) {
@@ -35,17 +64,38 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
     }
   };
 
+  const handleAssignMember = async userId => {
+    // Find the full member object from members list
+    const memberToAdd = members.find(m => m.userId._id === userId);
+    if (memberToAdd) {
+      // Add to local state (pending changes)
+      setAssignedMembers(prev => [
+        ...prev,
+        {
+          _id: memberToAdd.userId._id,
+          username: memberToAdd.userId.username,
+          email: memberToAdd.userId.email,
+        },
+      ]);
+    }
+  };
+
+  const handleUnassignMember = async userId => {
+    // Remove from local state (pending changes)
+    setAssignedMembers(prev => prev.filter(m => m._id !== userId));
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
             {t('cards:detailsTitle')}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
           >
             ✕
           </button>
@@ -55,37 +105,47 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
         <div className="p-6 space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('cards:titleLabel')}
             </label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('cards:descriptionLabel')}
             </label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows="6"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
               placeholder={t('cards:descriptionPlaceholder')}
             />
           </div>
 
+          {/* Member Assignment */}
+          {members && members.length > 0 && (
+            <MemberSelector
+              members={members}
+              assignedMembers={assignedMembers}
+              onAssign={handleAssignMember}
+              onUnassign={handleUnassignMember}
+            />
+          )}
+
           {/* Card Info */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-800 mb-2">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
               {t('cards:informationTitle')}
             </h3>
-            <div className="space-y-1 text-sm text-gray-600">
+            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
               <p>
                 <span className="font-medium">{t('cards:idLabel')}:</span>{' '}
                 {card._id}
@@ -103,7 +163,7 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between gap-2 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-between gap-2 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <button
             onClick={handleDelete}
             className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
@@ -114,7 +174,7 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-lg transition"
             >
               {t('cards:cancel')}
             </button>

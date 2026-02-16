@@ -333,5 +333,83 @@ describe('API Utils', () => {
       expect(api.delete).toHaveBeenCalledWith(`/cards/${mockCardId}`);
       expect(result).toBe(mockResponse);
     });
+
+    it('should assign member to card', async () => {
+      const mockCardId = '999';
+      const mockUserId = 'user123';
+      const mockResponse = { data: { success: true } };
+      api.post = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.assign(mockCardId, mockUserId);
+
+      expect(api.post).toHaveBeenCalledWith(`/cards/${mockCardId}/assign`, {
+        userId: mockUserId,
+      });
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should unassign member from card', async () => {
+      const mockCardId = '999';
+      const mockUserId = 'user123';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.unassign(mockCardId, mockUserId);
+
+      expect(api.delete).toHaveBeenCalledWith(
+        `/cards/${mockCardId}/unassign/${mockUserId}`
+      );
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('memberAPI', () => {
+    it('should get members by workspace', async () => {
+      const mockWorkspaceId = '123';
+      const mockResponse = { data: [] };
+      api.get = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await (
+        await import('../api')
+      ).memberAPI.getByWorkspace(mockWorkspaceId);
+
+      expect(api.get).toHaveBeenCalledWith(
+        `/workspaces/${mockWorkspaceId}/members`
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should invite member to workspace', async () => {
+      const mockWorkspaceId = '123';
+      const mockData = { email: 'new@example.com' };
+      const mockResponse = { data: { success: true } };
+      api.post = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await (
+        await import('../api')
+      ).memberAPI.invite(mockWorkspaceId, mockData);
+
+      expect(api.post).toHaveBeenCalledWith(
+        `/workspaces/${mockWorkspaceId}/invite`,
+        mockData
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should remove member from workspace', async () => {
+      const mockWorkspaceId = '123';
+      const mockUserId = 'user456';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await (
+        await import('../api')
+      ).memberAPI.remove(mockWorkspaceId, mockUserId);
+
+      expect(api.delete).toHaveBeenCalledWith(
+        `/workspaces/${mockWorkspaceId}/members/${mockUserId}`
+      );
+      expect(result).toBe(mockResponse);
+    });
   });
 });

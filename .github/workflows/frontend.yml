@@ -54,9 +54,19 @@ jobs:
 
       - name: Run tests
         working-directory: ./client
-        run: npm test -- --watch=false --passWithNoTests
+        run: npm test -- --run --coverage
         env:
           CI: true
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./client/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
 
       - name: Build
         working-directory: ./client

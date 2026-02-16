@@ -37,6 +37,12 @@ const cardSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'User ID is required'],
     },
+    assignedTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     timestamps: true,

@@ -277,4 +277,259 @@ describe('MemberList Component', () => {
       expect(screen.getByText(/cannot remove|error/i)).toBeInTheDocument();
     });
   });
+
+  it('cancels removal when cancel button is clicked', async () => {
+    const mockRemove = vi.spyOn(apiModule.memberAPI, 'remove');
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={mockMembers}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    const removeButtons = screen.getAllByRole('button', {
+      name: /remove|delete/i,
+    });
+    fireEvent.click(removeButtons[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/are you sure you want to remove/i)
+      ).toBeInTheDocument();
+    });
+
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/are you sure you want to remove/i)
+      ).not.toBeInTheDocument();
+    });
+
+    expect(mockRemove).not.toHaveBeenCalled();
+  });
+
+  it('handles member with single word username initials', () => {
+    const singleNameMember = [
+      {
+        _id: 'member4',
+        userId: {
+          _id: 'user4',
+          username: 'Alice',
+          email: 'alice@example.com',
+        },
+        role: 'member',
+        joinedAt: '2026-01-04T00:00:00.000Z',
+      },
+    ];
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={singleNameMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    expect(screen.getByText('A')).toBeInTheDocument();
+  });
+
+  it('handles member with no username', () => {
+    const noUsernameMember = [
+      {
+        _id: 'member5',
+        userId: {
+          _id: 'user5',
+          username: null,
+          email: 'noname@example.com',
+        },
+        role: 'member',
+        joinedAt: '2026-01-05T00:00:00.000Z',
+      },
+    ];
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={noUsernameMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    expect(screen.getByText('?')).toBeInTheDocument();
+    expect(screen.getByText(/unknown user/i)).toBeInTheDocument();
+  });
+
+  it('formats joined date for members joined more than 30 days ago', () => {
+    const oldMember = [
+      {
+        _id: 'member6',
+        userId: {
+          _id: 'user6',
+          username: 'old_user',
+          email: 'old@example.com',
+        },
+        role: 'member',
+        joinedAt: '2025-01-01T00:00:00.000Z', // More than 30 days ago
+      },
+    ];
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={oldMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    // Should show formatted date like "Joined 1/1/2025"
+    expect(screen.getByText(/joined.*2025/i)).toBeInTheDocument();
+  });
+
+  it('handles role colors correctly for owner', () => {
+    const ownerMember = mockMembers.filter(m => m.role === 'owner');
+
+    const { container } = render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={ownerMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    // Owner role chip should be rendered
+    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+  });
+
+  it('handles role colors correctly for admin', () => {
+    const adminMember = mockMembers.filter(m => m.role === 'admin');
+
+    const { container } = render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={adminMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    // Admin role chip should be rendered
+    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+  });
+
+  it('handles unknown role color default', () => {
+    const unknownRoleMember = [
+      {
+        _id: 'member7',
+        userId: {
+          _id: 'user7',
+          username: 'unknown_role',
+          email: 'unknown@example.com',
+        },
+        role: 'unknown',
+        joinedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ];
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={unknownRoleMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    // Should display the username
+    expect(screen.getByText('unknown_role')).toBeInTheDocument();
+    // Should display the unknown role chip
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+  });
+
+  it('does not call onMemberRemoved when callback is not provided', async () => {
+    vi.spyOn(apiModule.memberAPI, 'remove').mockResolvedValueOnce({
+      data: { success: true },
+    });
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={mockMembers}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={undefined}
+        />
+      </I18nextProvider>
+    );
+
+    const removeButtons = screen.getAllByRole('button', {
+      name: /remove|delete/i,
+    });
+    fireEvent.click(removeButtons[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/are you sure you want to remove/i)
+      ).toBeInTheDocument();
+    });
+
+    const confirmButton = screen.getByRole('button', { name: /remove/i });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/are you sure you want to remove/i)
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('handles members with invitedAt instead of joinedAt', () => {
+    const invitedMember = [
+      {
+        _id: 'member8',
+        userId: {
+          _id: 'user8',
+          username: 'invited_user',
+          email: 'invited@example.com',
+        },
+        role: 'member',
+        invitedAt: '2026-02-15T00:00:00.000Z', // Yesterday
+      },
+    ];
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemberList
+          members={invitedMember}
+          workspaceId={mockWorkspaceId}
+          currentUserId={mockCurrentUserId}
+          onMemberRemoved={mockOnMemberRemoved}
+        />
+      </I18nextProvider>
+    );
+
+    expect(screen.getByText(/joined/i)).toBeInTheDocument();
+  });
 });

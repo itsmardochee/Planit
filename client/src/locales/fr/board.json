@@ -6,6 +6,9 @@
   "add": "Ajouter",
   "cancel": "Annuler",
   "addAnotherList": "Ajouter une autre liste",
+  "filterByMember": "Filtrer par :",
+  "allMembers": "Tous les membres",
+  "unassigned": "Non assigné",
   "errors": {
     "loadingBoard": "Erreur lors du chargement du board",
     "creatingList": "Erreur lors de la création de la liste"

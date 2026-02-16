@@ -79,6 +79,9 @@ export const cardAPI = {
   update: (cardId, data) => api.put(`/cards/${cardId}`, data),
   reorder: (cardId, data) => api.put(`/cards/${cardId}/reorder`, data),
   delete: cardId => api.delete(`/cards/${cardId}`),
+  assign: (cardId, userId) => api.post(`/cards/${cardId}/assign`, { userId }),
+  unassign: (cardId, userId) =>
+    api.delete(`/cards/${cardId}/unassign/${userId}`),
 };
 
 // Member API calls (Workspace Members)

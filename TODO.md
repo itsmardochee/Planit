@@ -11,21 +11,27 @@
 
 #### Backend
 
-- [ ] Ajouter champ `assignedTo: [userId]` dans le modèle `Card`
-- [ ] Créer endpoint `POST /api/cards/:id/assign` pour assigner un membre
-- [ ] Créer endpoint `DELETE /api/cards/:id/unassign/:userId` pour retirer un membre
-- [ ] Valider que l'utilisateur assigné est membre du workspace
-- [ ] Tests unitaires pour l'assignation/retrait de membres
-- [ ] Mettre à jour Swagger documentation
+- [x] Ajouter champ `assignedTo: [userId]` dans le modèle `Card`
+- [x] Créer endpoint `POST /api/cards/:id/assign` pour assigner un membre
+- [x] Créer endpoint `DELETE /api/cards/:id/unassign/:userId` pour retirer un membre
+- [x] Valider que l'utilisateur assigné est membre du workspace
+- [x] Tests unitaires pour l'assignation/retrait de membres (22 tests)
+- [x] Mettre à jour Swagger documentation
+
+**Status:** ✅ Backend complet - 452 tests passing
 
 #### Frontend
 
-- [ ] Ajouter sélecteur de membres dans le modal de carte
-- [ ] Afficher les avatars/initiales des membres assignés sur la carte
-- [ ] Créer composant `MemberSelector` réutilisable
-- [ ] Intégrer l'assignation dans le formulaire d'édition de carte
-- [ ] Ajouter filtres par membre assigné dans la vue board
-- [ ] Tests Vitest pour le composant d'assignation
+- [x] Ajouter sélecteur de membres dans le modal de carte
+- [x] Afficher les avatars/initiales des membres assignés sur la carte
+- [x] Créer composant `MemberSelector` réutilisable
+- [x] Intégrer l'assignation dans le formulaire d'édition de carte
+- [x] Ajouter filtres par membre assigné dans la vue board
+- [x] Tests Vitest pour le composant d'assignation (28 tests)
+
+**Status:** ✅ Frontend complet - 199 tests passing
+
+**Feature Status:** ✅ **COMPLETE** - PR #143 prête pour merge
 
 ---
 

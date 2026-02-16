@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { boardAPI, listAPI, cardAPI } from '../utils/api';
+import { boardAPI, listAPI, cardAPI, memberAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
@@ -30,6 +30,8 @@ const BoardPage = () => {
 
   const [board, setBoard] = useState(null);
   const [lists, setLists] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -44,7 +46,22 @@ const BoardPage = () => {
       setLoading(true);
 
       const boardResponse = await boardAPI.getById(boardId);
-      setBoard(boardResponse.data.data);
+      const boardData = boardResponse.data.data;
+      setBoard(boardData);
+
+      // Fetch workspace members if workspaceId is available
+      if (boardData.workspaceId) {
+        try {
+          const membersResponse = await memberAPI.getByWorkspace(
+            boardData.workspaceId
+          );
+          setMembers(membersResponse.data.data || []);
+        } catch (memberErr) {
+          console.error('Error loading members', memberErr);
+          setMembers([]);
+        }
+      }
+
       const listsResponse = await listAPI.getByBoard(boardId);
       const listsData = listsResponse.data.data || [];
       const listsWithCards = await Promise.all(
@@ -345,6 +362,28 @@ const BoardPage = () => {
     }
   };
 
+  // Filter cards based on selected member
+  const getFilteredLists = () => {
+    if (!selectedMemberFilter) {
+      return lists; // Show all cards
+    }
+
+    return lists.map(list => ({
+      ...list,
+      cards: list.cards.filter(card => {
+        if (selectedMemberFilter === 'unassigned') {
+          return !card.assignedTo || card.assignedTo.length === 0;
+        }
+        return (
+          card.assignedTo &&
+          card.assignedTo.some(member => member._id === selectedMemberFilter)
+        );
+      }),
+    }));
+  };
+
+  const filteredLists = getFilteredLists();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-blue-500 dark:bg-blue-900 flex items-center justify-center transition-colors">
@@ -372,12 +411,44 @@ const BoardPage = () => {
             >
               ← {t('board:back')}
             </button>
-            <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
-            {board?.description && (
-              <p className="text-blue-100 dark:text-blue-200 mt-1">
-                {board.description}
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
+                {board?.description && (
+                  <p className="text-blue-100 dark:text-blue-200 mt-1">
+                    {board.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Member Filter */}
+              {members.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <label className="text-white text-sm">
+                    {t('board:filterByMember', 'Filter by:')}
+                  </label>
+                  <select
+                    value={selectedMemberFilter || ''}
+                    onChange={e =>
+                      setSelectedMemberFilter(e.target.value || null)
+                    }
+                    className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">
+                      {t('board:allMembers', 'All members')}
+                    </option>
+                    <option value="unassigned">
+                      {t('board:unassigned', 'Unassigned')}
+                    </option>
+                    {members.map(member => (
+                      <option key={member.userId._id} value={member.userId._id}>
+                        {member.userId.username}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -388,7 +459,7 @@ const BoardPage = () => {
               items={lists.map(l => l._id)}
               strategy={horizontalListSortingStrategy}
             >
-              {lists.map(list => (
+              {filteredLists.map(list => (
                 <KanbanList
                   key={list._id}
                   list={list}
@@ -456,6 +527,7 @@ const BoardPage = () => {
           <CardModal
             card={selectedCard}
             boardId={boardId}
+            members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}
           />

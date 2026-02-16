@@ -6,6 +6,8 @@ import {
   updateCard,
   reorderCard,
   deleteCard,
+  assignMember,
+  unassignMember,
 } from '../controllers/cardController.js';
 import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
@@ -19,6 +21,16 @@ listCardRouter.get('/', checkWorkspaceAccess, getCards);
 
 // Routes for /api/cards/:id
 // checkWorkspaceAccess resolves workspace from card._id
+
+// Member assignment routes (BEFORE /:id routes to avoid conflicts)
+cardRouter.post('/:id/assign', checkWorkspaceAccess, assignMember);
+cardRouter.delete(
+  '/:id/unassign/:userId',
+  checkWorkspaceAccess,
+  unassignMember
+);
+
+// Card CRUD routes
 cardRouter.get('/:id', checkWorkspaceAccess, getCard);
 cardRouter.put('/:id', checkWorkspaceAccess, updateCard);
 cardRouter.put('/:id/reorder', checkWorkspaceAccess, reorderCard);

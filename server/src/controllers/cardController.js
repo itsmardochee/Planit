@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import Card from '../models/Card.js';
 import List from '../models/List.js';
+import User from '../models/User.js';
+import WorkspaceMember from '../models/WorkspaceMember.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
@@ -184,9 +186,12 @@ export const getCards = async (req, res, next) => {
     // No need to check list.userId - workspace access is already verified by middleware
 
     // Return ALL cards in the list (workspace-scoped, not user-scoped)
-    const cards = await Card.find({ listId }).sort({
-      position: 1,
-    });
+    // Populate assignedTo with user details for filtering and display
+    const cards = await Card.find({ listId })
+      .populate('assignedTo', 'username email')
+      .sort({
+        position: 1,
+      });
 
     logger.info(`Retrieved ${cards.length} cards for list ${listId}`);
     res.status(200).json({ success: true, data: cards });
@@ -244,7 +249,10 @@ export const getCard = async (req, res, next) => {
       throw new ValidationError('Invalid card ID format');
     }
 
-    const card = await Card.findById(id);
+    const card = await Card.findById(id).populate(
+      'assignedTo',
+      'username email'
+    );
     if (!card) {
       throw new NotFoundError('Card not found');
     }
@@ -600,6 +608,195 @@ export const reorderCard = async (req, res, next) => {
     await card.save();
 
     logger.info(`Card reordered: ${id} to position ${position}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/cards/{id}/assign:
+ *   post:
+ *     summary: Assign a member to a card
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: User ID to assign
+ *     responses:
+ *       200:
+ *         description: Member assigned successfully
+ *       400:
+ *         description: Invalid input or user already assigned
+ *       403:
+ *         description: User is not a workspace member
+ *       404:
+ *         description: Card or user not found
+ */
+export const assignMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    // Validate card ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    // Validate userId
+    if (!userId) {
+      throw new ValidationError('User ID is required');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new ValidationError('Invalid user ID format');
+    }
+
+    // Check if user exists
+    const userToAssign = await User.findById(userId);
+    if (!userToAssign) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Get card with workspace access already verified by middleware
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    // Check if user is workspace owner or member
+    const workspace = req.workspace;
+    const isOwner = workspace.userId.toString() === userId;
+
+    if (!isOwner) {
+      const membership = await WorkspaceMember.findOne({
+        workspaceId: workspace._id,
+        userId: userId,
+      });
+
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          message: 'User is not a member of the workspace',
+        });
+      }
+    }
+
+    // Check if user is already assigned
+    const alreadyAssigned = card.assignedTo.some(
+      assignedId => assignedId.toString() === userId
+    );
+
+    if (alreadyAssigned) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already assigned to this card',
+      });
+    }
+
+    // Add user to assignedTo array
+    card.assignedTo.push(userId);
+    await card.save();
+
+    // Populate assigned users
+    await card.populate('assignedTo', 'username email');
+
+    logger.info(`User ${userId} assigned to card ${id}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/cards/{id}/unassign/{userId}:
+ *   delete:
+ *     summary: Unassign a member from a card
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to unassign
+ *     responses:
+ *       200:
+ *         description: Member unassigned successfully
+ *       400:
+ *         description: Invalid input or user not assigned
+ *       404:
+ *         description: Card not found
+ */
+export const unassignMember = async (req, res, next) => {
+  try {
+    const { id, userId } = req.params;
+
+    // Validate card ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new ValidationError('Invalid user ID format');
+    }
+
+    // Get card with workspace access already verified by middleware
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    // Check if user is assigned to the card
+    const isAssigned = card.assignedTo.some(
+      assignedId => assignedId.toString() === userId
+    );
+
+    if (!isAssigned) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not assigned to this card',
+      });
+    }
+
+    // Remove user from assignedTo array
+    card.assignedTo = card.assignedTo.filter(
+      assignedId => assignedId.toString() !== userId
+    );
+    await card.save();
+
+    // Populate remaining assigned users
+    await card.populate('assignedTo', 'username email');
+
+    logger.info(`User ${userId} unassigned from card ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
