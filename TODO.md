@@ -69,20 +69,22 @@
 
 #### Backend
 
-- [ ] Créer modèle `Label` (name, color, workspaceId/boardId)
-- [ ] Ajouter champ `labels: [labelId]` dans le modèle `Card`
-- [ ] Ajouter champ `status: String` (enum: "todo", "in-progress", "done", "blocked")
-- [ ] Créer endpoints CRUD pour les labels:
-  - [ ] `POST /api/boards/:id/labels` - Créer un label
-  - [ ] `GET /api/boards/:id/labels` - Lister les labels du board
-  - [ ] `PUT /api/labels/:id` - Modifier un label
-  - [ ] `DELETE /api/labels/:id` - Supprimer un label
-- [ ] Créer endpoints pour assigner/retirer labels:
-  - [ ] `POST /api/cards/:id/labels/:labelId` - Assigner un label
-  - [ ] `DELETE /api/cards/:id/labels/:labelId` - Retirer un label
-- [ ] Créer endpoint `PATCH /api/cards/:id/status` pour changer le statut
-- [ ] Tests pour labels et statuts
-- [ ] Mettre à jour Swagger documentation
+- [x] Créer modèle `Label` (name, color, boardId)
+- [x] Ajouter champ `labels: [labelId]` dans le modèle `Card`
+- [x] Ajouter champ `status: String` (enum: "todo", "in-progress", "done", "blocked")
+- [x] Créer endpoints CRUD pour les labels:
+  - [x] `POST /api/boards/:id/labels` - Créer un label
+  - [x] `GET /api/boards/:id/labels` - Lister les labels du board
+  - [x] `PUT /api/labels/:id` - Modifier un label
+  - [x] `DELETE /api/labels/:id` - Supprimer un label
+- [x] Créer endpoints pour assigner/retirer labels:
+  - [x] `POST /api/cards/:id/labels/:labelId` - Assigner un label
+  - [x] `DELETE /api/cards/:id/labels/:labelId` - Retirer un label
+- [x] Créer endpoint `PATCH /api/cards/:id/status` pour changer le statut
+- [x] Tests pour labels et statuts (53 tests labels + 11 tests status = 64 total)
+- [x] Mettre à jour Swagger documentation
+
+**Status:** ✅ Backend complet - PR #144
 
 #### Frontend
 
