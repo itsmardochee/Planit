@@ -6,6 +6,9 @@
   "add": "Add",
   "cancel": "Cancel",
   "addAnotherList": "Add another list",
+  "filterByMember": "Filter by:",
+  "allMembers": "All members",
+  "unassigned": "Unassigned",
   "errors": {
     "loadingBoard": "Error loading board",
     "creatingList": "Error creating list"

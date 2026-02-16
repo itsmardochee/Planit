@@ -186,9 +186,12 @@ export const getCards = async (req, res, next) => {
     // No need to check list.userId - workspace access is already verified by middleware
 
     // Return ALL cards in the list (workspace-scoped, not user-scoped)
-    const cards = await Card.find({ listId }).sort({
-      position: 1,
-    });
+    // Populate assignedTo with user details for filtering and display
+    const cards = await Card.find({ listId })
+      .populate('assignedTo', 'username email')
+      .sort({
+        position: 1,
+      });
 
     logger.info(`Retrieved ${cards.length} cards for list ${listId}`);
     res.status(200).json({ success: true, data: cards });
@@ -246,7 +249,10 @@ export const getCard = async (req, res, next) => {
       throw new ValidationError('Invalid card ID format');
     }
 
-    const card = await Card.findById(id);
+    const card = await Card.findById(id).populate(
+      'assignedTo',
+      'username email'
+    );
     if (!card) {
       throw new NotFoundError('Card not found');
     }

@@ -1,0 +1,231 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import CardModal from '../CardModal';
+import { cardAPI } from '../../utils/api';
+
+// Mock the API
+vi.mock('../../utils/api', () => ({
+  cardAPI: {
+    update: vi.fn(),
+    delete: vi.fn(),
+    assign: vi.fn(),
+    unassign: vi.fn(),
+  },
+}));
+
+describe('CardModal - Member Assignment', () => {
+  const mockCard = {
+    _id: 'card123',
+    title: 'Test Card',
+    description: 'Test description',
+    assignedTo: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Mock members structure matches API response from workspace members
+  const mockMembers = [
+    {
+      _id: 'member-1',
+      userId: { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+      role: 'member',
+    },
+    {
+      _id: 'member-2',
+      userId: {
+        _id: 'user2',
+        username: 'jane_smith',
+        email: 'jane@example.com',
+      },
+      role: 'member',
+    },
+  ];
+
+  const mockOnClose = vi.fn();
+  const mockOnCardUpdate = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders member selector when members are provided', () => {
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    expect(screen.getByText(/assign members/i)).toBeInTheDocument();
+  });
+
+  it('does not render member selector when members prop is not provided', () => {
+    render(
+      <CardModal
+        card={mockCard}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    expect(screen.queryByText(/assign members/i)).not.toBeInTheDocument();
+  });
+
+  it('displays assigned members from card data', () => {
+    const cardWithAssignees = {
+      ...mockCard,
+      assignedTo: [
+        { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+      ],
+    };
+
+    render(
+      <CardModal
+        card={cardWithAssignees}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    expect(screen.getByText(/john_doe/i)).toBeInTheDocument();
+  });
+
+  it('calls API to assign member when selected', async () => {
+    cardAPI.assign.mockResolvedValue({ data: { success: true } });
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user1' } });
+
+    await waitFor(() => {
+      expect(cardAPI.assign).toHaveBeenCalledWith('card123', 'user1');
+      expect(mockOnCardUpdate).toHaveBeenCalled();
+    });
+  });
+
+  it('calls API to unassign member when remove button is clicked', async () => {
+    cardAPI.unassign.mockResolvedValue({ data: { success: true } });
+
+    const cardWithAssignees = {
+      ...mockCard,
+      assignedTo: [
+        { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+      ],
+    };
+
+    render(
+      <CardModal
+        card={cardWithAssignees}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const removeButton = screen.getByRole('button', { name: /remove/i });
+    fireEvent.click(removeButton);
+
+    await waitFor(() => {
+      expect(cardAPI.unassign).toHaveBeenCalledWith('card123', 'user1');
+      expect(mockOnCardUpdate).toHaveBeenCalled();
+    });
+  });
+
+  it('handles assignment API errors gracefully', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    cardAPI.assign.mockRejectedValue(new Error('API Error'));
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user1' } });
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('handles unassignment API errors gracefully', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    cardAPI.unassign.mockRejectedValue(new Error('API Error'));
+
+    const cardWithAssignees = {
+      ...mockCard,
+      assignedTo: [
+        { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+      ],
+    };
+
+    render(
+      <CardModal
+        card={cardWithAssignees}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const removeButton = screen.getByRole('button', { name: /remove/i });
+    fireEvent.click(removeButton);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('updates member list after successful assignment', async () => {
+    cardAPI.assign.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          ...mockCard,
+          assignedTo: [
+            { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+          ],
+        },
+      },
+    });
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user1' } });
+
+    await waitFor(() => {
+      expect(mockOnCardUpdate).toHaveBeenCalled();
+    });
+  });
+});

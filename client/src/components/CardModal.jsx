@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cardAPI } from '../utils/api';
+import MemberSelector from './MemberSelector';
 
-const CardModal = ({ card, onClose, onCardUpdate }) => {
+const CardModal = ({ card, members, onClose, onCardUpdate }) => {
   const { t } = useTranslation(['cards', 'common']);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
@@ -32,6 +33,24 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
       onClose();
     } catch (err) {
       console.error('Error deleting card', err);
+    }
+  };
+
+  const handleAssignMember = async userId => {
+    try {
+      await cardAPI.assign(card._id, userId);
+      onCardUpdate(); // Refresh card data
+    } catch (err) {
+      console.error('Error assigning member', err);
+    }
+  };
+
+  const handleUnassignMember = async userId => {
+    try {
+      await cardAPI.unassign(card._id, userId);
+      onCardUpdate(); // Refresh card data
+    } catch (err) {
+      console.error('Error unassigning member', err);
     }
   };
 
@@ -79,6 +98,16 @@ const CardModal = ({ card, onClose, onCardUpdate }) => {
               placeholder={t('cards:descriptionPlaceholder')}
             />
           </div>
+
+          {/* Member Assignment */}
+          {members && members.length > 0 && (
+            <MemberSelector
+              members={members}
+              assignedMembers={card.assignedTo || []}
+              onAssign={handleAssignMember}
+              onUnassign={handleUnassignMember}
+            />
+          )}
 
           {/* Card Info */}
           <div className="bg-gray-50 rounded-lg p-4">
