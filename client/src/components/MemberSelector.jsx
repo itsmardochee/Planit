@@ -50,7 +50,7 @@ const MemberSelector = ({ members, assignedMembers, onAssign, onUnassign }) => {
 
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         {t('cards:assignMembers', { defaultValue: 'Assign Members' })}
       </label>
 
@@ -60,17 +60,17 @@ const MemberSelector = ({ members, assignedMembers, onAssign, onUnassign }) => {
           {assignedMembers.map(member => (
             <div
               key={member._id}
-              className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+              className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm"
             >
               {/* Avatar with initials */}
-              <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+              <div className="w-6 h-6 bg-blue-500 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
                 {getInitials(member.username)}
               </div>
               <span>{member.username}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveMember(member._id)}
-                className="ml-1 text-blue-600 hover:text-blue-800 font-bold"
+                className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 font-bold"
                 aria-label="Remove member"
               >
                 ✕
@@ -85,7 +85,7 @@ const MemberSelector = ({ members, assignedMembers, onAssign, onUnassign }) => {
         value={selectedMember}
         onChange={handleMemberSelect}
         disabled={availableMembers.length === 0}
-        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
       >
         <option value="">
           {availableMembers.length === 0
