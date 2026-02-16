@@ -93,9 +93,7 @@ describe('CardModal - Member Assignment', () => {
     expect(screen.getByText(/john_doe/i)).toBeInTheDocument();
   });
 
-  it('calls API to assign member when selected', async () => {
-    cardAPI.assign.mockResolvedValue({ data: { success: true } });
-
+  it('adds member to local state when selected (pending save)', async () => {
     render(
       <CardModal
         card={mockCard}
@@ -108,13 +106,117 @@ describe('CardModal - Member Assignment', () => {
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'user1' } });
 
+    // Should show member in UI immediately (local state only)
     await waitFor(() => {
+      expect(screen.getByText(/john_doe/i)).toBeInTheDocument();
+    });
+
+    // Should NOT call API until Save is clicked
+    expect(cardAPI.assign).not.toHaveBeenCalled();
+    expect(mockOnCardUpdate).not.toHaveBeenCalled();
+  });
+
+  it('removes member from local state when remove button is clicked (pending save)', async () => {
+    const cardWithAssignees = {
+      ...mockCard,
+      assignedTo: [
+        { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
+      ],
+    };
+
+    render(
+      <CardModal
+        card={cardWithAssignees}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    // Verify member badge is initially shown
+    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+
+    const removeButton = screen.getByRole('button', { name: /remove/i });
+    fireEvent.click(removeButton);
+
+    // Should remove member badge from UI immediately (local state only)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: /remove/i })
+      ).not.toBeInTheDocument();
+    });
+
+    // Should NOT call API until Save is clicked
+    expect(cardAPI.unassign).not.toHaveBeenCalled();
+    expect(mockOnCardUpdate).not.toHaveBeenCalled();
+  });
+
+  it('handles assignment API errors gracefully on save', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    cardAPI.update.mockResolvedValue({ data: { success: true } });
+    cardAPI.assign.mockRejectedValue(new Error('API Error'));
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    // Select a member
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user1' } });
+
+    // Click Save button
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('saves all member changes when Save button is clicked', async () => {
+    cardAPI.update.mockResolvedValue({ data: { success: true } });
+    cardAPI.assign.mockResolvedValue({ data: { success: true } });
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    // Select a member
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user1' } });
+
+    // Click Save button
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(cardAPI.update).toHaveBeenCalledWith('card123', {
+        title: 'Test Card',
+        description: 'Test description',
+      });
       expect(cardAPI.assign).toHaveBeenCalledWith('card123', 'user1');
       expect(mockOnCardUpdate).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
     });
   });
 
-  it('calls API to unassign member when remove button is clicked', async () => {
+  it('saves both additions and removals when Save button is clicked', async () => {
+    cardAPI.update.mockResolvedValue({ data: { success: true } });
+    cardAPI.assign.mockResolvedValue({ data: { success: true } });
     cardAPI.unassign.mockResolvedValue({ data: { success: true } });
 
     const cardWithAssignees = {
@@ -133,99 +235,24 @@ describe('CardModal - Member Assignment', () => {
       />
     );
 
+    // Remove existing member
     const removeButton = screen.getByRole('button', { name: /remove/i });
     fireEvent.click(removeButton);
 
+    // Add new member
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'user2' } });
+
+    // Click Save button
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveButton);
+
     await waitFor(() => {
+      expect(cardAPI.update).toHaveBeenCalled();
       expect(cardAPI.unassign).toHaveBeenCalledWith('card123', 'user1');
+      expect(cardAPI.assign).toHaveBeenCalledWith('card123', 'user2');
       expect(mockOnCardUpdate).toHaveBeenCalled();
-    });
-  });
-
-  it('handles assignment API errors gracefully', async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    cardAPI.assign.mockRejectedValue(new Error('API Error'));
-
-    render(
-      <CardModal
-        card={mockCard}
-        members={mockMembers}
-        onClose={mockOnClose}
-        onCardUpdate={mockOnCardUpdate}
-      />
-    );
-
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'user1' } });
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('handles unassignment API errors gracefully', async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    cardAPI.unassign.mockRejectedValue(new Error('API Error'));
-
-    const cardWithAssignees = {
-      ...mockCard,
-      assignedTo: [
-        { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
-      ],
-    };
-
-    render(
-      <CardModal
-        card={cardWithAssignees}
-        members={mockMembers}
-        onClose={mockOnClose}
-        onCardUpdate={mockOnCardUpdate}
-      />
-    );
-
-    const removeButton = screen.getByRole('button', { name: /remove/i });
-    fireEvent.click(removeButton);
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('updates member list after successful assignment', async () => {
-    cardAPI.assign.mockResolvedValue({
-      data: {
-        success: true,
-        data: {
-          ...mockCard,
-          assignedTo: [
-            { _id: 'user1', username: 'john_doe', email: 'john@example.com' },
-          ],
-        },
-      },
-    });
-
-    render(
-      <CardModal
-        card={mockCard}
-        members={mockMembers}
-        onClose={mockOnClose}
-        onCardUpdate={mockOnCardUpdate}
-      />
-    );
-
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'user1' } });
-
-    await waitFor(() => {
-      expect(mockOnCardUpdate).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
     });
   });
 });
