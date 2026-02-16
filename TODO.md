@@ -103,17 +103,19 @@
 
 #### Backend
 
-- [ ] Créer modèle `Comment` (cardId, userId, content, createdAt, updatedAt)
-- [ ] Créer endpoints CRUD pour les commentaires:
-  - [ ] `POST /api/cards/:id/comments` - Créer un commentaire
-  - [ ] `GET /api/cards/:id/comments` - Lister les commentaires
-  - [ ] `PUT /api/comments/:id` - Modifier un commentaire
-  - [ ] `DELETE /api/comments/:id` - Supprimer un commentaire
-- [ ] Valider que seul l'auteur peut modifier/supprimer son commentaire
-- [ ] Populate userId pour afficher le nom de l'auteur
+- [x] Créer modèle `Comment` (cardId, userId, content, createdAt, updatedAt)
+- [x] Créer endpoints CRUD pour les commentaires:
+  - [x] `POST /api/cards/:cardId/comments` - Créer un commentaire
+  - [x] `GET /api/cards/:cardId/comments` - Lister les commentaires
+  - [x] `PUT /api/comments/:id` - Modifier un commentaire
+  - [x] `DELETE /api/comments/:id` - Supprimer un commentaire
+- [x] Valider que seul l'auteur peut modifier/supprimer son commentaire
+- [x] Populate userId pour afficher le nom de l'auteur
 - [ ] Cascade delete: supprimer les commentaires quand carte est supprimée
-- [ ] Tests unitaires pour les commentaires
-- [ ] Mettre à jour Swagger documentation
+- [x] Tests unitaires pour les commentaires (44 tests: 35 controller + 9 model)
+- [x] Mettre à jour Swagger documentation (inline dans le controller)
+
+**Status:** ✅ Backend complet - 44 tests passing - PR #145 (draft)
 
 #### Frontend
 
