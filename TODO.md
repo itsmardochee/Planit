@@ -22,12 +22,16 @@
 
 #### Frontend
 
-- [ ] Ajouter sélecteur de membres dans le modal de carte
-- [ ] Afficher les avatars/initiales des membres assignés sur la carte
-- [ ] Créer composant `MemberSelector` réutilisable
-- [ ] Intégrer l'assignation dans le formulaire d'édition de carte
-- [ ] Ajouter filtres par membre assigné dans la vue board
-- [ ] Tests Vitest pour le composant d'assignation
+- [x] Ajouter sélecteur de membres dans le modal de carte
+- [x] Afficher les avatars/initiales des membres assignés sur la carte
+- [x] Créer composant `MemberSelector` réutilisable
+- [x] Intégrer l'assignation dans le formulaire d'édition de carte
+- [x] Ajouter filtres par membre assigné dans la vue board
+- [x] Tests Vitest pour le composant d'assignation (28 tests)
+
+**Status:** ✅ Frontend complet - 199 tests passing
+
+**Feature Status:** ✅ **COMPLETE** - PR #143 prête pour merge
 
 ---
 
