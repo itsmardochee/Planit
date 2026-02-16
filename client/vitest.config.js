@@ -9,7 +9,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
     css: true,
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/**',

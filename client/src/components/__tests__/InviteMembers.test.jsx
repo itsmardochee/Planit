@@ -251,4 +251,142 @@ describe('InviteMembers Modal', () => {
       expect(emailInput.value).toBe('');
     });
   });
+
+  it('sends invite when Enter key is pressed with valid email', async () => {
+    const inviteSpy = vi
+      .spyOn(apiModule.memberAPI, 'invite')
+      .mockResolvedValueOnce({
+        data: { success: true },
+      });
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <InviteMembers
+          open={true}
+          workspaceId={mockWorkspaceId}
+          onClose={mockOnClose}
+          onMemberInvited={mockOnMemberInvited}
+        />
+      </I18nextProvider>
+    );
+
+    const emailInput = screen.getByRole('textbox');
+    fireEvent.change(emailInput, {
+      target: { value: 'test@example.com' },
+    });
+
+    // Use keyDown instead of keyPress for better compatibility
+    fireEvent.keyDown(emailInput, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+    });
+
+    await waitFor(() => {
+      expect(inviteSpy).toHaveBeenCalledWith(mockWorkspaceId, {
+        email: 'test@example.com',
+      });
+    });
+  });
+
+  it('does not send invite when Enter is pressed without email', () => {
+    const inviteSpy = vi.spyOn(apiModule.memberAPI, 'invite');
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <InviteMembers
+          open={true}
+          workspaceId={mockWorkspaceId}
+          onClose={mockOnClose}
+          onMemberInvited={mockOnMemberInvited}
+        />
+      </I18nextProvider>
+    );
+
+    const emailInput = screen.getByRole('textbox');
+    fireEvent.keyPress(emailInput, { key: 'Enter', code: 'Enter' });
+
+    expect(inviteSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not send invite when other key is pressed', () => {
+    const inviteSpy = vi.spyOn(apiModule.memberAPI, 'invite');
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <InviteMembers
+          open={true}
+          workspaceId={mockWorkspaceId}
+          onClose={mockOnClose}
+          onMemberInvited={mockOnMemberInvited}
+        />
+      </I18nextProvider>
+    );
+
+    const emailInput = screen.getByRole('textbox');
+    fireEvent.change(emailInput, {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.keyPress(emailInput, { key: 'a', code: 'KeyA' });
+
+    expect(inviteSpy).not.toHaveBeenCalled();
+  });
+
+  it('calls onMemberInvited callback when provided and invitation succeeds', async () => {
+    vi.spyOn(apiModule.memberAPI, 'invite').mockResolvedValueOnce({
+      data: { success: true },
+    });
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <InviteMembers
+          open={true}
+          workspaceId={mockWorkspaceId}
+          onClose={mockOnClose}
+          onMemberInvited={mockOnMemberInvited}
+        />
+      </I18nextProvider>
+    );
+
+    const emailInput = screen.getByRole('textbox');
+    const inviteButton = screen.getByRole('button', { name: /invite|send/i });
+
+    fireEvent.change(emailInput, {
+      target: { value: 'newmember@example.com' },
+    });
+    fireEvent.click(inviteButton);
+
+    await waitFor(() => {
+      expect(mockOnMemberInvited).toHaveBeenCalled();
+    });
+  });
+
+  it('does not call onMemberInvited when callback is not provided', async () => {
+    vi.spyOn(apiModule.memberAPI, 'invite').mockResolvedValueOnce({
+      data: { success: true },
+    });
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <InviteMembers
+          open={true}
+          workspaceId={mockWorkspaceId}
+          onClose={mockOnClose}
+          onMemberInvited={undefined}
+        />
+      </I18nextProvider>
+    );
+
+    const emailInput = screen.getByRole('textbox');
+    const inviteButton = screen.getByRole('button', { name: /invite|send/i });
+
+    fireEvent.change(emailInput, {
+      target: { value: 'newmember@example.com' },
+    });
+    fireEvent.click(inviteButton);
+
+    await waitFor(() => {
+      expect(emailInput.value).toBe('');
+    });
+  });
 });

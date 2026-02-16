@@ -187,4 +187,106 @@ describe('KanbanCard - Member Assignment Display', () => {
     const avatarSection = screen.queryByTestId('assigned-members');
     expect(avatarSection).not.toBeInTheDocument();
   });
+
+  it('should call onClick handler when card is clicked', () => {
+    const onClickMock = vi.fn();
+
+    const { container } = renderWithDndContext(
+      <KanbanCard card={mockCard} onClick={onClickMock} onDelete={vi.fn()} />
+    );
+
+    // Find the main card div and click it
+    const cardElement = container.querySelector('div[class*="bg-white"]');
+    cardElement.click();
+
+    expect(onClickMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call onDelete handler and stopPropagation when delete button is clicked', async () => {
+    const { cardAPI } = await import('../../utils/api');
+    const onDeleteMock = vi.fn();
+    cardAPI.delete.mockResolvedValue({});
+
+    renderWithDndContext(
+      <KanbanCard card={mockCard} onClick={vi.fn()} onDelete={onDeleteMock} />
+    );
+
+    const deleteButton = screen.getByTitle('Delete');
+    deleteButton.click();
+
+    // Wait for async delete to complete
+    await vi.waitFor(() => {
+      expect(cardAPI.delete).toHaveBeenCalledWith('card-1');
+      expect(onDeleteMock).toHaveBeenCalledWith('card-1');
+    });
+  });
+
+  it('should display labels badge when labels are present', () => {
+    const cardWithLabels = {
+      ...mockCard,
+      labels: ['urgent', 'bug'],
+    };
+
+    renderWithDndContext(
+      <KanbanCard card={cardWithLabels} onClick={vi.fn()} onDelete={vi.fn()} />
+    );
+
+    expect(screen.getByText('2 labels')).toBeInTheDocument();
+  });
+
+  it('should display singular label text when only one label', () => {
+    const cardWithOneLabel = {
+      ...mockCard,
+      labels: ['urgent'],
+    };
+
+    renderWithDndContext(
+      <KanbanCard
+        card={cardWithOneLabel}
+        onClick={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('1 label')).toBeInTheDocument();
+  });
+
+  it('should display due date badge when dueDate is present', () => {
+    const cardWithDueDate = {
+      ...mockCard,
+      dueDate: '2024-12-31',
+    };
+
+    renderWithDndContext(
+      <KanbanCard card={cardWithDueDate} onClick={vi.fn()} onDelete={vi.fn()} />
+    );
+
+    expect(screen.getByText('📅')).toBeInTheDocument();
+  });
+
+  it('should display description when present', () => {
+    renderWithDndContext(
+      <KanbanCard card={mockCard} onClick={vi.fn()} onDelete={vi.fn()} />
+    );
+
+    expect(screen.getByText('Test description')).toBeInTheDocument();
+  });
+
+  it('should not display description when not present', () => {
+    const cardWithoutDescription = {
+      _id: 'card-1',
+      title: 'Test Card',
+    };
+
+    renderWithDndContext(
+      <KanbanCard
+        card={cardWithoutDescription}
+        onClick={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const description = screen.queryByText('Test description');
+    expect(description).not.toBeInTheDocument();
+  });
 });

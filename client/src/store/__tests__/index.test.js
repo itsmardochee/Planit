@@ -489,24 +489,211 @@ describe('Store Exports', () => {
     expect(state.cards).toBeDefined();
   });
 
-  it('should dispatch actions to the real store', () => {
-    // Dispatch real actions to the real store
-    store.dispatch(setLists([{ id: 1, name: 'List 1' }]));
-    store.dispatch(addList({ id: 2, name: 'List 2' }));
+  // Auth reducer tests - directly test the reducer functions
+  it('should execute loginSuccess reducer', () => {
+    const mockUser = { id: 1, email: 'test@test.com', name: 'Test' };
+    const mockToken = 'jwt-token-xyz';
 
-    const listsState = store.getState().lists;
-    expect(listsState.items).toHaveLength(2);
-    expect(listsState.items[0].name).toBe('List 1');
-    expect(listsState.items[1].name).toBe('List 2');
+    store.dispatch(loginSuccess({ user: mockUser, token: mockToken }));
+
+    const authState = store.getState().auth;
+    expect(authState.user).toEqual(mockUser);
+    expect(authState.token).toBe(mockToken);
+    expect(authState.loading).toBe(false);
+    expect(authState.error).toBeNull();
   });
 
-  it('should dispatch card actions to the real store', () => {
-    store.dispatch(setCards([{ id: 'c1', title: 'Card 1' }]));
-    store.dispatch(addCard({ id: 'c2', title: 'Card 2' }));
+  it('should execute loginRequest reducer', () => {
+    store.dispatch(loginRequest());
+
+    const authState = store.getState().auth;
+    expect(authState.loading).toBe(true);
+    expect(authState.error).toBeNull();
+  });
+
+  it('should execute loginError reducer', () => {
+    const errorMessage = 'Authentication failed';
+
+    store.dispatch(loginError(errorMessage));
+
+    const authState = store.getState().auth;
+    expect(authState.loading).toBe(false);
+    expect(authState.error).toBe(errorMessage);
+  });
+
+  it('should execute logout reducer', () => {
+    // First login
+    store.dispatch(
+      loginSuccess({
+        user: { id: 1, email: 'test@test.com' },
+        token: 'token-123',
+      })
+    );
+
+    // Then logout
+    store.dispatch(logout());
+
+    const authState = store.getState().auth;
+    expect(authState.user).toBeNull();
+    expect(authState.token).toBeNull();
+    expect(authState.loading).toBe(false);
+    expect(authState.error).toBeNull();
+  });
+
+  // Workspaces reducer tests
+  it('should execute setWorkspaces reducer', () => {
+    const workspaces = [
+      { id: 'ws1', name: 'Workspace 1' },
+      { id: 'ws2', name: 'Workspace 2' },
+    ];
+
+    store.dispatch(setWorkspaces(workspaces));
+
+    const workspacesState = store.getState().workspaces;
+    expect(workspacesState.list).toEqual(workspaces);
+  });
+
+  it('should execute setCurrentWorkspace reducer', () => {
+    const workspace = { id: 'ws1', name: 'Current Workspace' };
+
+    store.dispatch(setCurrentWorkspace(workspace));
+
+    const workspacesState = store.getState().workspaces;
+    expect(workspacesState.current).toEqual(workspace);
+  });
+
+  it('should execute addWorkspace reducer', () => {
+    const workspace = { id: 'ws3', name: 'New Workspace' };
+
+    store.dispatch(addWorkspace(workspace));
+
+    const workspacesState = store.getState().workspaces;
+    expect(workspacesState.list).toContainEqual(workspace);
+  });
+
+  // Boards reducer tests
+  it('should execute setBoards reducer', () => {
+    const boards = [
+      { id: 'b1', name: 'Board 1', workspaceId: 'ws1' },
+      { id: 'b2', name: 'Board 2', workspaceId: 'ws1' },
+    ];
+
+    store.dispatch(setBoards(boards));
+
+    const boardsState = store.getState().boards;
+    expect(boardsState.list).toEqual(boards);
+  });
+
+  it('should execute setCurrentBoard reducer', () => {
+    const board = { id: 'b1', name: 'Current Board', workspaceId: 'ws1' };
+
+    store.dispatch(setCurrentBoard(board));
+
+    const boardsState = store.getState().boards;
+    expect(boardsState.current).toEqual(board);
+  });
+
+  it('should execute addBoard reducer', () => {
+    const board = { id: 'b3', name: 'New Board', workspaceId: 'ws1' };
+
+    store.dispatch(addBoard(board));
+
+    const boardsState = store.getState().boards;
+    expect(boardsState.list).toContainEqual(board);
+  });
+
+  // Lists reducer tests
+  it('should execute setLists reducer', () => {
+    const lists = [
+      { id: 'l1', title: 'To Do', boardId: 'b1' },
+      { id: 'l2', title: 'In Progress', boardId: 'b1' },
+    ];
+
+    store.dispatch(setLists(lists));
+
+    const listsState = store.getState().lists;
+    expect(listsState.items).toEqual(lists);
+  });
+
+  it('should execute addList reducer', () => {
+    const list = { id: 'l3', title: 'Done', boardId: 'b1' };
+
+    store.dispatch(addList(list));
+
+    const listsState = store.getState().lists;
+    expect(listsState.items).toContainEqual(list);
+  });
+
+  // Cards reducer tests
+  it('should execute setCards reducer', () => {
+    const cards = [
+      { id: 'c1', title: 'Task 1', listId: 'l1' },
+      { id: 'c2', title: 'Task 2', listId: 'l1' },
+    ];
+
+    store.dispatch(setCards(cards));
 
     const cardsState = store.getState().cards;
-    expect(cardsState.items).toHaveLength(2);
-    expect(cardsState.items[0].title).toBe('Card 1');
-    expect(cardsState.items[1].title).toBe('Card 2');
+    expect(cardsState.items).toEqual(cards);
+  });
+
+  it('should execute addCard reducer', () => {
+    const card = { id: 'c3', title: 'New Task', listId: 'l1' };
+
+    store.dispatch(addCard(card));
+
+    const cardsState = store.getState().cards;
+    expect(cardsState.items).toContainEqual(card);
+  });
+
+  // Integration test
+  it('should handle complete workflow through all reducers', () => {
+    // Login
+    store.dispatch(
+      loginSuccess({
+        user: { id: 1, email: 'user@test.com' },
+        token: 'token-abc',
+      })
+    );
+
+    // Create workspace
+    const workspace = { id: 'ws-integration', name: 'Integration Workspace' };
+    store.dispatch(addWorkspace(workspace));
+    store.dispatch(setCurrentWorkspace(workspace));
+
+    // Create board
+    const board = {
+      id: 'b-integration',
+      name: 'Integration Board',
+      workspaceId: 'ws-integration',
+    };
+    store.dispatch(addBoard(board));
+    store.dispatch(setCurrentBoard(board));
+
+    // Create list
+    const list = {
+      id: 'l-integration',
+      title: 'To Do',
+      boardId: 'b-integration',
+    };
+    store.dispatch(addList(list));
+
+    // Create card
+    const card = {
+      id: 'c-integration',
+      title: 'Task 1',
+      listId: 'l-integration',
+    };
+    store.dispatch(addCard(card));
+
+    const state = store.getState();
+    expect(state.auth.user).toBeTruthy();
+    expect(state.auth.token).toBe('token-abc');
+    expect(state.workspaces.list).toContainEqual(workspace);
+    expect(state.workspaces.current).toEqual(workspace);
+    expect(state.boards.list).toContainEqual(board);
+    expect(state.boards.current).toEqual(board);
+    expect(state.lists.items).toContainEqual(list);
+    expect(state.cards.items).toContainEqual(card);
   });
 });

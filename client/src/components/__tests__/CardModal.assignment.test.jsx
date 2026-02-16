@@ -255,4 +255,116 @@ describe('CardModal - Member Assignment', () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
+
+  it('does not delete card when user cancels confirmation', async () => {
+    // Mock window.confirm to return false (user cancels)
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false)
+    );
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButton);
+
+    // API should not be called
+    expect(cardAPI.delete).not.toHaveBeenCalled();
+    expect(mockOnCardUpdate).not.toHaveBeenCalled();
+    expect(mockOnClose).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('deletes card when user confirms deletion', async () => {
+    // Mock window.confirm to return true (user confirms)
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
+    cardAPI.delete.mockResolvedValue({ data: { success: true } });
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(cardAPI.delete).toHaveBeenCalledWith('card123');
+      expect(mockOnCardUpdate).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  it('handles delete API errors gracefully', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    );
+    cardAPI.delete.mockRejectedValue(new Error('Delete failed'));
+
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error deleting card',
+        expect.any(Error)
+      );
+    });
+
+    // Modal should not close on error
+    expect(mockOnClose).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it('does not assign member when memberToAdd is not found', async () => {
+    render(
+      <CardModal
+        card={mockCard}
+        members={mockMembers}
+        onClose={mockOnClose}
+        onCardUpdate={mockOnCardUpdate}
+      />
+    );
+
+    // Try to select a userId that doesn't exist in members
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'nonexistent-user' } });
+
+    // Member should not be added to UI
+    await waitFor(() => {
+      expect(screen.queryByText(/nonexistent/i)).not.toBeInTheDocument();
+    });
+  });
 });

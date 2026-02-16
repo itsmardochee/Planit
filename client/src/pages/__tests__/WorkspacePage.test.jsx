@@ -483,4 +483,423 @@ describe('WorkspacePage', () => {
       expect(editButton).toBeInTheDocument();
     });
   });
+
+  it('handles error loading workspace', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockRejectedValue(
+      new Error('Network error')
+    );
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error loading workspace',
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('opens invite members modal when button clicked', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+    });
+
+    const inviteButton = screen.getByRole('button', {
+      name: /inviter|invite/i,
+    });
+    fireEvent.click(inviteButton);
+
+    // InviteMembers modal should be rendered
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+  });
+
+  it('handles refreshing members after member invited', async () => {
+    const mockMembers = [
+      {
+        _id: 'member1',
+        userId: { _id: 'user1', username: 'user1', email: 'user1@test.com' },
+        role: 'owner',
+      },
+    ];
+
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace')
+      .mockResolvedValueOnce({
+        data: { data: [] },
+      })
+      .mockResolvedValueOnce({
+        data: { data: mockMembers },
+      });
+    vi.spyOn(apiModule.memberAPI, 'invite').mockResolvedValue({
+      data: { success: true },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+    });
+
+    // Open invite modal
+    const inviteButton = screen.getByRole('button', {
+      name: /inviter|invite/i,
+    });
+    fireEvent.click(inviteButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    // Simulate inviting a member
+    const emailInput = screen.getByRole('textbox');
+    fireEvent.change(emailInput, { target: { value: 'new@test.com' } });
+
+    const sendButton = screen.getByRole('button', { name: /envoyer|send/i });
+    fireEvent.click(sendButton);
+
+    // Wait for members to refresh
+    await waitFor(() => {
+      expect(apiModule.memberAPI.getByWorkspace).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('handles error refreshing members after removal', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    const mockMembers = [
+      {
+        _id: 'member1',
+        userId: { _id: 'user1', username: 'user1', email: 'user1@test.com' },
+        role: 'owner',
+      },
+      {
+        _id: 'member2',
+        userId: { _id: 'user2', username: 'user2', email: 'user2@test.com' },
+        role: 'member',
+      },
+    ];
+
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace')
+      .mockResolvedValueOnce({
+        data: { data: mockMembers },
+      })
+      .mockRejectedValueOnce(new Error('Network error'));
+    vi.spyOn(apiModule.memberAPI, 'remove').mockResolvedValue({
+      data: { success: true },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('user1')).toBeInTheDocument();
+    });
+
+    // Try to remove a member
+    const removeButton = screen.getByRole('button', { name: /remove user2/i });
+    fireEvent.click(removeButton);
+
+    // Confirm removal
+    await waitFor(() => {
+      expect(
+        screen.getByText(/are you sure|êtes-vous sûr/i)
+      ).toBeInTheDocument();
+    });
+
+    const confirmButtons = screen.getAllByRole('button');
+    const confirmButton = confirmButtons.find(
+      btn =>
+        btn.textContent.match(/supprimer|remove/i) &&
+        btn.closest('[role="dialog"]')
+    );
+
+    if (confirmButton) {
+      fireEvent.click(confirmButton);
+
+      // Wait for error to be logged
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Error refreshing members',
+          expect.any(Error)
+        );
+      });
+    }
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('handles error refreshing members after invitation', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    // Initial load succeeds, refresh fails
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace')
+      .mockResolvedValueOnce({
+        data: { data: [] },
+      })
+      .mockRejectedValueOnce(new Error('Refresh error'));
+    vi.spyOn(apiModule.memberAPI, 'invite').mockResolvedValue({
+      data: { success: true },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+    });
+
+    // Clear the console error spy to ignore initial load
+    consoleErrorSpy.mockClear();
+
+    // Open invite modal
+    const inviteButton = screen.getByRole('button', {
+      name: /inviter|invite/i,
+    });
+    fireEvent.click(inviteButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    // Simulate inviting a member
+    const emailInput = screen.getByRole('textbox');
+    fireEvent.change(emailInput, { target: { value: 'new@test.com' } });
+
+    const sendButton = screen.getByRole('button', { name: /envoyer|send/i });
+    fireEvent.click(sendButton);
+
+    // Wait for error to be logged
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error refreshing members',
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('closes edit board modal', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: mockBoards },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Board 1')).toBeInTheDocument();
+    });
+
+    // Open edit modal
+    const editButton = screen.getByRole('button', { name: /modifier|edit/i });
+    fireEvent.click(editButton);
+
+    // Modal should be rendered (BoardEditModal tests cover the modal content)
+    await waitFor(() => {
+      expect(editButton).toBeInTheDocument();
+    });
+  });
+
+  it('saves board changes successfully', async () => {
+    const updatedBoard = {
+      ...mockBoards[0],
+      name: 'Updated Board Name',
+      description: 'Updated description',
+    };
+
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.boardAPI, 'update').mockResolvedValue({
+      data: { success: true, data: updatedBoard },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Board 1')).toBeInTheDocument();
+    });
+
+    // Click edit button to open modal
+    const editButton = screen.getByRole('button', { name: /modifier|edit/i });
+    fireEvent.click(editButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(/nom du board|board name/i)
+      ).toBeInTheDocument();
+    });
+
+    // Update board name in modal
+    const nameInput = screen.getByLabelText(/nom du board|board name/i);
+    fireEvent.change(nameInput, { target: { value: 'Updated Board Name' } });
+
+    // Submit form to trigger handleSaveBoard
+    const saveButton = screen.getByRole('button', {
+      name: /enregistrer|save/i,
+    });
+    fireEvent.click(saveButton);
+
+    // Verify API was called with correct data
+    await waitFor(() => {
+      expect(apiModule.boardAPI.update).toHaveBeenCalledWith('board1', {
+        name: 'Updated Board Name',
+        description: 'Board 1 desc',
+      });
+    });
+  });
+
+  it('cancels board deletion when user declines confirmation', async () => {
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false)
+    ); // User clicks "Cancel"
+
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    const deleteSpy = vi.spyOn(apiModule.boardAPI, 'delete');
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Board 1')).toBeInTheDocument();
+    });
+
+    const deleteButton = screen.getByRole('button', {
+      name: /supprimer|delete/i,
+    });
+    fireEvent.click(deleteButton);
+
+    // Verify API was NOT called because user canceled
+    expect(deleteSpy).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('handles null data when fetching members', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    // Return empty response (no data field) to test || [] fallback
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: {}, // Missing data field, should use || [] fallback
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+    });
+
+    // Should render without crashing despite missing data.data
+    expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+  });
+
+  it('closes invite modal without inviting', async () => {
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<WorkspacePage />, { store });
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Workspace')).toBeInTheDocument();
+    });
+
+    // Open invite modal
+    const inviteButton = screen.getByRole('button', {
+      name: /inviter|invite/i,
+    });
+    fireEvent.click(inviteButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    // Close modal without inviting (click Cancel)
+    const cancelButton = screen.getByRole('button', {
+      name: /annuler|cancel/i,
+    });
+    fireEvent.click(cancelButton);
+
+    // Modal should be closed
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
 });

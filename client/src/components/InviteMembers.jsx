@@ -92,7 +92,7 @@ const InviteMembers = ({ open, workspaceId, onClose, onMemberInvited }) => {
             })}
             value={email}
             onChange={e => setEmail(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             type="email"
             autoFocus
             disabled={loading}
