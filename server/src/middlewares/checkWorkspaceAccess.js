@@ -4,6 +4,7 @@ import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
+import Label from '../models/Label.js';
 
 /**
  * Middleware to check if user has access to a workspace
@@ -59,8 +60,22 @@ const checkWorkspaceAccess = async (req, res, next) => {
             if (board) {
               workspaceId = board.workspaceId.toString();
             } else {
-              // Assume it's a workspace ID - the controller will validate if resource exists
-              workspaceId = possibleId;
+              // Try Label -> Board -> workspaceId
+              const label = await Label.findById(possibleId);
+              if (label) {
+                const labelBoard = await Board.findById(label.boardId);
+                if (labelBoard) {
+                  workspaceId = labelBoard.workspaceId.toString();
+                } else {
+                  return res.status(404).json({
+                    success: false,
+                    message: 'Board not found for this label',
+                  });
+                }
+              } else {
+                // Assume it's a workspace ID - the controller will validate if resource exists
+                workspaceId = possibleId;
+              }
             }
           }
         }

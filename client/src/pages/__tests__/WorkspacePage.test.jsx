@@ -86,6 +86,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -100,6 +103,9 @@ describe('WorkspacePage', () => {
       data: { data: mockWorkspace },
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
 
@@ -117,6 +123,9 @@ describe('WorkspacePage', () => {
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
     });
 
     const store = getStore();
@@ -169,6 +178,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
     vi.spyOn(apiModule.boardAPI, 'create').mockResolvedValue({
       data: {
         success: true,
@@ -213,6 +225,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -244,6 +259,9 @@ describe('WorkspacePage', () => {
       data: { data: mockWorkspace },
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
     vi.spyOn(apiModule.boardAPI, 'create').mockRejectedValue({
@@ -287,6 +305,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
     vi.spyOn(apiModule.boardAPI, 'create').mockResolvedValue({
       data: { success: true, data: {} },
     });
@@ -316,6 +337,9 @@ describe('WorkspacePage', () => {
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
     });
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
@@ -351,6 +375,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
@@ -383,6 +410,9 @@ describe('WorkspacePage', () => {
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
     });
     vi.spyOn(apiModule.boardAPI, 'delete').mockRejectedValue({
       response: { data: { message: 'Failed to delete' } },
@@ -423,6 +453,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
     });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -442,6 +475,9 @@ describe('WorkspacePage', () => {
       data: { data: mockWorkspace },
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
 
@@ -466,6 +502,9 @@ describe('WorkspacePage', () => {
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
     });
 
     const store = getStore();
@@ -492,6 +531,9 @@ describe('WorkspacePage', () => {
       new Error('Network error')
     );
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: [] },
     });
 
@@ -730,6 +772,9 @@ describe('WorkspacePage', () => {
     });
     vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
       data: { data: mockBoards },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
     });
 
     const store = getStore();

@@ -43,6 +43,20 @@ const cardSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    labels: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Label',
+      },
+    ],
+    status: {
+      type: String,
+      enum: {
+        values: ['todo', 'in-progress', 'done', 'blocked'],
+        message: 'Status must be one of: todo, in-progress, done, blocked',
+      },
+      default: null,
+    },
   },
   {
     timestamps: true,

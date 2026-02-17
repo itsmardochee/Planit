@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Card from '../models/Card.js';
 import List from '../models/List.js';
 import User from '../models/User.js';
+import Label from '../models/Label.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
@@ -189,6 +190,7 @@ export const getCards = async (req, res, next) => {
     // Populate assignedTo with user details for filtering and display
     const cards = await Card.find({ listId })
       .populate('assignedTo', 'username email')
+      .populate('labels', 'name color')
       .sort({
         position: 1,
       });
@@ -249,10 +251,9 @@ export const getCard = async (req, res, next) => {
       throw new ValidationError('Invalid card ID format');
     }
 
-    const card = await Card.findById(id).populate(
-      'assignedTo',
-      'username email'
-    );
+    const card = await Card.findById(id)
+      .populate('assignedTo', 'username email')
+      .populate('labels', 'name color');
     if (!card) {
       throw new NotFoundError('Card not found');
     }
@@ -797,6 +798,221 @@ export const unassignMember = async (req, res, next) => {
     await card.populate('assignedTo', 'username email');
 
     logger.info(`User ${userId} unassigned from card ${id}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/cards/{id}/labels/{labelId}:
+ *   post:
+ *     summary: Assign a label to a card
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *       - in: path
+ *         name: labelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Label ID
+ *     responses:
+ *       200:
+ *         description: Label assigned successfully
+ *       400:
+ *         description: Invalid input or label already assigned
+ *       404:
+ *         description: Card or label not found
+ */
+export const assignLabel = async (req, res, next) => {
+  try {
+    const { id, labelId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(labelId)) {
+      throw new ValidationError('Invalid label ID format');
+    }
+
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    const label = await Label.findById(labelId);
+    if (!label) {
+      throw new NotFoundError('Label not found');
+    }
+
+    // Verify label belongs to the same board as the card
+    if (label.boardId.toString() !== card.boardId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Label does not belong to the same board as the card',
+      });
+    }
+
+    // Check if label is already assigned
+    const alreadyAssigned = card.labels.some(l => l.toString() === labelId);
+    if (alreadyAssigned) {
+      return res.status(400).json({
+        success: false,
+        message: 'Label is already assigned to this card',
+      });
+    }
+
+    card.labels.push(labelId);
+    await card.save();
+    await card.populate('labels', 'name color');
+
+    logger.info(`Label ${labelId} assigned to card ${id}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/cards/{id}/labels/{labelId}:
+ *   delete:
+ *     summary: Remove a label from a card
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *       - in: path
+ *         name: labelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Label ID
+ *     responses:
+ *       200:
+ *         description: Label removed successfully
+ *       400:
+ *         description: Label not assigned to card
+ *       404:
+ *         description: Card not found
+ */
+export const removeLabel = async (req, res, next) => {
+  try {
+    const { id, labelId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(labelId)) {
+      throw new ValidationError('Invalid label ID format');
+    }
+
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    const isAssigned = card.labels.some(l => l.toString() === labelId);
+    if (!isAssigned) {
+      return res.status(400).json({
+        success: false,
+        message: 'Label is not assigned to this card',
+      });
+    }
+
+    card.labels = card.labels.filter(l => l.toString() !== labelId);
+    await card.save();
+    await card.populate('labels', 'name color');
+
+    logger.info(`Label ${labelId} removed from card ${id}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/cards/{id}/status:
+ *   patch:
+ *     summary: Update card status
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [todo, in-progress, done, blocked]
+ *                 nullable: true
+ *                 example: in-progress
+ *     responses:
+ *       200:
+ *         description: Card status updated
+ *       400:
+ *         description: Invalid status
+ *       404:
+ *         description: Card not found
+ */
+export const updateCardStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    const validStatuses = ['todo', 'in-progress', 'done', 'blocked'];
+
+    if (status === undefined) {
+      throw new ValidationError('Please provide status');
+    }
+
+    if (status !== null && !validStatuses.includes(status)) {
+      throw new ValidationError(
+        'Status must be one of: todo, in-progress, done, blocked'
+      );
+    }
+
+    card.status = status;
+    await card.save();
+
+    logger.info(`Card ${id} status updated to ${status}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);

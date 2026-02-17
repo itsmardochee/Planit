@@ -8,6 +8,9 @@ import {
   deleteCard,
   assignMember,
   unassignMember,
+  assignLabel,
+  removeLabel,
+  updateCardStatus,
 } from '../controllers/cardController.js';
 import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
@@ -29,6 +32,13 @@ cardRouter.delete(
   checkWorkspaceAccess,
   unassignMember
 );
+
+// Label assignment routes
+cardRouter.post('/:id/labels/:labelId', checkWorkspaceAccess, assignLabel);
+cardRouter.delete('/:id/labels/:labelId', checkWorkspaceAccess, removeLabel);
+
+// Status route
+cardRouter.patch('/:id/status', checkWorkspaceAccess, updateCardStatus);
 
 // Card CRUD routes
 cardRouter.get('/:id', checkWorkspaceAccess, getCard);

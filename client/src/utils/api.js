@@ -82,6 +82,20 @@ export const cardAPI = {
   assign: (cardId, userId) => api.post(`/cards/${cardId}/assign`, { userId }),
   unassign: (cardId, userId) =>
     api.delete(`/cards/${cardId}/unassign/${userId}`),
+  assignLabel: (cardId, labelId) =>
+    api.post(`/cards/${cardId}/labels/${labelId}`),
+  removeLabel: (cardId, labelId) =>
+    api.delete(`/cards/${cardId}/labels/${labelId}`),
+  updateStatus: (cardId, status) =>
+    api.patch(`/cards/${cardId}/status`, { status }),
+};
+
+// Label API calls
+export const labelAPI = {
+  getByBoard: boardId => api.get(`/boards/${boardId}/labels`),
+  create: (boardId, data) => api.post(`/boards/${boardId}/labels`, data),
+  update: (labelId, data) => api.put(`/labels/${labelId}`, data),
+  delete: labelId => api.delete(`/labels/${labelId}`),
 };
 
 // Member API calls (Workspace Members)

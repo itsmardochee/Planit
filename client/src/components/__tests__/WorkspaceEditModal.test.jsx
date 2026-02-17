@@ -1,11 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach as vitestBeforeEach,
-} from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 import WorkspaceEditModal from '../WorkspaceEditModal';
@@ -17,11 +11,12 @@ describe('WorkspaceEditModal', () => {
     description: 'Test Description',
   };
 
-  const mockOnClose = vi.fn();
-  const mockOnSave = vi.fn();
+  let mockOnClose;
+  let mockOnSave;
 
-  vitestBeforeEach(() => {
-    vi.clearAllMocks();
+  beforeEach(() => {
+    mockOnClose = vi.fn();
+    mockOnSave = vi.fn();
   });
 
   it('renders modal with workspace data', () => {
