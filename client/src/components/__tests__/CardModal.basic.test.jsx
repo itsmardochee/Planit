@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CardModal from '../CardModal';
-import * as apiModule from '../../utils/api';
+import { cardAPI, labelAPI } from '../../utils/api';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 
@@ -12,6 +12,12 @@ vi.mock('../../utils/api', () => ({
     delete: vi.fn(),
     assign: vi.fn(),
     unassign: vi.fn(),
+    assignLabel: vi.fn(),
+    removeLabel: vi.fn(),
+    updateStatus: vi.fn(),
+  },
+  labelAPI: {
+    getByBoard: vi.fn(),
   },
 }));
 
@@ -26,9 +32,14 @@ describe('CardModal - Basic Fields', () => {
   const mockOnClose = vi.fn();
   const mockOnCardUpdate = vi.fn();
   const mockOnDelete = vi.fn();
+  const mockBoardId = 'board123';
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock labelAPI to prevent errors
+    labelAPI.getByBoard.mockResolvedValue({
+      data: { success: true, data: [] },
+    });
   });
 
   function renderCardModal(props = {}) {
@@ -36,6 +47,7 @@ describe('CardModal - Basic Fields', () => {
       <I18nextProvider i18n={i18n}>
         <CardModal
           open={true}
+          boardId={mockBoardId}
           onClose={mockOnClose}
           onCardUpdate={mockOnCardUpdate}
           onDelete={mockOnDelete}
@@ -85,7 +97,7 @@ describe('CardModal - Basic Fields', () => {
   });
 
   it('saves both title and description changes when save button clicked', async () => {
-    apiModule.cardAPI.update.mockResolvedValue({
+    cardAPI.update.mockResolvedValue({
       data: {
         data: {
           _id: 'card-123',
@@ -116,7 +128,7 @@ describe('CardModal - Basic Fields', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(apiModule.cardAPI.update).toHaveBeenCalledWith('card-123', {
+      expect(cardAPI.update).toHaveBeenCalledWith('card-123', {
         title: 'New Title',
         description: 'New description',
       });

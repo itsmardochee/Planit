@@ -92,38 +92,86 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
       </div>
 
       {/* Card Badges */}
-      <div className="mt-2 flex gap-1 text-xs items-center">
+      <div className="mt-2 space-y-2">
+        {/* Labels */}
         {card.labels && card.labels.length > 0 && (
-          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
-            {card.labels.length} label{card.labels.length > 1 ? 's' : ''}
-          </span>
-        )}
-        {card.dueDate && (
-          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
-            📅
-          </span>
-        )}
-
-        {/* Assigned Members Avatars */}
-        {card.assignedTo && card.assignedTo.length > 0 && (
-          <div className="flex -space-x-2" data-testid="assigned-members">
-            {card.assignedTo.slice(0, 3).map((member, index) => (
-              <div
-                key={member._id}
-                data-testid={`member-avatar-${member._id}`}
-                className={`w-6 h-6 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white text-[10px] font-medium border-2 border-white`}
-                title={member.username}
+          <div className="flex flex-wrap gap-1" data-testid="card-labels">
+            {card.labels.slice(0, 3).map(label => (
+              <span
+                key={label._id}
+                className="px-2 py-0.5 text-white text-[10px] font-medium rounded"
+                style={{ backgroundColor: label.color }}
               >
-                {getInitials(member.username)}
-              </div>
+                {label.name}
+              </span>
             ))}
-            {card.assignedTo.length > 3 && (
-              <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-white text-[10px] font-medium border-2 border-white">
-                +{card.assignedTo.length - 3}
-              </div>
+            {card.labels.length > 3 && (
+              <span className="px-2 py-0.5 bg-gray-200 text-gray-700 text-[10px] font-medium rounded">
+                +{card.labels.length - 3}
+              </span>
             )}
           </div>
         )}
+
+        {/* Status and Members Section */}
+        <div className="flex gap-2 text-xs items-center justify-between">
+          <div className="flex gap-1 items-center">
+            {/* Status Badge */}
+            {card.status && (
+              <span
+                data-testid="card-status"
+                className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                  card.status === 'todo'
+                    ? 'bg-gray-100 text-gray-700'
+                    : card.status === 'in-progress'
+                      ? 'bg-blue-100 text-blue-700'
+                      : card.status === 'done'
+                        ? 'bg-green-100 text-green-700'
+                        : card.status === 'blocked'
+                          ? 'bg-red-100 text-red-700'
+                          : ''
+                }`}
+              >
+                {card.status === 'todo'
+                  ? 'To Do'
+                  : card.status === 'in-progress'
+                    ? 'In Progress'
+                    : card.status === 'done'
+                      ? 'Done'
+                      : card.status === 'blocked'
+                        ? 'Blocked'
+                        : ''}
+              </span>
+            )}
+
+            {card.dueDate && (
+              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
+                📅
+              </span>
+            )}
+          </div>
+
+          {/* Assigned Members Avatars */}
+          {card.assignedTo && card.assignedTo.length > 0 && (
+            <div className="flex -space-x-2" data-testid="assigned-members">
+              {card.assignedTo.slice(0, 3).map((member, index) => (
+                <div
+                  key={member._id}
+                  data-testid={`member-avatar-${member._id}`}
+                  className={`w-6 h-6 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white text-[10px] font-medium border-2 border-white`}
+                  title={member.username}
+                >
+                  {getInitials(member.username)}
+                </div>
+              ))}
+              {card.assignedTo.length > 3 && (
+                <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-white text-[10px] font-medium border-2 border-white">
+                  +{card.assignedTo.length - 3}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

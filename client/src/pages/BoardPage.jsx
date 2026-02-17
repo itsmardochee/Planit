@@ -6,6 +6,7 @@ import KanbanList from '../components/KanbanList';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
+import LabelManager from '../components/LabelManager';
 import {
   DndContext,
   PointerSensor,
@@ -40,6 +41,7 @@ const BoardPage = () => {
   const [activeCard, setActiveCard] = useState(null);
   const [activeSourceListId, setActiveSourceListId] = useState(null);
   const [editingList, setEditingList] = useState(null);
+  const [showLabelManager, setShowLabelManager] = useState(false);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -421,33 +423,47 @@ const BoardPage = () => {
                 )}
               </div>
 
-              {/* Member Filter */}
-              {members.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <label className="text-white text-sm">
-                    {t('board:filterByMember', 'Filter by:')}
-                  </label>
-                  <select
-                    value={selectedMemberFilter || ''}
-                    onChange={e =>
-                      setSelectedMemberFilter(e.target.value || null)
-                    }
-                    className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">
-                      {t('board:allMembers', 'All members')}
-                    </option>
-                    <option value="unassigned">
-                      {t('board:unassigned', 'Unassigned')}
-                    </option>
-                    {members.map(member => (
-                      <option key={member.userId._id} value={member.userId._id}>
-                        {member.userId.username}
+              {/* Member Filter and Labels Button */}
+              <div className="flex items-center gap-4">
+                {members.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-white text-sm">
+                      {t('board:filterByMember', 'Filter by:')}
+                    </label>
+                    <select
+                      value={selectedMemberFilter || ''}
+                      onChange={e =>
+                        setSelectedMemberFilter(e.target.value || null)
+                      }
+                      className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">
+                        {t('board:allMembers', 'All members')}
                       </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                      <option value="unassigned">
+                        {t('board:unassigned', 'Unassigned')}
+                      </option>
+                      {members.map(member => (
+                        <option
+                          key={member.userId._id}
+                          value={member.userId._id}
+                        >
+                          {member.userId.username}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Manage Labels Button */}
+                <button
+                  onClick={() => setShowLabelManager(true)}
+                  className="bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
+                >
+                  <span>🏷️</span>
+                  {t('board:manageLabels', 'Manage Labels')}
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -520,6 +536,17 @@ const BoardPage = () => {
           list={editingList}
           onClose={() => setEditingList(null)}
           onSave={handleSaveList}
+        />
+
+        {/* Label Manager */}
+        <LabelManager
+          boardId={boardId}
+          open={showLabelManager}
+          onClose={() => {
+            setShowLabelManager(false);
+            // Optionally refresh board data to update labels on cards
+            fetchBoardData();
+          }}
         />
 
         {/* Card Modal */}

@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cardAPI } from '../utils/api';
 import MemberSelector from './MemberSelector';
+import LabelPicker from './LabelPicker';
+import StatusSelector from './StatusSelector';
 
-const CardModal = ({ card, members, onClose, onCardUpdate }) => {
+const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   const { t } = useTranslation(['cards', 'common']);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [isSaving, setIsSaving] = useState(false);
   const [assignedMembers, setAssignedMembers] = useState(card.assignedTo || []);
+  const [currentCard, setCurrentCard] = useState(card);
 
   const handleSave = async () => {
     try {
@@ -85,6 +88,16 @@ const CardModal = ({ card, members, onClose, onCardUpdate }) => {
     setAssignedMembers(prev => prev.filter(m => m._id !== userId));
   };
 
+  const handleCardChange = updatedCard => {
+    // Update local card state when labels or status change
+    setCurrentCard(updatedCard);
+  };
+
+  // Sync currentCard when prop card changes
+  useEffect(() => {
+    setCurrentCard(card);
+  }, [card]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
@@ -132,13 +145,40 @@ const CardModal = ({ card, members, onClose, onCardUpdate }) => {
 
           {/* Member Assignment */}
           {members && members.length > 0 && (
-            <MemberSelector
-              members={members}
-              assignedMembers={assignedMembers}
-              onAssign={handleAssignMember}
-              onUnassign={handleUnassignMember}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('cards:assignedTo', 'Assigned To')}
+              </label>
+              <MemberSelector
+                members={members}
+                assignedMembers={assignedMembers}
+                onAssign={handleAssignMember}
+                onUnassign={handleUnassignMember}
+              />
+            </div>
           )}
+
+          {/* Labels */}
+          {boardId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('cards:labels', 'Labels')}
+              </label>
+              <LabelPicker
+                boardId={boardId}
+                card={currentCard}
+                onUpdate={handleCardChange}
+              />
+            </div>
+          )}
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('cards:status', 'Status')}
+            </label>
+            <StatusSelector card={currentCard} onUpdate={handleCardChange} />
+          </div>
 
           {/* Card Info */}
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
