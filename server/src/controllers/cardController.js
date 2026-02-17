@@ -1022,3 +1022,104 @@ export const updateCardStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @swagger
+ * /api/cards/{id}/due-date:
+ *   patch:
+ *     summary: Set or update the due date of a card
+ *     tags: [Cards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Card ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               dueDate:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 example: "2026-03-15T10:00:00.000Z"
+ *               reminderDate:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 example: "2026-03-14T10:00:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Due date updated successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Card not found
+ */
+/**
+ * @desc    Set or update due date (and optional reminder) on a card
+ * @route   PATCH /api/cards/:id/due-date
+ * @access  Private (workspace owner or member)
+ */
+export const updateDueDate = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { dueDate, reminderDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid card ID format');
+    }
+
+    const card = await Card.findById(id);
+    if (!card) {
+      throw new NotFoundError('Card not found');
+    }
+
+    // dueDate is required in body (can be null to clear)
+    if (dueDate === undefined) {
+      throw new ValidationError('Please provide dueDate (use null to clear)');
+    }
+
+    // Validate dueDate format if not null
+    if (dueDate !== null) {
+      const parsed = new Date(dueDate);
+      if (isNaN(parsed.getTime())) {
+        throw new ValidationError('Invalid dueDate format');
+      }
+      card.dueDate = parsed;
+    } else {
+      card.dueDate = null;
+      card.reminderDate = null; // Clear reminder if due date is cleared
+    }
+
+    // Handle reminderDate if provided
+    if (reminderDate !== undefined) {
+      if (reminderDate !== null) {
+        const parsedReminder = new Date(reminderDate);
+        if (isNaN(parsedReminder.getTime())) {
+          throw new ValidationError('Invalid reminderDate format');
+        }
+        if (card.dueDate && parsedReminder >= card.dueDate) {
+          throw new ValidationError('reminderDate must be before dueDate');
+        }
+        card.reminderDate = parsedReminder;
+      } else {
+        card.reminderDate = null;
+      }
+    }
+
+    await card.save();
+
+    logger.info(`Card ${id} due date updated to ${card.dueDate}`);
+    res.status(200).json({ success: true, data: card });
+  } catch (error) {
+    next(error);
+  }
+};

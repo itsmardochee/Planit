@@ -136,20 +136,20 @@
 
 #### Backend
 
-- [ ] Ajouter champs dans le modèle `Card`:
-  - [ ] `dueDate: Date` - Date d'échéance
-  - [ ] `reminderDate: Date` - Date de rappel (optionnel)
-  - [ ] `isOverdue: Boolean` (computed field ou virtuel)
-- [ ] Créer endpoint `PATCH /api/cards/:id/due-date` pour définir/modifier la date
-- [ ] Créer modèle `Notification` (userId, cardId, type, message, read, createdAt)
-- [ ] Créer endpoints pour les notifications:
-  - [ ] `GET /api/notifications` - Lister les notifications de l'utilisateur
-  - [ ] `PATCH /api/notifications/:id/read` - Marquer comme lu
-  - [ ] `DELETE /api/notifications/:id` - Supprimer une notification
+- [x] Ajouter champs dans le modèle `Card`:
+  - [x] `dueDate: Date` - Date d'échéance
+  - [x] `reminderDate: Date` - Date de rappel (optionnel)
+  - [x] `isOverdue: Boolean` (computed field ou virtuel)
+- [x] Créer endpoint `PATCH /api/cards/:id/due-date` pour définir/modifier la date
+- [x] Créer modèle `Notification` (userId, cardId, type, message, read, createdAt)
+- [x] Créer endpoints pour les notifications:
+  - [x] `GET /api/notifications` - Lister les notifications de l'utilisateur
+  - [x] `PATCH /api/notifications/:id/read` - Marquer comme lu
+  - [x] `DELETE /api/notifications/:id` - Supprimer une notification
 - [ ] Créer job/cron pour vérifier les cartes en retard (Node-cron)
 - [ ] Envoyer notifications quand une carte approche de sa date d'échéance
 - [ ] Optionnel: Envoyer des emails de notification
-- [ ] Tests pour dates d'échéance et notifications
+- [x] Tests pour dates d'échéance et notifications
 
 #### Frontend
 

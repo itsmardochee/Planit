@@ -57,11 +57,27 @@ const cardSchema = new mongoose.Schema(
       },
       default: null,
     },
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+    reminderDate: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Virtual field: true if dueDate exists and is in the past
+cardSchema.virtual('isOverdue').get(function () {
+  if (!this.dueDate) return false;
+  return new Date() > this.dueDate;
+});
 
 // Useful indexes for query performance
 cardSchema.index({ listId: 1, userId: 1 });
