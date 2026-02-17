@@ -111,11 +111,11 @@
   - [x] `DELETE /api/comments/:id` - Supprimer un commentaire
 - [x] Valider que seul l'auteur peut modifier/supprimer son commentaire
 - [x] Populate userId pour afficher le nom de l'auteur
-- [ ] Cascade delete: supprimer les commentaires quand carte est supprimée
+- [x] Cascade delete: supprimer les commentaires quand carte/liste/board/workspace est supprimé(e)
 - [x] Tests unitaires pour les commentaires (44 tests: 35 controller + 9 model)
 - [x] Mettre à jour Swagger documentation (inline dans le controller)
 
-**Status:** ✅ Backend complet - 44 tests passing - PR #145 (draft)
+**Status:** ✅ Backend complet - 261 tests passing across all controllers - PR #145 (draft)
 
 #### Frontend
 

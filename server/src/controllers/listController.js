@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import List from '../models/List.js';
 import Board from '../models/Board.js';
 import Card from '../models/Card.js';
+import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
@@ -555,10 +556,16 @@ export const deleteList = async (req, res, next) => {
 
     // No need to check list.userId - workspace access is already verified by middleware
 
-    await List.findByIdAndDelete(id);
+    // Cascade delete: remove all comments on cards in this list
+    const cardIds = (await Card.find({ listId: id }).select('_id')).map(
+      c => c._id
+    );
+    await Comment.deleteMany({ cardId: { $in: cardIds } });
 
     // Cascade delete: remove all cards that belong to this list
     await Card.deleteMany({ listId: id });
+
+    await List.findByIdAndDelete(id);
 
     logger.info(`List deleted: ${id}`);
     res

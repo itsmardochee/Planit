@@ -10,6 +10,7 @@ import Workspace from '../../models/Workspace.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
+import Comment from '../../models/Comment.js';
 import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
@@ -787,6 +788,7 @@ describe('DELETE /api/cards/:id', () => {
   });
 
   afterEach(async () => {
+    await Comment.deleteMany({});
     await Card.deleteMany({});
     await List.deleteMany({});
     await Board.deleteMany({});
@@ -873,6 +875,29 @@ describe('DELETE /api/cards/:id', () => {
       .set('Authorization', `Bearer ${otherToken}`);
 
     expect(res.status).toBe(403);
+  });
+
+  it('should cascade delete comments when card is deleted', async () => {
+    // Create comments on the card
+    await Comment.create([
+      { content: 'Comment 1', cardId: testCard._id, userId: testUser._id },
+      { content: 'Comment 2', cardId: testCard._id, userId: testUser._id },
+    ]);
+
+    // Verify comments exist
+    const commentsBefore = await Comment.find({ cardId: testCard._id });
+    expect(commentsBefore).toHaveLength(2);
+
+    // Delete the card
+    const res = await request(app)
+      .delete(`/api/cards/${testCard._id}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(res.status).toBe(200);
+
+    // Verify comments are deleted
+    const commentsAfter = await Comment.find({ cardId: testCard._id });
+    expect(commentsAfter).toHaveLength(0);
   });
 });
 
