@@ -129,17 +129,15 @@ describe('KanbanCard - Member Assignment Display', () => {
     const cardWithMember = {
       ...mockCard,
       assignedTo: [{ _id: 'user-1', username: 'john_doe' }],
-      labels: ['label1'],
     };
 
     renderWithDndContext(
       <KanbanCard card={cardWithMember} onClick={vi.fn()} onDelete={vi.fn()} />
     );
 
-    // Check that both labels and member avatars are in the same section
+    // Check that member avatars are displayed
     const avatarSection = screen.getByTestId('assigned-members');
     expect(avatarSection).toBeInTheDocument();
-    expect(screen.getByText(/1 label/)).toBeInTheDocument();
   });
 
   it('should use different colors for avatar backgrounds', () => {
@@ -221,35 +219,7 @@ describe('KanbanCard - Member Assignment Display', () => {
     });
   });
 
-  it('should display labels badge when labels are present', () => {
-    const cardWithLabels = {
-      ...mockCard,
-      labels: ['urgent', 'bug'],
-    };
-
-    renderWithDndContext(
-      <KanbanCard card={cardWithLabels} onClick={vi.fn()} onDelete={vi.fn()} />
-    );
-
-    expect(screen.getByText('2 labels')).toBeInTheDocument();
-  });
-
-  it('should display singular label text when only one label', () => {
-    const cardWithOneLabel = {
-      ...mockCard,
-      labels: ['urgent'],
-    };
-
-    renderWithDndContext(
-      <KanbanCard
-        card={cardWithOneLabel}
-        onClick={vi.fn()}
-        onDelete={vi.fn()}
-      />
-    );
-
-    expect(screen.getByText('1 label')).toBeInTheDocument();
-  });
+  // Label display tests moved to KanbanCard.labels.test.jsx
 
   it('should display due date badge when dueDate is present', () => {
     const cardWithDueDate = {
