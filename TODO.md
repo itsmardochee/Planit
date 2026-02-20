@@ -119,14 +119,16 @@
 
 #### Frontend
 
-- [ ] Créer composant `CommentSection` dans le modal de carte
-- [ ] Créer composant `CommentItem` pour afficher un commentaire
-- [ ] Créer formulaire `AddComment` avec textarea
-- [ ] Implémenter édition/suppression de commentaire (seulement pour l'auteur)
-- [ ] Afficher l'avatar et le nom de l'auteur
-- [ ] Afficher la date/heure du commentaire (format relatif: "il y a 2h")
-- [ ] Ajouter indicateur du nombre de commentaires sur la carte
-- [ ] Tests pour les composants de commentaires
+- [x] Créer composant `CommentSection` dans le modal de carte
+- [x] Créer composant `CommentItem` pour afficher un commentaire
+- [x] Créer formulaire `AddComment` avec textarea
+- [x] Implémenter édition/suppression de commentaire (seulement pour l'auteur)
+- [x] Afficher l'avatar et le nom de l'auteur
+- [x] Afficher la date/heure du commentaire (format relatif: "il y a 2h")
+- [x] Ajouter indicateur du nombre de commentaires sur la carte
+- [x] Tests pour les composants de commentaires
+
+**Status:** ✅ Frontend complet - CommentSection, CommentItem, AddComment créés avec TDD
 
 ---
 
