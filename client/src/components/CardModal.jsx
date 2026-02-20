@@ -13,15 +13,20 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [assignedMembers, setAssignedMembers] = useState(card.assignedTo || []);
   const [currentCard, setCurrentCard] = useState(card);
+  const [dueDate, setDueDate] = useState(
+    card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
+  );
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
 
-      // Update title and description
+      // Update title, description, and due date
+      const dueDateValue = dueDate ? new Date(dueDate).toISOString() : null;
       await cardAPI.update(card._id, {
         title,
         description,
+        dueDate: dueDateValue,
       });
 
       // Process member assignment changes
@@ -94,9 +99,17 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
     setCurrentCard(updatedCard);
   };
 
+  const handleDueDateChange = e => {
+    const newDate = e.target.value;
+    setDueDate(newDate);
+  };
+
   // Sync currentCard when prop card changes
   useEffect(() => {
     setCurrentCard(card);
+    setDueDate(
+      card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
+    );
   }, [card]);
 
   return (
@@ -179,6 +192,23 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
               {t('cards:status', 'Status')}
             </label>
             <StatusSelector card={currentCard} onUpdate={handleCardChange} />
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label
+              htmlFor="dueDate"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              {t('cards:dueDate', 'Due Date')}
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              value={dueDate}
+              onChange={handleDueDateChange}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
+            />
           </div>
 
           {/* Card Info */}

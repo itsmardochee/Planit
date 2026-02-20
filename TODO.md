@@ -136,33 +136,43 @@
 
 #### Backend
 
-- [ ] Ajouter champs dans le modèle `Card`:
-  - [ ] `dueDate: Date` - Date d'échéance
-  - [ ] `reminderDate: Date` - Date de rappel (optionnel)
-  - [ ] `isOverdue: Boolean` (computed field ou virtuel)
-- [ ] Créer endpoint `PATCH /api/cards/:id/due-date` pour définir/modifier la date
-- [ ] Créer modèle `Notification` (userId, cardId, type, message, read, createdAt)
-- [ ] Créer endpoints pour les notifications:
-  - [ ] `GET /api/notifications` - Lister les notifications de l'utilisateur
-  - [ ] `PATCH /api/notifications/:id/read` - Marquer comme lu
-  - [ ] `DELETE /api/notifications/:id` - Supprimer une notification
-- [ ] Créer job/cron pour vérifier les cartes en retard (Node-cron)
-- [ ] Envoyer notifications quand une carte approche de sa date d'échéance
-- [ ] Optionnel: Envoyer des emails de notification
-- [ ] Tests pour dates d'échéance et notifications
+- [x] Ajouter champs dans le modèle `Card`:
+  - [x] `dueDate: Date` - Date d'échéance
+  - [x] `reminderDate: Date` - Date de rappel (optionnel)
+  - [x] `isOverdue: Boolean` (computed field ou virtuel)
+- [x] Créer endpoint `PATCH /api/cards/:id/due-date` pour définir/modifier la date
+- [x] Ajouter support `dueDate` dans `PUT /api/cards/:id` (updateCard endpoint)
+- [x] Créer modèle `Notification` (userId, cardId, type, message, read, createdAt)
+- [x] Créer endpoints pour les notifications:
+  - [x] `GET /api/notifications` - Lister les notifications de l'utilisateur
+  - [x] `PATCH /api/notifications/:id/read` - Marquer comme lu
+  - [x] `DELETE /api/notifications/:id` - Supprimer une notification
+- [ ] **TODO:** Créer job/cron pour vérifier les cartes en retard (Node-cron)
+- [ ] **TODO:** Envoyer notifications automatiques quand une carte approche échéance
+- [ ] **TODO (Optionnel):** Envoyer des emails de notification (Nodemailer/SendGrid)
+- [x] Tests pour dates d'échéance et notifications
+
+**Status:** ✅ Backend 80% complet - Manque automatisation (cron + notifications auto)
 
 #### Frontend
 
-- [ ] Ajouter DatePicker dans le modal de carte pour la date d'échéance
-- [ ] Afficher l'icône de calendrier avec la date sur la carte
-- [ ] Afficher indicateur visuel si la carte est en retard (rouge)
-- [ ] Afficher indicateur si la carte est bientôt due (jaune/orange)
-- [ ] Créer composant `NotificationBell` dans la navbar
-- [ ] Créer dropdown `NotificationList` pour afficher les notifications
-- [ ] Marquer les notifications comme lues au clic
-- [ ] Afficher badge avec le nombre de notifications non lues
-- [ ] Ajouter filtre par "cartes en retard" dans la vue board
-- [ ] Tests pour les composants de dates et notifications
+- [x] Ajouter DatePicker dans le modal de carte (input type="date")
+- [x] Afficher l'icône de calendrier (📅) avec la date sur la carte
+- [x] Afficher badge rouge si la carte est en retard (overdue)
+- [x] Afficher badge jaune/orange si la carte est bientôt due (< 48h)
+- [x] Ajouter filtre par "cartes en retard" dans la vue board (avec compteur)
+- [x] Créer helpers pour calcul dates (isCardOverdue, getOverdueCount dans boardHelpers.js)
+- [x] Tests pour les composants de dates (CardModal.dueDate.test.jsx - 9 tests)
+- [x] Créer composants `NotificationBell` et `NotificationList` (composants créés)
+- [ ] **TODO:** Créer navbar/header global pour intégrer NotificationBell
+- [ ] **TODO:** Intégrer NotificationBell dans la navbar avec badge de compteur
+- [ ] **TODO:** Connecter NotificationList aux notifications réelles (fetch API)
+- [ ] **TODO:** Marquer les notifications comme lues au clic
+- [ ] **TODO:** Tests pour NotificationBell et NotificationList
+
+**Status:** ✅ Frontend 75% complet - Dates d'échéance fonctionnelles, notifications UI en attente d'intégration
+
+**Feature Status:** ✅ **PARTIELLEMENT COMPLET** - Dates d'échéance 100% fonctionnelles, notifications backend prêt mais automatisation et UI notifications à finaliser - PR #146
 
 ---
 

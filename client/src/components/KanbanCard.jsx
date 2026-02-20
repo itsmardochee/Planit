@@ -27,6 +27,42 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
     ];
     return colors[index % colors.length];
   };
+
+  // Get due date status (overdue, due-soon, or future)
+  const getDueDateStatus = dueDate => {
+    if (!dueDate) return null;
+
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'overdue'; // Past due
+    if (diffDays <= 2) return 'due-soon'; // Within 2 days
+    return 'future'; // More than 2 days away
+  };
+
+  // Format due date as "MMM D" (e.g., "Mar 15")
+  const formatDueDate = dueDate => {
+    const date = new Date(dueDate);
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  // Get badge styling based on due date status
+  const getDueDateBadgeClasses = status => {
+    switch (status) {
+      case 'overdue':
+        return 'bg-red-100 text-red-700';
+      case 'due-soon':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'future':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   const {
     attributes,
     listeners,
@@ -144,9 +180,13 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
               </span>
             )}
 
+            {/* Due Date Badge */}
             {card.dueDate && (
-              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
-                📅
+              <span
+                data-testid="due-date-badge"
+                className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${getDueDateBadgeClasses(getDueDateStatus(card.dueDate))}`}
+              >
+                📅 {formatDueDate(card.dueDate)}
               </span>
             )}
 

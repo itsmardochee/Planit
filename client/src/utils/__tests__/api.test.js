@@ -1,7 +1,15 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 describe('API Utils', () => {
-  let api, authAPI, workspaceAPI, boardAPI, listAPI, cardAPI;
+  let api,
+    authAPI,
+    workspaceAPI,
+    boardAPI,
+    listAPI,
+    cardAPI,
+    labelAPI,
+    commentAPI,
+    notificationAPI;
 
   beforeEach(async () => {
     // Clear localStorage
@@ -22,12 +30,16 @@ describe('API Utils', () => {
     boardAPI = apiModule.boardAPI;
     listAPI = apiModule.listAPI;
     cardAPI = apiModule.cardAPI;
+    labelAPI = apiModule.labelAPI;
+    commentAPI = apiModule.commentAPI;
+    notificationAPI = apiModule.notificationAPI;
 
     // Mock API methods
     api.get = vi.fn();
     api.post = vi.fn();
     api.put = vi.fn();
     api.delete = vi.fn();
+    api.patch = vi.fn();
   });
 
   afterEach(() => {
@@ -361,6 +373,62 @@ describe('API Utils', () => {
       );
       expect(result).toBe(mockResponse);
     });
+
+    it('should assign label to card', async () => {
+      const mockCardId = '999';
+      const mockLabelId = 'label123';
+      const mockResponse = { data: { success: true } };
+      api.post = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.assignLabel(mockCardId, mockLabelId);
+
+      expect(api.post).toHaveBeenCalledWith(
+        `/cards/${mockCardId}/labels/${mockLabelId}`
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should remove label from card', async () => {
+      const mockCardId = '999';
+      const mockLabelId = 'label123';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.removeLabel(mockCardId, mockLabelId);
+
+      expect(api.delete).toHaveBeenCalledWith(
+        `/cards/${mockCardId}/labels/${mockLabelId}`
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should update card status', async () => {
+      const mockCardId = '999';
+      const mockStatus = 'done';
+      const mockResponse = { data: { success: true } };
+      api.patch = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.updateStatus(mockCardId, mockStatus);
+
+      expect(api.patch).toHaveBeenCalledWith(`/cards/${mockCardId}/status`, {
+        status: mockStatus,
+      });
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should update card due date', async () => {
+      const mockCardId = '999';
+      const mockDueDate = '2026-03-15T00:00:00.000Z';
+      const mockResponse = { data: { success: true } };
+      api.patch = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await cardAPI.updateDueDate(mockCardId, mockDueDate);
+
+      expect(api.patch).toHaveBeenCalledWith(`/cards/${mockCardId}/due-date`, {
+        dueDate: mockDueDate,
+      });
+      expect(result).toBe(mockResponse);
+    });
   });
 
   describe('memberAPI', () => {
@@ -410,6 +478,235 @@ describe('API Utils', () => {
         `/workspaces/${mockWorkspaceId}/members/${mockUserId}`
       );
       expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('labelAPI', () => {
+    it('should get labels by board', async () => {
+      const mockBoardId = 'board123';
+      const mockResponse = { data: [] };
+      api.get = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await labelAPI.getByBoard(mockBoardId);
+
+      expect(api.get).toHaveBeenCalledWith(`/boards/${mockBoardId}/labels`);
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should create label', async () => {
+      const mockBoardId = 'board123';
+      const mockData = { name: 'Bug', color: '#FF0000' };
+      const mockResponse = { data: { id: 'label1', ...mockData } };
+      api.post = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await labelAPI.create(mockBoardId, mockData);
+
+      expect(api.post).toHaveBeenCalledWith(
+        `/boards/${mockBoardId}/labels`,
+        mockData
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should update label', async () => {
+      const mockLabelId = 'label1';
+      const mockData = { name: 'Feature', color: '#00FF00' };
+      const mockResponse = { data: { id: mockLabelId, ...mockData } };
+      api.put = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await labelAPI.update(mockLabelId, mockData);
+
+      expect(api.put).toHaveBeenCalledWith(`/labels/${mockLabelId}`, mockData);
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should delete label', async () => {
+      const mockLabelId = 'label1';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await labelAPI.delete(mockLabelId);
+
+      expect(api.delete).toHaveBeenCalledWith(`/labels/${mockLabelId}`);
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('commentAPI', () => {
+    it('should get comments by card', async () => {
+      const mockCardId = 'card123';
+      const mockResponse = { data: [] };
+      api.get = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await commentAPI.getByCard(mockCardId);
+
+      expect(api.get).toHaveBeenCalledWith(`/cards/${mockCardId}/comments`);
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should create comment', async () => {
+      const mockCardId = 'card123';
+      const mockData = { content: 'Great work!' };
+      const mockResponse = { data: { id: 'comment1', ...mockData } };
+      api.post = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await commentAPI.create(mockCardId, mockData);
+
+      expect(api.post).toHaveBeenCalledWith(
+        `/cards/${mockCardId}/comments`,
+        mockData
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should update comment', async () => {
+      const mockCommentId = 'comment1';
+      const mockData = { content: 'Updated comment' };
+      const mockResponse = { data: { id: mockCommentId, ...mockData } };
+      api.put = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await commentAPI.update(mockCommentId, mockData);
+
+      expect(api.put).toHaveBeenCalledWith(
+        `/comments/${mockCommentId}`,
+        mockData
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should delete comment', async () => {
+      const mockCommentId = 'comment1';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await commentAPI.delete(mockCommentId);
+
+      expect(api.delete).toHaveBeenCalledWith(`/comments/${mockCommentId}`);
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('notificationAPI', () => {
+    it('should get all notifications', async () => {
+      const mockResponse = { data: [] };
+      api.get = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await notificationAPI.getAll();
+
+      expect(api.get).toHaveBeenCalledWith('/notifications');
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should mark notification as read', async () => {
+      const mockNotificationId = 'notif1';
+      const mockResponse = { data: { success: true } };
+      api.patch = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await notificationAPI.markAsRead(mockNotificationId);
+
+      expect(api.patch).toHaveBeenCalledWith(
+        `/notifications/${mockNotificationId}/read`
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should mark all notifications as read', async () => {
+      const mockResponse = { data: { success: true } };
+      api.patch = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await notificationAPI.markAllAsRead();
+
+      expect(api.patch).toHaveBeenCalledWith('/notifications/read-all');
+      expect(result).toBe(mockResponse);
+    });
+
+    it('should delete notification', async () => {
+      const mockNotificationId = 'notif1';
+      const mockResponse = { data: { success: true } };
+      api.delete = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await notificationAPI.delete(mockNotificationId);
+
+      expect(api.delete).toHaveBeenCalledWith(
+        `/notifications/${mockNotificationId}`
+      );
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('interceptors', () => {
+    it('request interceptor adds Authorization header when token exists', () => {
+      // Override the no-op localStorage mock to return a token
+      vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(
+        'my-jwt-token'
+      );
+
+      const requestHandler = api.interceptors.request.handlers[0];
+      const config = { headers: {} };
+      const result = requestHandler.fulfilled(config);
+
+      expect(result.headers.Authorization).toBe('Bearer my-jwt-token');
+    });
+
+    it('request interceptor does not add Authorization header when no token', () => {
+      vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(null);
+
+      const requestHandler = api.interceptors.request.handlers[0];
+      const config = { headers: {} };
+      const result = requestHandler.fulfilled(config);
+
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('response interceptor redirects to /login on 401 when not on login/root page', async () => {
+      window.location = { href: '', pathname: '/dashboard' };
+      const removeItemSpy = vi.spyOn(globalThis.localStorage, 'removeItem');
+
+      const responseHandler = api.interceptors.response.handlers[0];
+      const error = { response: { status: 401 } };
+
+      await expect(responseHandler.rejected(error)).rejects.toEqual(error);
+      expect(window.location.href).toBe('/login');
+      expect(removeItemSpy).toHaveBeenCalledWith('token');
+      expect(removeItemSpy).toHaveBeenCalledWith('user');
+    });
+
+    it('response interceptor does not redirect on 401 when on /login page', async () => {
+      window.location = { href: '', pathname: '/login' };
+
+      const responseHandler = api.interceptors.response.handlers[0];
+      const error = { response: { status: 401 } };
+
+      await expect(responseHandler.rejected(error)).rejects.toEqual(error);
+      expect(window.location.href).toBe('');
+    });
+
+    it('response interceptor does not redirect on 401 when on root page', async () => {
+      window.location = { href: '', pathname: '/' };
+
+      const responseHandler = api.interceptors.response.handlers[0];
+      const error = { response: { status: 401 } };
+
+      await expect(responseHandler.rejected(error)).rejects.toEqual(error);
+      expect(window.location.href).toBe('');
+    });
+
+    it('response interceptor does not redirect on non-401 errors', async () => {
+      window.location = { href: '', pathname: '/dashboard' };
+
+      const responseHandler = api.interceptors.response.handlers[0];
+      const error = { response: { status: 500 } };
+
+      await expect(responseHandler.rejected(error)).rejects.toEqual(error);
+      expect(window.location.href).toBe('');
+    });
+
+    it('response interceptor passes through successful responses', () => {
+      const responseHandler = api.interceptors.response.handlers[0];
+      const response = { data: { success: true } };
+
+      const result = responseHandler.fulfilled(response);
+      expect(result).toBe(response);
     });
   });
 });

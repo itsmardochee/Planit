@@ -11,6 +11,7 @@ import {
   assignLabel,
   removeLabel,
   updateCardStatus,
+  updateDueDate,
 } from '../controllers/cardController.js';
 import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
 
@@ -39,6 +40,9 @@ cardRouter.delete('/:id/labels/:labelId', checkWorkspaceAccess, removeLabel);
 
 // Status route
 cardRouter.patch('/:id/status', checkWorkspaceAccess, updateCardStatus);
+
+// Due date route
+cardRouter.patch('/:id/due-date', checkWorkspaceAccess, updateDueDate);
 
 // Card CRUD routes
 cardRouter.get('/:id', checkWorkspaceAccess, getCard);
