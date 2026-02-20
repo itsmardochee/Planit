@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import User from '../models/User.js';
+import { canModifyRole, ROLES } from '../utils/permissions.js';
 
 /**
  * @swagger
@@ -152,11 +153,25 @@ export const inviteMember = async (req, res) => {
       });
     }
 
-    // Check if current user is the workspace owner
-    if (workspace.userId.toString() !== req.user.id) {
+    // Check permission: only owner/admin can invite
+    // First check if user is workspace creator (legacy check for compatibility)
+    const isWorkspaceOwner = workspace.userId.toString() === req.user.id;
+
+    // Also check if user has admin or owner role
+    const membership = await WorkspaceMember.findOne({
+      workspaceId,
+      userId: req.user.id,
+    });
+
+    const hasInvitePermission =
+      isWorkspaceOwner ||
+      (membership && ['owner', 'admin'].includes(membership.role));
+
+    if (!hasInvitePermission) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to invite members to this workspace',
+        message:
+          'You do not have permission to invite members to this workspace',
       });
     }
 
@@ -473,11 +488,15 @@ export const removeMember = async (req, res) => {
       });
     }
 
-    // Check if current user is the owner or removing themselves
-    const isOwner = workspace.userId.toString() === req.user.id;
+    // Check permission: owner/admin can remove anyone, members can remove themselves
     const isRemovingSelf = userId === req.user.id;
+    const hasPermission =
+      req.userRole &&
+      (req.userRole === ROLES.OWNER ||
+        req.userRole === ROLES.ADMIN ||
+        isRemovingSelf);
 
-    if (!isOwner && !isRemovingSelf) {
+    if (!hasPermission) {
       return res.status(403).json({
         success: false,
         message: 'You are not authorized to remove members from this workspace',
@@ -500,6 +519,194 @@ export const removeMember = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Member removed successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /api/workspaces/{id}/members/{userId}/role:
+ *   patch:
+ *     summary: Update a member's role in workspace
+ *     description: Change the role of a workspace member. Only owners can change any role. Admins can only change member/viewer roles.
+ *     tags: [Workspace Members]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Workspace ID
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID of the member whose role to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - role
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [owner, admin, member, viewer]
+ *                 description: New role for the member
+ *     responses:
+ *       200:
+ *         description: Member role updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/WorkspaceMember'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Workspace or member not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+/**
+ * @desc    Update member role in workspace
+ * @route   PATCH /api/workspaces/:id/members/:userId/role
+ * @access  Private (owner can change any role, admin can change member/viewer)
+ */
+export const updateMemberRole = async (req, res) => {
+  try {
+    const { id: workspaceId, userId } = req.params;
+    const { role: newRole } = req.body;
+
+    // Validate workspaceId
+    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid workspace ID format',
+      });
+    }
+
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format',
+      });
+    }
+
+    // Validate new role
+    const validRoles = Object.values(ROLES);
+    if (!newRole || !validRoles.includes(newRole)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      });
+    }
+
+    // Check if workspace exists
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+    }
+
+    // Find the target member
+    const targetMember = await WorkspaceMember.findOne({
+      workspaceId,
+      userId,
+    });
+
+    if (!targetMember) {
+      return res.status(404).json({
+        success: false,
+        message: 'Member not found in this workspace',
+      });
+    }
+
+    // Find current user's membership and role
+    const currentUserMember = await WorkspaceMember.findOne({
+      workspaceId,
+      userId: req.user.id,
+    });
+
+    if (!currentUserMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not a member of this workspace',
+      });
+    }
+
+    // Check if current user has permission to modify this role
+    const hasPermission = canModifyRole(
+      currentUserMember.role,
+      targetMember.role,
+      newRole
+    );
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        success: false,
+        message: `You do not have permission to change this member's role`,
+      });
+    }
+
+    // Prevent demoting the last owner
+    if (targetMember.role === ROLES.OWNER && newRole !== ROLES.OWNER) {
+      const ownerCount = await WorkspaceMember.countDocuments({
+        workspaceId,
+        role: ROLES.OWNER,
+      });
+
+      if (ownerCount === 1) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Cannot demote the last owner. Promote another member to owner first.',
+        });
+      }
+    }
+
+    // Update the role
+    targetMember.role = newRole;
+    await targetMember.save();
+
+    // Populate user info for response
+    await targetMember.populate('userId', 'username email');
+
+    res.status(200).json({
+      success: true,
+      message: `Member role updated to ${newRole}`,
+      data: targetMember,
     });
   } catch (error) {
     res.status(500).json({

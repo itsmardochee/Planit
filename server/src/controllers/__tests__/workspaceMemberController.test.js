@@ -202,7 +202,7 @@ describe('POST /api/workspaces/:id/invite', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('not authorized');
+      expect(response.body.message).toContain('access');
     });
   });
 
@@ -621,6 +621,15 @@ describe('DELETE /api/workspaces/:id/members/:userId', () => {
 
   describe('Business Logic', () => {
     beforeEach(async () => {
+      // Create owner membership
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: ownerUser._id,
+        role: 'owner',
+        invitedBy: ownerUser._id,
+      });
+
+      // Create member to be removed
       await WorkspaceMember.create({
         workspaceId: testWorkspace._id,
         userId: memberUser._id,
@@ -683,6 +692,420 @@ describe('DELETE /api/workspaces/:id/members/:userId', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
+    });
+  });
+});
+
+describe('PATCH /api/workspaces/:id/members/:userId/role', () => {
+  let mongoServer;
+  let ownerUser;
+  let adminUser;
+  let memberUser;
+  let viewerUser;
+  let testWorkspace;
+  let ownerToken;
+  let adminToken;
+  let memberToken;
+
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    process.env.JWT_SECRET = 'test_secret_key';
+  }, 30000);
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+    delete process.env.JWT_SECRET;
+  });
+
+  beforeEach(async () => {
+    // Create users
+    ownerUser = await User.create({
+      username: 'owner',
+      email: 'owner@example.com',
+      password: 'password123',
+    });
+
+    adminUser = await User.create({
+      username: 'admin',
+      email: 'admin@example.com',
+      password: 'password123',
+    });
+
+    memberUser = await User.create({
+      username: 'member',
+      email: 'member@example.com',
+      password: 'password123',
+    });
+
+    viewerUser = await User.create({
+      username: 'viewer',
+      email: 'viewer@example.com',
+      password: 'password123',
+    });
+
+    // Create workspace
+    testWorkspace = await Workspace.create({
+      name: 'Test Workspace',
+      description: 'Test workspace for role tests',
+      userId: ownerUser._id,
+    });
+
+    // Create memberships
+    await WorkspaceMember.create({
+      workspaceId: testWorkspace._id,
+      userId: ownerUser._id,
+      role: 'owner',
+      invitedBy: ownerUser._id,
+    });
+
+    await WorkspaceMember.create({
+      workspaceId: testWorkspace._id,
+      userId: adminUser._id,
+      role: 'admin',
+      invitedBy: ownerUser._id,
+    });
+
+    await WorkspaceMember.create({
+      workspaceId: testWorkspace._id,
+      userId: memberUser._id,
+      role: 'member',
+      invitedBy: ownerUser._id,
+    });
+
+    await WorkspaceMember.create({
+      workspaceId: testWorkspace._id,
+      userId: viewerUser._id,
+      role: 'viewer',
+      invitedBy: ownerUser._id,
+    });
+
+    // Generate tokens
+    ownerToken = jwt.sign(
+      { id: ownerUser._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    adminToken = jwt.sign(
+      { id: adminUser._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    memberToken = jwt.sign(
+      { id: memberUser._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+  });
+
+  afterEach(async () => {
+    await WorkspaceMember.deleteMany({});
+    await Workspace.deleteMany({});
+    await User.deleteMany({});
+  });
+
+  describe('Input Validation', () => {
+    it('should fail with invalid workspace ID', async () => {
+      const response = await request(app)
+        .patch(`/api/workspaces/invalid-id/members/${memberUser._id}/role`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Invalid');
+    });
+
+    it('should fail with invalid user ID', async () => {
+      const response = await request(app)
+        .patch(`/api/workspaces/${testWorkspace._id}/members/invalid-id/role`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Invalid user ID');
+    });
+
+    it('should fail when role is missing', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Invalid role');
+    });
+
+    it('should fail with invalid role value', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'super-admin' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Invalid role');
+    });
+
+    it('should fail when workspace does not exist', async () => {
+      const fakeWorkspaceId = new mongoose.Types.ObjectId();
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${fakeWorkspaceId}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Workspace not found');
+    });
+
+    it('should fail when target member does not exist', async () => {
+      const fakeUserId = new mongoose.Types.ObjectId();
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${fakeUserId}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Member not found');
+    });
+  });
+
+  describe('Owner Permissions', () => {
+    it('should allow owner to promote member to admin', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('admin');
+      expect(response.body.message).toContain('updated to admin');
+    });
+
+    it('should allow owner to demote admin to member', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${adminUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'member' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('member');
+    });
+
+    it('should allow owner to promote member to owner', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'owner' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('owner');
+    });
+
+    it('should allow owner to change viewer to member', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${viewerUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'member' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('member');
+    });
+
+    it('should not allow demoting the last owner', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${ownerUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('last owner');
+    });
+  });
+
+  describe('Admin Permissions', () => {
+    it('should allow admin to change member to viewer', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'viewer' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('viewer');
+    });
+
+    it('should allow admin to change viewer to member', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${viewerUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'member' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.role).toBe('member');
+    });
+
+    it('should not allow admin to change owner role', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${ownerUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('do not have permission');
+    });
+
+    it('should not allow admin to change another admin role', async () => {
+      // Create another admin
+      const admin2 = await User.create({
+        username: 'admin2',
+        email: 'admin2@example.com',
+        password: 'password123',
+      });
+
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: admin2._id,
+        role: 'admin',
+        invitedBy: ownerUser._id,
+      });
+
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${admin2._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'member' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should not allow admin to promote member to admin', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('do not have permission');
+    });
+
+    it('should not allow admin to promote member to owner', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ role: 'owner' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+    });
+  });
+
+  describe('Member/Viewer Permissions', () => {
+    it('should not allow member to change any role', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${viewerUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${memberToken}`)
+        .send({ role: 'member' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should not allow member to change their own role', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${memberToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+    });
+  });
+
+  describe('Authorization', () => {
+    it('should fail when user is not authenticated', async () => {
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should fail when user is not a member of the workspace', async () => {
+      const outsider = await User.create({
+        username: 'outsider',
+        email: 'outsider@example.com',
+        password: 'password123',
+      });
+
+      const outsiderToken = jwt.sign(
+        { id: outsider._id.toString() },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const response = await request(app)
+        .patch(
+          `/api/workspaces/${testWorkspace._id}/members/${memberUser._id}/role`
+        )
+        .set('Authorization', `Bearer ${outsiderToken}`)
+        .send({ role: 'admin' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
     });
   });
 });

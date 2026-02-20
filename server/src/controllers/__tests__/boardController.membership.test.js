@@ -82,7 +82,14 @@ describe('Board Access - Workspace Members', () => {
       userId: owner._id,
     });
 
-    // Add members
+    // Add members (including owner)
+    await WorkspaceMember.create({
+      workspaceId: workspace._id,
+      userId: owner._id,
+      role: 'owner',
+      invitedBy: owner._id,
+    });
+
     await WorkspaceMember.create({
       workspaceId: workspace._id,
       userId: member._id,
@@ -157,7 +164,7 @@ describe('Board Access - Workspace Members', () => {
       expect(response.body.data.name).toBe('Owner Board');
     });
 
-    it('should allow workspace member to create board', async () => {
+    it('should not allow workspace member to create board (RBAC: only owner/admin)', async () => {
       const response = await request(app)
         .post(`/api/workspaces/${workspace._id}/boards`)
         .set('Authorization', `Bearer ${memberToken}`)
@@ -165,10 +172,9 @@ describe('Board Access - Workspace Members', () => {
           name: 'Member Board',
         });
 
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.name).toBe('Member Board');
-      expect(response.body.data.userId.toString()).toBe(member._id.toString());
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('permission');
     });
 
     it('should allow workspace admin to create board', async () => {
@@ -184,7 +190,7 @@ describe('Board Access - Workspace Members', () => {
       expect(response.body.data.name).toBe('Admin Board');
     });
 
-    it('should allow workspace viewer to create board', async () => {
+    it('should not allow workspace viewer to create board', async () => {
       const response = await request(app)
         .post(`/api/workspaces/${workspace._id}/boards`)
         .set('Authorization', `Bearer ${viewerToken}`)
@@ -192,9 +198,8 @@ describe('Board Access - Workspace Members', () => {
           name: 'Viewer Board',
         });
 
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.name).toBe('Viewer Board');
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
     });
 
     it('should deny access to non-member', async () => {
@@ -346,7 +351,7 @@ describe('Board Access - Workspace Members', () => {
       });
     });
 
-    it('should allow workspace member to update board', async () => {
+    it('should not allow workspace member to update board (RBAC: only owner/admin)', async () => {
       const response = await request(app)
         .put(`/api/boards/${testBoard._id}`)
         .set('Authorization', `Bearer ${memberToken}`)
@@ -354,9 +359,9 @@ describe('Board Access - Workspace Members', () => {
           name: 'Updated Board',
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.name).toBe('Updated Board');
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('permission');
     });
 
     it('should allow workspace admin to update board', async () => {
@@ -404,13 +409,14 @@ describe('Board Access - Workspace Members', () => {
       expect(response.body.success).toBe(true);
     });
 
-    it('should allow workspace member to delete board', async () => {
+    it('should not allow workspace member to delete board (RBAC: only owner/admin)', async () => {
       const response = await request(app)
         .delete(`/api/boards/${testBoard._id}`)
         .set('Authorization', `Bearer ${memberToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('permission');
     });
 
     it('should deny access to non-member', async () => {
