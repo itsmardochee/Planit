@@ -107,7 +107,9 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   // Sync currentCard when prop card changes
   useEffect(() => {
     setCurrentCard(card);
-    setDueDate(card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : '');
+    setDueDate(
+      card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
+    );
   }, [card]);
 
   return (
