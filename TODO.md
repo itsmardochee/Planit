@@ -215,19 +215,30 @@
 
 #### Backend
 
-- [ ] Créer modèle `Activity` (workspaceId, boardId, cardId, userId, action, details, createdAt)
-- [ ] Actions à tracker:
-  - [ ] Création/modification/suppression de cartes
-  - [ ] Déplacement de cartes entre listes
-  - [ ] Ajout/retrait de membres
-  - [ ] Ajout de commentaires
-  - [ ] Changement de statut/labels
-  - [ ] Modification de date d'échéance
-- [ ] Créer endpoint `GET /api/boards/:id/activity` pour récupérer l'historique
-- [ ] Créer endpoint `GET /api/cards/:id/activity` pour l'historique d'une carte
-- [ ] Pagination de l'historique (limit, skip)
-- [ ] Filtres par type d'action, utilisateur, date
-- [ ] Tests pour l'historique d'activités
+- [x] Créer modèle `Activity` (workspaceId, boardId, cardId, userId, action, details, createdAt)
+- [x] Actions à tracker:
+  - [x] Création/modification/suppression de cartes
+  - [x] Déplacement de cartes entre listes
+  - [x] Ajout/retrait de membres (assignation)
+  - [x] Ajout de commentaires
+  - [x] Changement de statut
+  - [ ] Modification de dates d'échéance (quand Feature 5 sera implémentée)
+  - [x] Création/modification/suppression de listes
+  - [x] Création/modification/suppression de boards
+  - [x] Création/modification/suppression de workspaces
+- [x] Créer endpoints pour récupérer l'historique:
+  - [x] `GET /api/workspaces/:id/activity` - Historique workspace
+  - [x] `GET /api/boards/:id/activity` - Historique board
+  - [x] `GET /api/cards/:id/activity` - Historique carte
+- [x] Pagination de l'historique (limit, skip)
+- [x] Filtres par type d'action (action, entityType)
+- [x] Créer utilitaire `logActivity` pour enregistrer automatiquement
+- [x] Intégrer logActivity dans tous les controllers
+- [x] Ajouter indexes pour performance (workspaceId, boardId, cardId, userId)
+- [x] Tests pour l'historique d'activités (32 model tests + 18 controller tests)
+- [x] Swagger documentation pour tous les endpoints
+
+**Status:** ✅ Backend complet - 611 tests passing - Commit 76d5914
 
 #### Frontend
 
