@@ -47,7 +47,9 @@ export const getNotifications = async (req, res, next) => {
       .populate('cardId', 'title')
       .lean();
 
-    logger.info(`Fetched ${notifications.length} notifications for user ${userId}`);
+    logger.info(
+      `Fetched ${notifications.length} notifications for user ${userId}`
+    );
 
     res.status(200).json({
       success: true,
@@ -108,7 +110,7 @@ export const markAsRead = async (req, res, next) => {
     }
 
     if (notification.userId.toString() !== userId) {
-      throw new ValidationError('Cannot modify another user\'s notification');
+      throw new ValidationError("Cannot modify another user's notification");
     }
 
     notification.read = true;
@@ -160,7 +162,9 @@ export const markAllAsRead = async (req, res, next) => {
       { read: true }
     );
 
-    logger.info(`Marked ${result.modifiedCount} notifications as read for user ${userId}`);
+    logger.info(
+      `Marked ${result.modifiedCount} notifications as read for user ${userId}`
+    );
 
     res.status(200).json({
       success: true,
@@ -213,7 +217,7 @@ export const deleteNotification = async (req, res, next) => {
     }
 
     if (notification.userId.toString() !== userId) {
-      throw new ValidationError('Cannot delete another user\'s notification');
+      throw new ValidationError("Cannot delete another user's notification");
     }
 
     await Notification.findByIdAndDelete(id);

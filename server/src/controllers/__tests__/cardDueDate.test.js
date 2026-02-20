@@ -151,7 +151,9 @@ describe('PATCH /api/cards/:id/due-date', () => {
 
       expect(res.status).toBe(200);
       expect(new Date(res.body.data.dueDate).toISOString()).toBe(dueDate);
-      expect(new Date(res.body.data.reminderDate).toISOString()).toBe(reminderDate);
+      expect(new Date(res.body.data.reminderDate).toISOString()).toBe(
+        reminderDate
+      );
     });
 
     it('should reject reminderDate that is after dueDate', async () => {
@@ -190,7 +192,9 @@ describe('PATCH /api/cards/:id/due-date', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.reminderDate).toBeNull();
-      expect(new Date(res.body.data.dueDate).toISOString()).toBe('2026-06-15T10:00:00.000Z');
+      expect(new Date(res.body.data.dueDate).toISOString()).toBe(
+        '2026-06-15T10:00:00.000Z'
+      );
     });
   });
 

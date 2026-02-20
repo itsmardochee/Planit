@@ -138,7 +138,9 @@ describe('Notification Model', () => {
       message: 'Bad type',
     });
 
-    await expect(notification.validate()).rejects.toThrow('due-soon, overdue, reminder');
+    await expect(notification.validate()).rejects.toThrow(
+      'due-soon, overdue, reminder'
+    );
   });
 
   it('should accept all valid types', async () => {

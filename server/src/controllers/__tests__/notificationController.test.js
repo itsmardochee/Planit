@@ -314,8 +314,9 @@ describe('Notification Controller', () => {
     });
 
     it('should fail without authentication', async () => {
-      const res = await request(app)
-        .patch(`/api/notifications/${testNotification._id}/read`);
+      const res = await request(app).patch(
+        `/api/notifications/${testNotification._id}/read`
+      );
       expect(res.status).toBe(401);
     });
   });
@@ -475,8 +476,9 @@ describe('Notification Controller', () => {
     });
 
     it('should fail without authentication', async () => {
-      const res = await request(app)
-        .delete(`/api/notifications/${testNotification._id}`);
+      const res = await request(app).delete(
+        `/api/notifications/${testNotification._id}`
+      );
       expect(res.status).toBe(401);
     });
   });
