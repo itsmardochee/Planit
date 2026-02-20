@@ -7,6 +7,7 @@ import WorkspaceMember from '../models/WorkspaceMember.js';
 import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -123,6 +124,17 @@ export const createCard = async (req, res, next) => {
       listId,
       boardId: list.boardId,
       userId: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: list.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'card',
+      details: { title: card.title },
     });
 
     logger.info(`Card created: ${card._id} by user ${req.user._id}`);
@@ -377,6 +389,24 @@ export const updateCard = async (req, res, next) => {
 
     await card.save();
 
+    // Log activity for updates
+    const updatedFields = [];
+    if (title !== undefined) updatedFields.push('title');
+    if (description !== undefined) updatedFields.push('description');
+
+    if (updatedFields.length > 0) {
+      const list = await List.findById(card.listId);
+      await logActivity({
+        workspaceId: list.workspaceId,
+        boardId: card.boardId,
+        cardId: card._id,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'card',
+        details: { fields: updatedFields },
+      });
+    }
+
     logger.info(`Card updated: ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
@@ -437,11 +467,29 @@ export const deleteCard = async (req, res, next) => {
 
     const deletedPosition = card.position;
     const listId = card.listId;
+    const cardTitle = card.title;
+    const boardId = card.boardId;
+
+    // Get list for workspace ID
+    const list = await List.findById(listId);
 
     // Cascade delete: remove all comments on this card
     await Comment.deleteMany({ cardId: id });
 
     await card.deleteOne();
+
+    // Log activity
+    if (list) {
+      await logActivity({
+        workspaceId: list.workspaceId,
+        boardId,
+        cardId: id,
+        userId: req.user._id,
+        action: 'deleted',
+        entityType: 'card',
+        details: { title: cardTitle },
+      });
+    }
 
     // Adjust positions of remaining cards
     await Card.updateMany(
@@ -590,6 +638,21 @@ export const reorderCard = async (req, res, next) => {
       card.position = position;
       await card.save();
 
+      // Log activity for moving between lists
+      const oldList = await List.findById(oldListId);
+      await logActivity({
+        workspaceId: req.workspace._id,
+        boardId: card.boardId,
+        cardId: card._id,
+        userId: req.user._id,
+        action: 'moved',
+        entityType: 'card',
+        details: {
+          from: { listId: oldListId, position: oldPosition },
+          to: { listId: targetListId, position },
+        },
+      });
+
       return res.status(200).json({ success: true, data: card });
     }
 
@@ -626,6 +689,21 @@ export const reorderCard = async (req, res, next) => {
     // Update card position
     card.position = position;
     await card.save();
+
+    // Log activity for reordering within same list
+    const list = await List.findById(oldListId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'moved',
+      entityType: 'card',
+      details: {
+        from: { position: oldPosition },
+        to: { position },
+      },
+    });
 
     logger.info(`Card reordered: ${id} to position ${position}`);
     res.status(200).json({ success: true, data: card });
@@ -739,6 +817,21 @@ export const assignMember = async (req, res, next) => {
     // Populate assigned users
     await card.populate('assignedTo', 'username email');
 
+    // Log activity
+    const list = await List.findById(card.listId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'assigned',
+      entityType: 'card',
+      details: {
+        assignedUserId: userId,
+        assignedUsername: userToAssign.username,
+      },
+    });
+
     logger.info(`User ${userId} assigned to card ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
@@ -815,6 +908,19 @@ export const unassignMember = async (req, res, next) => {
 
     // Populate remaining assigned users
     await card.populate('assignedTo', 'username email');
+
+    // Log activity
+    const list = await List.findById(card.listId);
+    const user = await User.findById(userId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'assigned',
+      entityType: 'card',
+      details: { unassignedUserId: userId, unassignedUsername: user?.username },
+    });
 
     logger.info(`User ${userId} unassigned from card ${id}`);
     res.status(200).json({ success: true, data: card });
@@ -895,6 +1001,18 @@ export const assignLabel = async (req, res, next) => {
     await card.save();
     await card.populate('labels', 'name color');
 
+    // Log activity
+    const list = await List.findById(card.listId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'updated',
+      entityType: 'label',
+      details: { labelId, labelName: label.name, action: 'assigned' },
+    });
+
     logger.info(`Label ${labelId} assigned to card ${id}`);
     res.status(200).json({ success: true, data: card });
   } catch (error) {
@@ -956,9 +1074,24 @@ export const removeLabel = async (req, res, next) => {
       });
     }
 
+    // Get label for logging
+    const label = await Label.findById(labelId);
+
     card.labels = card.labels.filter(l => l.toString() !== labelId);
     await card.save();
     await card.populate('labels', 'name color');
+
+    // Log activity
+    const list = await List.findById(card.listId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'updated',
+      entityType: 'label',
+      details: { labelId, labelName: label?.name, action: 'removed' },
+    });
 
     logger.info(`Label ${labelId} removed from card ${id}`);
     res.status(200).json({ success: true, data: card });
@@ -1028,8 +1161,21 @@ export const updateCardStatus = async (req, res, next) => {
       );
     }
 
+    const oldStatus = card.status;
     card.status = status;
     await card.save();
+
+    // Log activity
+    const list = await List.findById(card.listId);
+    await logActivity({
+      workspaceId: list.workspaceId,
+      boardId: card.boardId,
+      cardId: card._id,
+      userId: req.user._id,
+      action: 'updated',
+      entityType: 'card',
+      details: { field: 'status', oldValue: oldStatus, newValue: status },
+    });
 
     logger.info(`Card ${id} status updated to ${status}`);
     res.status(200).json({ success: true, data: card });

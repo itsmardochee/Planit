@@ -5,6 +5,7 @@ import Card from '../models/Card.js';
 import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -121,6 +122,16 @@ export const createList = async (req, res, next) => {
       workspaceId: board.workspaceId,
       boardId,
       userId: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      workspaceId: board.workspaceId,
+      boardId,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'list',
+      details: { name: list.name },
     });
 
     logger.info(`List created: ${list._id} by user ${req.user._id}`);
@@ -368,6 +379,19 @@ export const updateList = async (req, res, next) => {
       runValidators: true,
     });
 
+    // Log activity for updates
+    const updatedFields = Object.keys(updateData);
+    if (updatedFields.length > 0) {
+      await logActivity({
+        workspaceId: existing.workspaceId,
+        boardId: existing.boardId,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'list',
+        details: { fields: updatedFields },
+      });
+    }
+
     logger.info(`List updated: ${id}`);
     res.status(200).json({ success: true, data: list });
   } catch (error) {
@@ -487,6 +511,21 @@ export const reorderList = async (req, res, next) => {
     list.position = newPosition;
     await list.save();
 
+    // Log activity
+    if (oldPosition !== newPosition) {
+      await logActivity({
+        workspaceId: list.workspaceId,
+        boardId: list.boardId,
+        userId: req.user._id,
+        action: 'moved',
+        entityType: 'list',
+        details: {
+          from: { position: oldPosition },
+          to: { position: newPosition },
+        },
+      });
+    }
+
     logger.info(`List reordered: ${id} to position ${newPosition}`);
     res.status(200).json({ success: true, data: list });
   } catch (error) {
@@ -556,6 +595,10 @@ export const deleteList = async (req, res, next) => {
 
     // No need to check list.userId - workspace access is already verified by middleware
 
+    const listName = list.name;
+    const workspaceId = list.workspaceId;
+    const boardId = list.boardId;
+
     // Cascade delete: remove all comments on cards in this list
     const cardIds = (await Card.find({ listId: id }).select('_id')).map(
       c => c._id
@@ -566,6 +609,16 @@ export const deleteList = async (req, res, next) => {
     await Card.deleteMany({ listId: id });
 
     await List.findByIdAndDelete(id);
+
+    // Log activity
+    await logActivity({
+      workspaceId,
+      boardId,
+      userId: req.user._id,
+      action: 'deleted',
+      entityType: 'list',
+      details: { name: listName },
+    });
 
     logger.info(`List deleted: ${id}`);
     res
