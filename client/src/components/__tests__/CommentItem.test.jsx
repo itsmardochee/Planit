@@ -314,7 +314,9 @@ describe('CommentItem', () => {
     });
 
     it('should display days for comments less than 1 month old', () => {
-      const daysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
+      const daysAgo = new Date(
+        Date.now() - 5 * 24 * 60 * 60 * 1000
+      ).toISOString(); // 5 days ago
       const oldComment = {
         ...mockComment,
         createdAt: daysAgo,
@@ -333,7 +335,9 @@ describe('CommentItem', () => {
     });
 
     it('should display months for comments less than 1 year old', () => {
-      const monthsAgo = new Date(Date.now() - 3 * 30 * 24 * 60 * 60 * 1000).toISOString(); // ~3 months ago
+      const monthsAgo = new Date(
+        Date.now() - 3 * 30 * 24 * 60 * 60 * 1000
+      ).toISOString(); // ~3 months ago
       const oldComment = {
         ...mockComment,
         createdAt: monthsAgo,
@@ -352,7 +356,9 @@ describe('CommentItem', () => {
     });
 
     it('should display years for very old comments', () => {
-      const yearsAgo = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString(); // 2 years ago
+      const yearsAgo = new Date(
+        Date.now() - 2 * 365 * 24 * 60 * 60 * 1000
+      ).toISOString(); // 2 years ago
       const veryOldComment = {
         ...mockComment,
         createdAt: yearsAgo,
