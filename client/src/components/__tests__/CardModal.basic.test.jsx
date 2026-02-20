@@ -33,6 +33,9 @@ describe('CardModal - Basic Fields', () => {
     title: 'Test Card',
     description: 'Original description',
     listId: 'list-1',
+    assignedTo: [],
+    createdAt: new Date('2024-01-01').toISOString(),
+    updatedAt: new Date('2024-01-15').toISOString(),
   };
 
   const mockOnClose = vi.fn();
@@ -190,5 +193,148 @@ describe('CardModal - Basic Fields', () => {
     expect(descriptionTextarea).toBeInTheDocument();
     expect(descriptionTextarea.value).toContain('Line 1');
     expect(descriptionTextarea.value).toContain('Line 2');
+  });
+
+  it('calls delete API and callbacks when delete button is clicked', async () => {
+    window.confirm = vi.fn(() => true);
+    cardAPI.delete.mockResolvedValue({ data: { success: true } });
+
+    renderCardModal();
+
+    const deleteButton = screen.getByRole('button', {
+      name: /delete|supprimer/i,
+    });
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(cardAPI.delete).toHaveBeenCalledWith('card-123');
+      expect(mockOnCardUpdate).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+  });
+
+  it('does not delete card when confirmation is cancelled', async () => {
+    window.confirm = vi.fn(() => false);
+
+    renderCardModal();
+
+    const deleteButton = screen.getByRole('button', {
+      name: /delete|supprimer/i,
+    });
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(cardAPI.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  it('handles delete error gracefully', async () => {
+    window.confirm = vi.fn(() => true);
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    cardAPI.delete.mockRejectedValue(new Error('Failed to delete'));
+
+    renderCardModal();
+
+    const deleteButton = screen.getByRole('button', {
+      name: /delete|supprimer/i,
+    });
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        'Error deleting card',
+        expect.any(Error)
+      );
+    });
+
+    consoleError.mockRestore();
+  });
+
+  it('calls onClose when close button is clicked', () => {
+    renderCardModal();
+
+    const closeButton = screen.getByText('✕');
+    fireEvent.click(closeButton);
+
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('calls onClose when cancel button is clicked', () => {
+    renderCardModal();
+
+    const cancelButton = screen.getByRole('button', {
+      name: /cancel|annuler/i,
+    });
+    fireEvent.click(cancelButton);
+
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('renders member assignment section when members are provided', () => {
+    const mockMembers = [
+      {
+        userId: {
+          _id: 'user1',
+          username: 'John Doe',
+          email: 'john@example.com',
+        },
+        role: 'member',
+      },
+    ];
+
+    renderCardModal({ members: mockMembers });
+
+    expect(screen.getByText(/assigned to/i)).toBeInTheDocument();
+  });
+
+  it('does not render member assignment section when members are not provided', () => {
+    renderCardModal({ members: undefined });
+
+    expect(screen.queryByText(/assigned to/i)).not.toBeInTheDocument();
+  });
+
+  it('renders labels section when boardId is provided', () => {
+    renderCardModal({ boardId: 'board123' });
+
+    expect(screen.getByText(/labels/i)).toBeInTheDocument();
+  });
+
+  it('renders status selector', () => {
+    renderCardModal();
+
+    expect(screen.getByText(/status/i)).toBeInTheDocument();
+  });
+
+  it('renders card information section', () => {
+    renderCardModal();
+
+    expect(screen.getByText(/created on/i)).toBeInTheDocument();
+    expect(screen.getByText(/modified on/i)).toBeInTheDocument();
+  });
+
+  it('disables save and delete buttons when saving', async () => {
+    cardAPI.update.mockImplementation(
+      () => new Promise(resolve => setTimeout(resolve, 100))
+    );
+
+    renderCardModal();
+
+    const saveButton = screen.getByRole('button', {
+      name: /save|enregistrer/i,
+    });
+    const deleteButton = screen.getByRole('button', {
+      name: /delete|supprimer/i,
+    });
+
+    fireEvent.click(saveButton);
+
+    // Buttons should be disabled during save
+    expect(deleteButton).toBeDisabled();
+
+    await waitFor(() => {
+      expect(deleteButton).not.toBeDisabled();
+    });
   });
 });
