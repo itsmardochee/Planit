@@ -149,6 +149,16 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
                 📅
               </span>
             )}
+
+            {/* Comment Count Badge */}
+            {card.commentCount > 0 && (
+              <span
+                data-testid="comment-count"
+                className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium flex items-center gap-1"
+              >
+                💬 {card.commentCount}
+              </span>
+            )}
           </div>
 
           {/* Assigned Members Avatars */}

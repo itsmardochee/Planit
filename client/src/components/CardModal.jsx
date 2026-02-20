@@ -4,6 +4,7 @@ import { cardAPI } from '../utils/api';
 import MemberSelector from './MemberSelector';
 import LabelPicker from './LabelPicker';
 import StatusSelector from './StatusSelector';
+import CommentSection from './CommentSection';
 
 const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   const { t } = useTranslation(['cards', 'common']);
@@ -199,6 +200,11 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
                 {new Date(card.updatedAt).toLocaleDateString()}
               </p>
             </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <CommentSection cardId={card._id} />
           </div>
         </div>
 
