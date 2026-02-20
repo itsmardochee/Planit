@@ -118,9 +118,10 @@ describe('CardModal - Due Date', () => {
       });
     });
 
-    it('should update due date when user selects a new date', async () => {
+    it('should update due date when user selects a new date and clicks Save', async () => {
       const user = userEvent.setup();
-      cardAPI.updateDueDate.mockResolvedValue({
+      const onCardUpdate = vi.fn();
+      cardAPI.update.mockResolvedValue({
         data: { success: true },
       });
 
@@ -130,7 +131,7 @@ describe('CardModal - Due Date', () => {
           boardId={mockBoardId}
           members={mockMembers}
           onClose={vi.fn()}
-          onCardUpdate={vi.fn()}
+          onCardUpdate={onCardUpdate}
         />
       );
 
@@ -143,25 +144,30 @@ describe('CardModal - Due Date', () => {
       await user.clear(dateInput);
       await user.type(dateInput, '2026-04-20');
 
-      // Blur to trigger save
-      await user.tab();
+      // Click Save button to trigger save
+      const saveButton = screen.getByText(/cards:save/i);
+      await user.click(saveButton);
 
       await waitFor(() => {
-        expect(cardAPI.updateDueDate).toHaveBeenCalledWith(
+        expect(cardAPI.update).toHaveBeenCalledWith(
           'card123',
-          expect.stringContaining('2026-04-20')
+          expect.objectContaining({
+            title: 'Test Card',
+            description: 'Test description',
+            dueDate: expect.stringContaining('2026-04-20'),
+          })
         );
       });
     });
 
-    it('should clear due date when user removes the date', async () => {
+    it('should clear due date when user removes the date and clicks Save', async () => {
       const user = userEvent.setup();
       const cardWithDueDate = {
         ...mockCard,
         dueDate: '2026-03-15T12:00:00.000Z',
       };
 
-      cardAPI.updateDueDate.mockResolvedValue({
+      cardAPI.update.mockResolvedValue({
         data: { success: true },
       });
 
@@ -182,18 +188,24 @@ describe('CardModal - Due Date', () => {
 
       const dateInput = screen.getByLabelText(/cards:dueDate/i);
       await user.clear(dateInput);
-      await user.tab();
+
+      // Click Save button
+      const saveButton = screen.getByText(/cards:save/i);
+      await user.click(saveButton);
 
       await waitFor(() => {
-        expect(cardAPI.updateDueDate).toHaveBeenCalledWith('card123', null);
+        expect(cardAPI.update).toHaveBeenCalledWith(
+          'card123',
+          expect.objectContaining({
+            dueDate: null,
+          })
+        );
       });
     });
 
-    it('should show error message if due date update fails', async () => {
+    it('should handle error if due date update fails', async () => {
       const user = userEvent.setup();
-      cardAPI.updateDueDate.mockRejectedValue(
-        new Error('Failed to update due date')
-      );
+      cardAPI.update.mockRejectedValue(new Error('Failed to update card'));
 
       render(
         <CardModal
@@ -212,12 +224,52 @@ describe('CardModal - Due Date', () => {
 
       const dateInput = screen.getByLabelText(/cards:dueDate/i);
       await user.type(dateInput, '2026-04-20');
-      await user.tab();
 
-      // Note: Error handling will be implemented in the component
-      // This test ensures the error is caught and doesn't crash
+      const saveButton = screen.getByText(/cards:save/i);
+      await user.click(saveButton);
+
+      // Error is caught and logged, component doesn't crash
       await waitFor(() => {
-        expect(cardAPI.updateDueDate).toHaveBeenCalled();
+        expect(cardAPI.update).toHaveBeenCalled();
+      });
+    });
+
+    it('should NOT auto-save due date (requires Save button click)', async () => {
+      const user = userEvent.setup();
+      cardAPI.update.mockResolvedValue({
+        data: { success: true },
+      });
+
+      render(
+        <CardModal
+          card={mockCard}
+          boardId={mockBoardId}
+          members={mockMembers}
+          onClose={vi.fn()}
+          onCardUpdate={vi.fn()}
+        />
+      );
+
+      await waitFor(() => {
+        const dateInput = screen.getByLabelText(/cards:dueDate/i);
+        expect(dateInput).toBeInTheDocument();
+      });
+
+      const dateInput = screen.getByLabelText(/cards:dueDate/i);
+      await user.type(dateInput, '2026-04-20');
+
+      // Wait a bit to ensure no auto-save happens
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify that the API was NOT called (no auto-save)
+      expect(cardAPI.update).not.toHaveBeenCalled();
+
+      // Now click Save and verify it's called
+      const saveButton = screen.getByText(/cards:save/i);
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(cardAPI.update).toHaveBeenCalledTimes(1);
       });
     });
   });

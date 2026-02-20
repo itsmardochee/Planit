@@ -360,6 +360,21 @@ export const updateCard = async (req, res, next) => {
       card.description = trimmedDescription;
     }
 
+    // Update dueDate if provided (can be null to clear)
+    if (req.body.dueDate !== undefined) {
+      const { dueDate } = req.body;
+      if (dueDate !== null) {
+        const parsed = new Date(dueDate);
+        if (isNaN(parsed.getTime())) {
+          throw new ValidationError('Invalid dueDate format');
+        }
+        card.dueDate = parsed;
+      } else {
+        card.dueDate = null;
+        card.reminderDate = null; // Clear reminder if due date is cleared
+      }
+    }
+
     await card.save();
 
     logger.info(`Card updated: ${id}`);

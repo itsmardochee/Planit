@@ -21,10 +21,12 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
     try {
       setIsSaving(true);
 
-      // Update title and description
+      // Update title, description, and due date
+      const dueDateValue = dueDate ? new Date(dueDate).toISOString() : null;
       await cardAPI.update(card._id, {
         title,
         description,
+        dueDate: dueDateValue,
       });
 
       // Process member assignment changes
@@ -97,23 +99,15 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
     setCurrentCard(updatedCard);
   };
 
-  const handleDueDateChange = async e => {
+  const handleDueDateChange = e => {
     const newDate = e.target.value;
     setDueDate(newDate);
-
-    try {
-      // Convert to ISO string or null if empty
-      const dueDateValue = newDate ? new Date(newDate).toISOString() : null;
-      await cardAPI.updateDueDate(card._id, dueDateValue);
-      onCardUpdate();
-    } catch (err) {
-      console.error('Error updating due date', err);
-    }
   };
 
   // Sync currentCard when prop card changes
   useEffect(() => {
     setCurrentCard(card);
+    setDueDate(card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : '');
   }, [card]);
 
   return (

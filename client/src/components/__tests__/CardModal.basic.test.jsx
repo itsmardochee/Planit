@@ -141,10 +141,13 @@ describe('CardModal - Basic Fields', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(cardAPI.update).toHaveBeenCalledWith('card-123', {
-        title: 'New Title',
-        description: 'New description',
-      });
+      expect(cardAPI.update).toHaveBeenCalledWith(
+        'card-123',
+        expect.objectContaining({
+          title: 'New Title',
+          description: 'New description',
+        })
+      );
     });
 
     expect(mockOnCardUpdate).toHaveBeenCalled();
