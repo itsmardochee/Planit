@@ -273,4 +273,187 @@ describe('CommentItem', () => {
       expect(screen.queryByText(/edited/i)).not.toBeInTheDocument();
     });
   });
+
+  describe('Time formatting', () => {
+    it('should display "just now" for very recent comments', () => {
+      const justNow = new Date(Date.now() - 10 * 1000).toISOString(); // 10 seconds ago
+      const recentComment = {
+        ...mockComment,
+        createdAt: justNow,
+      };
+
+      render(
+        <CommentItem
+          comment={recentComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText(/just now/i)).toBeInTheDocument();
+    });
+
+    it('should display minutes for comments less than 1 hour old', () => {
+      const minutesAgo = new Date(Date.now() - 45 * 60 * 1000).toISOString(); // 45 minutes ago
+      const recentComment = {
+        ...mockComment,
+        createdAt: minutesAgo,
+      };
+
+      render(
+        <CommentItem
+          comment={recentComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText(/45 minutes? ago/i)).toBeInTheDocument();
+    });
+
+    it('should display days for comments less than 1 month old', () => {
+      const daysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
+      const oldComment = {
+        ...mockComment,
+        createdAt: daysAgo,
+      };
+
+      render(
+        <CommentItem
+          comment={oldComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText(/5 days? ago/i)).toBeInTheDocument();
+    });
+
+    it('should display months for comments less than 1 year old', () => {
+      const monthsAgo = new Date(Date.now() - 3 * 30 * 24 * 60 * 60 * 1000).toISOString(); // ~3 months ago
+      const oldComment = {
+        ...mockComment,
+        createdAt: monthsAgo,
+      };
+
+      render(
+        <CommentItem
+          comment={oldComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText(/months? ago/i)).toBeInTheDocument();
+    });
+
+    it('should display years for very old comments', () => {
+      const yearsAgo = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString(); // 2 years ago
+      const veryOldComment = {
+        ...mockComment,
+        createdAt: yearsAgo,
+      };
+
+      render(
+        <CommentItem
+          comment={veryOldComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText(/years? ago/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Username initials', () => {
+    it('should handle single word username', () => {
+      const singleWordComment = {
+        ...mockComment,
+        userId: {
+          ...mockComment.userId,
+          username: 'John',
+        },
+      };
+
+      render(
+        <CommentItem
+          comment={singleWordComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText('J')).toBeInTheDocument();
+    });
+
+    it('should handle username with hyphens', () => {
+      const hyphenComment = {
+        ...mockComment,
+        userId: {
+          ...mockComment.userId,
+          username: 'mary-jane',
+        },
+      };
+
+      render(
+        <CommentItem
+          comment={hyphenComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText('MJ')).toBeInTheDocument();
+    });
+
+    it('should handle username with dots', () => {
+      const dotComment = {
+        ...mockComment,
+        userId: {
+          ...mockComment.userId,
+          username: 'bob.smith',
+        },
+      };
+
+      render(
+        <CommentItem
+          comment={dotComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText('BS')).toBeInTheDocument();
+    });
+
+    it('should handle empty username', () => {
+      const emptyUsernameComment = {
+        ...mockComment,
+        userId: {
+          ...mockComment.userId,
+          username: '',
+        },
+      };
+
+      render(
+        <CommentItem
+          comment={emptyUsernameComment}
+          currentUserId="user-1"
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      expect(screen.getByText('?')).toBeInTheDocument();
+    });
+  });
 });

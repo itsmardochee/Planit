@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CardModal from '../CardModal';
-import { cardAPI, labelAPI } from '../../utils/api';
+import { cardAPI, labelAPI, commentAPI } from '../../utils/api';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 
@@ -18,6 +18,12 @@ vi.mock('../../utils/api', () => ({
   },
   labelAPI: {
     getByBoard: vi.fn(),
+  },
+  commentAPI: {
+    getByCard: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -38,6 +44,10 @@ describe('CardModal - Basic Fields', () => {
     vi.clearAllMocks();
     // Mock labelAPI to prevent errors
     labelAPI.getByBoard.mockResolvedValue({
+      data: { success: true, data: [] },
+    });
+    // Mock commentAPI to prevent errors
+    commentAPI.getByCard.mockResolvedValue({
       data: { success: true, data: [] },
     });
   });

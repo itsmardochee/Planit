@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CardModal from '../CardModal';
-import { cardAPI, labelAPI } from '../../utils/api';
+import { cardAPI, labelAPI, commentAPI } from '../../utils/api';
 
 // Mock translation
 vi.mock('react-i18next', () => ({
@@ -25,6 +25,12 @@ vi.mock('../../utils/api', () => ({
   },
   labelAPI: {
     getByBoard: vi.fn(),
+  },
+  commentAPI: {
+    getByCard: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -57,6 +63,9 @@ describe('CardModal - Labels and Status Integration', () => {
     vi.clearAllMocks();
     labelAPI.getByBoard.mockResolvedValue({
       data: { success: true, data: mockLabels },
+    });
+    commentAPI.getByCard.mockResolvedValue({
+      data: { success: true, data: [] },
     });
   });
 
