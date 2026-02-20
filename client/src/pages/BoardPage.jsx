@@ -33,6 +33,7 @@ const BoardPage = () => {
   const [lists, setLists] = useState([]);
   const [members, setMembers] = useState([]);
   const [selectedMemberFilter, setSelectedMemberFilter] = useState(null);
+  const [showOverdueFilter, setShowOverdueFilter] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -364,22 +365,57 @@ const BoardPage = () => {
     }
   };
 
+  // Helper function to check if a card is overdue
+  const isCardOverdue = card => {
+    if (!card.dueDate) return false;
+    const dueDate = new Date(card.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    return dueDate < today;
+  };
+
+  // Get count of overdue cards across all lists
+  const getOverdueCount = () => {
+    let count = 0;
+    lists.forEach(list => {
+      list.cards.forEach(card => {
+        if (isCardOverdue(card)) count++;
+      });
+    });
+    return count;
+  };
+
   // Filter cards based on selected member
   const getFilteredLists = () => {
-    if (!selectedMemberFilter) {
+    if (!selectedMemberFilter && !showOverdueFilter) {
       return lists; // Show all cards
     }
 
     return lists.map(list => ({
       ...list,
       cards: list.cards.filter(card => {
-        if (selectedMemberFilter === 'unassigned') {
-          return !card.assignedTo || card.assignedTo.length === 0;
+        // Apply member filter
+        let passesMemberFilter = true;
+        if (selectedMemberFilter) {
+          if (selectedMemberFilter === 'unassigned') {
+            passesMemberFilter =
+              !card.assignedTo || card.assignedTo.length === 0;
+          } else {
+            passesMemberFilter =
+              card.assignedTo &&
+              card.assignedTo.some(
+                member => member._id === selectedMemberFilter
+              );
+          }
         }
-        return (
-          card.assignedTo &&
-          card.assignedTo.some(member => member._id === selectedMemberFilter)
-        );
+
+        // Apply overdue filter
+        let passesOverdueFilter = true;
+        if (showOverdueFilter) {
+          passesOverdueFilter = isCardOverdue(card);
+        }
+
+        return passesMemberFilter && passesOverdueFilter;
       }),
     }));
   };
@@ -423,8 +459,22 @@ const BoardPage = () => {
                 )}
               </div>
 
-              {/* Member Filter and Labels Button */}
+              {/* Filters and Actions */}
               <div className="flex items-center gap-4">
+                {/* Overdue Filter Button */}
+                <button
+                  onClick={() => setShowOverdueFilter(!showOverdueFilter)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showOverdueFilter
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label={`Overdue ${getOverdueCount()}`}
+                >
+                  🕒 {t('board:overdue', 'Overdue')} ({getOverdueCount()})
+                </button>
+
+                {/* Member Filter */}
                 {members.length > 0 && (
                   <div className="flex items-center gap-2">
                     <label className="text-white text-sm">

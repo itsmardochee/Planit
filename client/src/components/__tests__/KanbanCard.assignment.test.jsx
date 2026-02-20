@@ -231,7 +231,8 @@ describe('KanbanCard - Member Assignment Display', () => {
       <KanbanCard card={cardWithDueDate} onClick={vi.fn()} onDelete={vi.fn()} />
     );
 
-    expect(screen.getByText('📅')).toBeInTheDocument();
+    // Due date badge now includes formatted date, not just emoji
+    expect(screen.getByTestId('due-date-badge')).toBeInTheDocument();
   });
 
   it('should display description when present', () => {

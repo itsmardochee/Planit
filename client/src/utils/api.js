@@ -88,6 +88,8 @@ export const cardAPI = {
     api.delete(`/cards/${cardId}/labels/${labelId}`),
   updateStatus: (cardId, status) =>
     api.patch(`/cards/${cardId}/status`, { status }),
+  updateDueDate: (cardId, dueDate) =>
+    api.patch(`/cards/${cardId}/due-date`, { dueDate }),
 };
 
 // Label API calls
@@ -113,4 +115,13 @@ export const commentAPI = {
   create: (cardId, data) => api.post(`/cards/${cardId}/comments`, data),
   update: (commentId, data) => api.put(`/comments/${commentId}`, data),
   delete: commentId => api.delete(`/comments/${commentId}`),
+};
+
+// Notification API calls
+export const notificationAPI = {
+  getAll: () => api.get('/notifications'),
+  markAsRead: notificationId =>
+    api.patch(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  delete: notificationId => api.delete(`/notifications/${notificationId}`),
 };

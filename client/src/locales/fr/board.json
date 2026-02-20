@@ -9,6 +9,7 @@
   "filterByMember": "Filtrer par :",
   "allMembers": "Tous les membres",
   "unassigned": "Non assigné",
+  "overdue": "En retard",
   "errors": {
     "loadingBoard": "Erreur lors du chargement du board",
     "creatingList": "Erreur lors de la création de la liste"

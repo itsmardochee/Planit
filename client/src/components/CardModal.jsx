@@ -13,6 +13,9 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [assignedMembers, setAssignedMembers] = useState(card.assignedTo || []);
   const [currentCard, setCurrentCard] = useState(card);
+  const [dueDate, setDueDate] = useState(
+    card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
+  );
 
   const handleSave = async () => {
     try {
@@ -92,6 +95,20 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   const handleCardChange = updatedCard => {
     // Update local card state when labels or status change
     setCurrentCard(updatedCard);
+  };
+
+  const handleDueDateChange = async e => {
+    const newDate = e.target.value;
+    setDueDate(newDate);
+
+    try {
+      // Convert to ISO string or null if empty
+      const dueDateValue = newDate ? new Date(newDate).toISOString() : null;
+      await cardAPI.updateDueDate(card._id, dueDateValue);
+      onCardUpdate();
+    } catch (err) {
+      console.error('Error updating due date', err);
+    }
   };
 
   // Sync currentCard when prop card changes
@@ -179,6 +196,23 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
               {t('cards:status', 'Status')}
             </label>
             <StatusSelector card={currentCard} onUpdate={handleCardChange} />
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label
+              htmlFor="dueDate"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              {t('cards:dueDate', 'Due Date')}
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              value={dueDate}
+              onChange={handleDueDateChange}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-trello-blue outline-none"
+            />
           </div>
 
           {/* Card Info */}

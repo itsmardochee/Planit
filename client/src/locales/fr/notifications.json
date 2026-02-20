@@ -1,0 +1,10 @@
+{
+  "bell": "Notifications",
+  "title": "Notifications",
+  "noNotifications": "Aucune notification",
+  "markAsRead": "Marquer comme lu",
+  "markAllAsRead": "Tout marquer comme lu",
+  "delete": "Supprimer",
+  "cardOverdue": "La carte \"{{cardTitle}}\" est en retard",
+  "cardDueSoon": "La carte \"{{cardTitle}}\" arrive bientôt à échéance"
+}
