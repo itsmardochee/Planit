@@ -337,4 +337,127 @@ describe('NotificationList', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  describe('Time Formatting', () => {
+    function makeNotification(msAgo) {
+      return {
+        _id: 'notif-time',
+        message: 'Time test notification',
+        cardId: { _id: 'card1', title: 'Card' },
+        isRead: true,
+        createdAt: new Date(Date.now() - msAgo).toISOString(),
+      };
+    }
+
+    it('shows "Just now" for notifications less than 60 seconds old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(30 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('Just now')).toBeInTheDocument();
+    });
+
+    it('shows "1 minute ago" for a notification ~65 seconds old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(65 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('1 minute ago')).toBeInTheDocument();
+    });
+
+    it('shows "N minutes ago" for a notification several minutes old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(5 * 60 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('5 minutes ago')).toBeInTheDocument();
+    });
+
+    it('shows "1 hour ago" for a notification ~65 minutes old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(65 * 60 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('1 hour ago')).toBeInTheDocument();
+    });
+
+    it('shows "N hours ago" for a notification several hours old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(5 * 60 * 60 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('5 hours ago')).toBeInTheDocument();
+    });
+
+    it('shows "1 day ago" for a notification ~25 hours old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(25 * 60 * 60 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('1 day ago')).toBeInTheDocument();
+    });
+
+    it('shows "N days ago" for a notification several days old', () => {
+      render(
+        <NotificationList
+          notifications={[makeNotification(5 * 24 * 60 * 60 * 1000)]}
+          onRefetch={vi.fn()}
+          onClose={vi.fn()}
+        />
+      );
+      expect(screen.getByText('5 days ago')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('does not navigate when notification has no cardId', async () => {
+      const user = userEvent.setup();
+      notificationAPI.markAsRead.mockResolvedValue({
+        data: { success: true },
+      });
+
+      const notificationWithoutCard = {
+        _id: 'notif-no-card',
+        message: 'Notification without card',
+        cardId: null,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      render(
+        <NotificationList
+          notifications={[notificationWithoutCard]}
+          onRefetch={mockOnRefetch}
+          onClose={mockOnClose}
+        />
+      );
+
+      await user.click(screen.getByText('Notification without card'));
+
+      await waitFor(() => {
+        expect(notificationAPI.markAsRead).toHaveBeenCalledWith(
+          'notif-no-card'
+        );
+        expect(mockNavigate).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
