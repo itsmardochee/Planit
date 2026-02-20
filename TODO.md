@@ -97,14 +97,16 @@
 
 #### Frontend
 
-- [ ] Créer composant `LabelManager` pour gérer les labels du board
-- [ ] Créer composant `LabelPicker` pour sélectionner des labels
-- [ ] Afficher les labels colorés sur les cartes (style badges)
-- [ ] Créer composant `StatusSelector` (dropdown avec couleurs)
-- [ ] Afficher l'indicateur de statut sur la carte
+- [x] Créer composant `LabelManager` pour gérer les labels du board
+- [x] Créer composant `LabelPicker` pour sélectionner des labels
+- [x] Afficher les labels colorés sur les cartes (style badges)
+- [x] Créer composant `StatusSelector` (dropdown avec couleurs)
+- [x] Afficher l'indicateur de statut sur la carte
 - [ ] Ajouter filtres par label et statut dans la vue board
-- [ ] Créer page de gestion des labels dans les paramètres du board
-- [ ] Tests pour les composants de labels et statuts
+- [x] Créer page de gestion des labels dans les paramètres du board (modal LabelManager)
+- [x] Tests pour les composants de labels et statuts
+
+**Status:** ✅ Frontend complet (sauf filtres optionnels)
 
 ---
 
@@ -212,15 +214,18 @@
 
 #### Frontend
 
-- [ ] Afficher le rôle de chaque membre dans `MemberList`
-- [ ] Créer composant `RoleSelector` pour les admins (dropdown)
-- [ ] Désactiver les boutons selon les permissions de l'utilisateur:
-  - [ ] Masquer "Delete Workspace" si pas Owner
-  - [ ] Masquer "Invite Members" si pas Admin+
-  - [ ] Désactiver édition si Viewer
-- [ ] Afficher des tooltips explicatifs si action non autorisée
-- [ ] Créer page `Settings > Permissions` pour gérer les rôles
-- [ ] Tests pour la gestion des permissions UI
+- [ ] Créer hook `usePermissions` et utilitaire permissions.js (mirror backend)
+- [ ] Afficher le rôle dans `MemberList` avec badge coloré
+- [ ] Créer composant `RoleSelector` pour changer les rôles (admin+)
+- [ ] Masquer/désactiver les boutons selon les permissions:
+  - [ ] Workspace (delete, edit, create board, invite)
+  - [ ] Board (edit, delete, create list, drag & drop)
+  - [ ] Cards (edit, delete, assignation si viewer)
+- [ ] Afficher tooltips/messages pour actions non autorisées
+- [ ] Créer page `WorkspaceSettings` avec tableau des permissions
+- [ ] Tests pour composants et UI basée sur les rôles
+
+**Status:** ⬜ Frontend à faire
 
 ---
 
