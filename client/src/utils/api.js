@@ -125,3 +125,13 @@ export const notificationAPI = {
   markAllAsRead: () => api.patch('/notifications/read-all'),
   delete: notificationId => api.delete(`/notifications/${notificationId}`),
 };
+
+// Activity API calls
+export const activityAPI = {
+  getByWorkspace: (workspaceId, params = {}) =>
+    api.get(`/workspaces/${workspaceId}/activity`, { params }),
+  getByBoard: (boardId, params = {}) =>
+    api.get(`/boards/${boardId}/activity`, { params }),
+  getByCard: (cardId, params = {}) =>
+    api.get(`/cards/${cardId}/activity`, { params }),
+};

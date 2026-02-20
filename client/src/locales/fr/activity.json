@@ -1,0 +1,54 @@
+{
+  "title": "Activité",
+  "emptyState": {
+    "noActivity": "Aucune activité pour le moment",
+    "description": "L'activité apparaîtra ici au fur et à mesure des modifications"
+  },
+  "errors": {
+    "failedToLoad": "Échec du chargement des activités"
+  },
+  "actions": {
+    "created": "a créé",
+    "updated": "a mis à jour",
+    "deleted": "a supprimé",
+    "moved": "a déplacé",
+    "commented": "a commenté sur",
+    "assigned": "a assigné",
+    "unassigned": "a désassigné"
+  },
+  "entities": {
+    "card": "la carte",
+    "list": "la liste",
+    "board": "le tableau",
+    "comment": "le commentaire"
+  },
+  "messages": {
+    "cardCreated": "{{username}} a créé la carte {{cardTitle}}",
+    "cardUpdated": "{{username}} a mis à jour la carte {{cardTitle}}",
+    "cardDeleted": "{{username}} a supprimé la carte {{cardTitle}}",
+    "cardMoved": "{{username}} a déplacé la carte {{cardTitle}} de {{fromList}} vers {{toList}}",
+    "cardAssigned": "{{username}} a assigné {{assignedUser}} à {{cardTitle}}",
+    "cardUnassigned": "{{username}} a désassigné {{unassignedUser}} de {{cardTitle}}",
+    "listCreated": "{{username}} a créé la liste {{listName}}",
+    "listUpdated": "{{username}} a mis à jour la liste {{listName}}",
+    "listDeleted": "{{username}} a supprimé la liste {{listName}}",
+    "boardCreated": "{{username}} a créé le tableau {{boardName}}",
+    "boardUpdated": "{{username}} a mis à jour le tableau {{boardName}}",
+    "boardDeleted": "{{username}} a supprimé le tableau {{boardName}}",
+    "commented": "{{username}} a commenté sur {{cardTitle}}"
+  },
+  "time": {
+    "justNow": "à l'instant",
+    "secondsAgo": "il y a {{count}} secondes",
+    "minuteAgo": "il y a {{count}} minute",
+    "minutesAgo": "il y a {{count}} minutes",
+    "hourAgo": "il y a {{count}} heure",
+    "hoursAgo": "il y a {{count}} heures",
+    "dayAgo": "il y a {{count}} jour",
+    "daysAgo": "il y a {{count}} jours",
+    "monthAgo": "il y a {{count}} mois",
+    "monthsAgo": "il y a {{count}} mois",
+    "yearAgo": "il y a {{count}} an",
+    "yearsAgo": "il y a {{count}} ans"
+  }
+}
