@@ -1,7 +1,16 @@
 # Planit - TODO List
 
-**Last Updated:** February 2026
+**Last Updated:** February 20, 2026
 **Status:** Feature Roadmap for Future Releases
+
+**Recent Completions:**
+
+- ✅ Feature 1: Member Assignment (Backend + Frontend) - PR #143
+- ✅ Feature 2: Multi-users/Workspaces (Backend + Frontend) - PR #133
+- ✅ Feature 3: Labels & Status (Backend) - PR #144
+- ✅ Feature 4: Comments (Backend + Frontend) - PR #145
+- ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
+- ✅ Feature 6: RBAC Roles & Permissions (Backend) - Committed locally (a2b06ed), awaiting PR #146 merge
 
 ---
 
@@ -180,20 +189,26 @@
 
 #### Backend
 
-- [ ] Ajouter champ `role` dans `WorkspaceMember` (enum: "owner", "admin", "member", "viewer")
-- [ ] Définir les permissions par rôle:
-  - [ ] **Owner**: Toutes les permissions + supprimer workspace
-  - [ ] **Admin**: Gérer membres, boards, listes, cartes
-  - [ ] **Member**: Créer/éditer/supprimer cartes et listes
-  - [ ] **Viewer**: Lecture seule (view only)
-- [ ] Créer middleware `checkPermission(permission)` pour valider les rôles
-- [ ] Appliquer les permissions sur tous les endpoints concernés:
-  - [ ] Workspace: seul Owner peut supprimer
-  - [ ] Boards: Admin+ peut créer/modifier
-  - [ ] Members: Admin+ peut inviter/retirer
-  - [ ] Cards/Lists: Member+ peut modifier
-- [ ] Créer endpoint `PATCH /api/workspaces/:id/members/:userId/role` pour changer le rôle
-- [ ] Tests pour les permissions et autorisations
+- [x] Ajouter champ `role` dans `WorkspaceMember` (enum: "owner", "admin", "member", "viewer")
+- [x] Définir les permissions par rôle (33 permissions granulaires):
+  - [x] **Owner**: Toutes les 33 permissions + supprimer workspace
+  - [x] **Admin**: 32 permissions (toutes sauf workspace:delete)
+  - [x] **Member**: 18 permissions (board:view, list/card/comment CRUD, label:assign)
+  - [x] **Viewer**: 7 permissions (lecture seule sur workspace/board/list/card/label)
+- [x] Créer middleware `checkPermission(permission)` pour valider les rôles
+- [x] Créer utilitaires: hasPermission, isRoleAtLeast, canModifyRole
+- [x] Appliquer les permissions sur tous les endpoints concernés:
+  - [x] Workspace: seul Owner peut supprimer, Admin+ peut inviter/gérer membres
+  - [x] Boards: Owner/Admin peuvent créer/modifier/supprimer
+  - [x] Lists: Member+ peuvent créer/modifier/supprimer
+  - [x] Cards: Member+ peuvent créer/modifier/supprimer
+  - [x] Comments: Member+ peuvent créer, propriétaire peut modifier/supprimer
+  - [x] Labels: Admin+ peuvent créer/modifier/supprimer, Member+ peuvent assigner
+- [x] Créer endpoint `PATCH /api/workspaces/:id/members/:userId/role` pour changer le rôle
+- [x] Tests pour les permissions et autorisations (permissions.test.js, checkPermission, controllers)
+- [x] Backward compatibility: workspace.userId traité comme owner même sans WorkspaceMember
+
+**Status:** ✅ Backend complet - 666 tests passing - Committed localement (a2b06ed)
 
 #### Frontend
 
@@ -334,14 +349,22 @@
 
 ## 🎯 Ordre de Priorité Recommandé
 
-1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration
-2. **Gestion des droits (Feature 6)** - Nécessaire pour sécuriser le multi-utilisateurs
-3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs
-4. **Labels et statuts (Feature 3)** - Améliore la gestion des tâches
-5. **Commentaires (Feature 4)** - Facilite la communication
-6. **Dates d'échéance (Feature 5)** - Améliore le suivi des tâches
-7. **Historique d'activités (Feature 7 - Bonus)** - Traçabilité
-8. **Temps réel (Feature 8 - Bonus)** - Expérience utilisateur ultime
+✅ **COMPLÉTÉES:**
+
+1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration → PR #133 merged
+2. **Gestion des droits (Feature 6)** - Backend RBAC complet → Committed (a2b06ed), awaiting PR #146 merge
+3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs → PR #143 merged
+4. **Labels et statuts (Feature 3)** - Backend complet → PR #144 merged
+5. **Commentaires (Feature 4)** - Backend + Frontend complets → PR #145
+6. **Dates d'échéance (Feature 5)** - Backend complet → PR #146 (en attente de merge)
+
+🚧 **PROCHAINES PRIORITÉS:**
+
+1. **Frontend Feature 3**: Labels & Status UI (LabelManager, LabelPicker, StatusSelector)
+2. **Frontend Feature 6**: RBAC UI (RoleSelector, permissions-based UI, settings page)
+3. **Frontend Feature 5**: Due Dates & Notifications UI (DatePicker, NotificationBell)
+4. **Feature 7 (Bonus)**: Historique d'activités - Traçabilité
+5. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
 
 ---
 
