@@ -11,6 +11,7 @@ import WorkspaceMember from '../../models/WorkspaceMember.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
+import Comment from '../../models/Comment.js';
 import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
@@ -863,6 +864,21 @@ describe('DELETE /api/workspaces/:id', () => {
         position: 0,
       });
 
+      // Create comments on cards
+      const cards = await Card.find({ boardId: board._id });
+      await Comment.create([
+        {
+          content: 'Comment on card 1',
+          cardId: cards[0]._id,
+          userId: testUser._id,
+        },
+        {
+          content: 'Comment on card 2',
+          cardId: cards[1]._id,
+          userId: testUser._id,
+        },
+      ]);
+
       // Delete the workspace
       const response = await request(app)
         .delete(`/api/workspaces/${testWorkspace._id}`)
@@ -888,6 +904,12 @@ describe('DELETE /api/workspaces/:id', () => {
       // Verify cards are deleted
       const deletedCards = await Card.find({ boardId: board._id });
       expect(deletedCards).toHaveLength(0);
+
+      // Verify comments are deleted
+      const deletedComments = await Comment.find({
+        cardId: { $in: cards.map(c => c._id) },
+      });
+      expect(deletedComments).toHaveLength(0);
     });
   });
 });

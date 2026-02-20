@@ -103,28 +103,32 @@
 
 #### Backend
 
-- [ ] Créer modèle `Comment` (cardId, userId, content, createdAt, updatedAt)
-- [ ] Créer endpoints CRUD pour les commentaires:
-  - [ ] `POST /api/cards/:id/comments` - Créer un commentaire
-  - [ ] `GET /api/cards/:id/comments` - Lister les commentaires
-  - [ ] `PUT /api/comments/:id` - Modifier un commentaire
-  - [ ] `DELETE /api/comments/:id` - Supprimer un commentaire
-- [ ] Valider que seul l'auteur peut modifier/supprimer son commentaire
-- [ ] Populate userId pour afficher le nom de l'auteur
-- [ ] Cascade delete: supprimer les commentaires quand carte est supprimée
-- [ ] Tests unitaires pour les commentaires
-- [ ] Mettre à jour Swagger documentation
+- [x] Créer modèle `Comment` (cardId, userId, content, createdAt, updatedAt)
+- [x] Créer endpoints CRUD pour les commentaires:
+  - [x] `POST /api/cards/:cardId/comments` - Créer un commentaire
+  - [x] `GET /api/cards/:cardId/comments` - Lister les commentaires
+  - [x] `PUT /api/comments/:id` - Modifier un commentaire
+  - [x] `DELETE /api/comments/:id` - Supprimer un commentaire
+- [x] Valider que seul l'auteur peut modifier/supprimer son commentaire
+- [x] Populate userId pour afficher le nom de l'auteur
+- [x] Cascade delete: supprimer les commentaires quand carte/liste/board/workspace est supprimé(e)
+- [x] Tests unitaires pour les commentaires (44 tests: 35 controller + 9 model)
+- [x] Mettre à jour Swagger documentation (inline dans le controller)
+
+**Status:** ✅ Backend complet - 261 tests passing across all controllers - PR #145 (draft)
 
 #### Frontend
 
-- [ ] Créer composant `CommentSection` dans le modal de carte
-- [ ] Créer composant `CommentItem` pour afficher un commentaire
-- [ ] Créer formulaire `AddComment` avec textarea
-- [ ] Implémenter édition/suppression de commentaire (seulement pour l'auteur)
-- [ ] Afficher l'avatar et le nom de l'auteur
-- [ ] Afficher la date/heure du commentaire (format relatif: "il y a 2h")
-- [ ] Ajouter indicateur du nombre de commentaires sur la carte
-- [ ] Tests pour les composants de commentaires
+- [x] Créer composant `CommentSection` dans le modal de carte
+- [x] Créer composant `CommentItem` pour afficher un commentaire
+- [x] Créer formulaire `AddComment` avec textarea
+- [x] Implémenter édition/suppression de commentaire (seulement pour l'auteur)
+- [x] Afficher l'avatar et le nom de l'auteur
+- [x] Afficher la date/heure du commentaire (format relatif: "il y a 2h")
+- [x] Ajouter indicateur du nombre de commentaires sur la carte
+- [x] Tests pour les composants de commentaires
+
+**Status:** ✅ Frontend complet - CommentSection, CommentItem, AddComment créés avec TDD
 
 ---
 

@@ -106,3 +106,11 @@ export const memberAPI = {
   remove: (workspaceId, userId) =>
     api.delete(`/workspaces/${workspaceId}/members/${userId}`),
 };
+
+// Comment API calls
+export const commentAPI = {
+  getByCard: cardId => api.get(`/cards/${cardId}/comments`),
+  create: (cardId, data) => api.post(`/cards/${cardId}/comments`, data),
+  update: (commentId, data) => api.put(`/comments/${commentId}`, data),
+  delete: commentId => api.delete(`/comments/${commentId}`),
+};

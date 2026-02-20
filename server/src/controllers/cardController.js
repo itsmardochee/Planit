@@ -4,6 +4,7 @@ import List from '../models/List.js';
 import User from '../models/User.js';
 import Label from '../models/Label.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
+import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
@@ -421,6 +422,9 @@ export const deleteCard = async (req, res, next) => {
 
     const deletedPosition = card.position;
     const listId = card.listId;
+
+    // Cascade delete: remove all comments on this card
+    await Comment.deleteMany({ cardId: id });
 
     await card.deleteOne();
 

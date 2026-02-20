@@ -4,6 +4,7 @@ import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
+import Comment from '../models/Comment.js';
 
 /**
  * @swagger
@@ -462,6 +463,12 @@ export const deleteWorkspace = async (req, res) => {
     // Cascade delete: Get all boards in this workspace
     const boards = await Board.find({ workspaceId });
     const boardIds = boards.map(board => board._id);
+
+    // Delete all comments on cards in those boards
+    const cardIds = (
+      await Card.find({ boardId: { $in: boardIds } }).select('_id')
+    ).map(c => c._id);
+    await Comment.deleteMany({ cardId: { $in: cardIds } });
 
     // Delete all cards associated with those boards
     await Card.deleteMany({ boardId: { $in: boardIds } });
