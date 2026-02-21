@@ -98,6 +98,69 @@ When deleting:
   listId: ObjectId (ref: List, indexed),
   boardId: ObjectId (ref: Board, indexed),
   position: Number (for ordering),
+  assignedTo: [ObjectId] (ref: User),
+  labels: [ObjectId] (ref: Label),
+  dueDate: Date,
+  status: String (enum: active, archived),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Activity Model
+```javascript
+{
+  _id: ObjectId,
+  workspaceId: ObjectId (ref: Workspace, required, indexed),
+  boardId: ObjectId (ref: Board, indexed),
+  cardId: ObjectId (ref: Card, indexed),
+  userId: ObjectId (ref: User, required, indexed),
+  action: String (enum: created, updated, moved, deleted, commented, assigned, archived, required),
+  entityType: String (enum: workspace, board, list, card, comment, member, label, required),
+  details: Mixed (flexible field for additional context),
+  createdAt: Date
+}
+```
+
+**Activity Indexes:**
+- `{ workspaceId: 1, createdAt: -1 }` — Workspace activity queries
+- `{ boardId: 1, createdAt: -1 }` — Board activity queries
+- `{ cardId: 1, createdAt: -1 }` — Card activity queries
+- `{ userId: 1, createdAt: -1 }` — User activity queries
+
+### Comment Model
+```javascript
+{
+  _id: ObjectId,
+  cardId: ObjectId (ref: Card, required, indexed),
+  userId: ObjectId (ref: User, required),
+  text: String (required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Label Model
+```javascript
+{
+  _id: ObjectId,
+  boardId: ObjectId (ref: Board, required, indexed),
+  name: String (required),
+  color: String (hex color code),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### WorkspaceMember Model
+```javascript
+{
+  _id: ObjectId,
+  workspaceId: ObjectId (ref: Workspace, required, indexed),
+  userId: ObjectId (ref: User, required, indexed),
+  role: String (enum: owner, member, default: member),
+  invitedAt: Date,
+  position: Number (for ordering),
   // Stretch goals:
   // labels: [String],
   // dueDate: Date,
@@ -187,16 +250,107 @@ components/
 ├── Board/
 │   ├── BoardCard.jsx
 │   ├── BoardModal.jsx
-│   └── BoardHeader.jsx
+│   ├── BoardHeader.jsx
+│   └── BoardEditModal.jsx
 ├── List/
-│   ├── List.jsx
-│   ├── ListHeader.jsx
+│   ├── KanbanList.jsx
+│   ├── ListEditModal.jsx
 │   └── AddList.jsx
-└── Card/
-    ├── Card.jsx
-    ├── CardModal.jsx
-    └── AddCard.jsx
+├── Card/
+│   ├── KanbanCard.jsx
+│   ├── CardModal.jsx
+│   └── AddCard.jsx
+├── Activity/
+│   ├── ActivityFeed.jsx
+│   └── ActivityItem.jsx
+├── Members/
+│   ├── InviteMembers.jsx
+│   ├── MemberList.jsx
+│   └── MemberSelector.jsx
+└── Common/
+    ├── DarkModeToggle.jsx
+    ├── LanguageSelector.jsx
+    ├── ToastProvider.jsx
+    └── ProtectedRoute.jsx
 ```
+
+## Activity Logging System
+
+### Architecture
+
+The activity logging system tracks all user actions across the application hierarchy:
+
+```
+User Action → Controller → logActivity() → Activity Model → Database
+                                ↓
+                    Activity Feed (Frontend) ← API Endpoint
+```
+
+### Integration Points (19 total)
+
+**Card Controller** (7 actions):
+- `createCard` → action: 'created', entityType: 'card'
+- `updateCard` → action: 'updated', entityType: 'card'
+- `deleteCard` → action: 'deleted', entityType: 'card'
+- `reorderCard` → action: 'moved', entityType: 'card'
+- `assignMember` → action: 'assigned', entityType: 'card'
+- `unassignMember` → action: 'unassigned', entityType: 'card'
+- `updateCardStatus` → action: 'updated', entityType: 'card'
+
+**List Controller** (4 actions):
+- `createList`, `updateList`, `deleteList`, `reorderList`
+
+**Board Controller** (3 actions):
+- `createBoard`, `updateBoard`, `deleteBoard`
+
+**Workspace Controller** (3 actions):
+- `createWorkspace`, `updateWorkspace`, `deleteWorkspace`
+
+**Comment Controller** (2 actions):
+- `createComment` → action: 'commented', entityType: 'comment'
+- `deleteComment` → action: 'deleted', entityType: 'comment'
+
+### Activity Endpoints
+
+- `GET /api/workspaces/:workspaceId/activity` — Get workspace activities
+- `GET /api/boards/:id/activity` — Get board activities
+- `GET /api/cards/:id/activity` — Get card activities
+
+**Query Parameters:**
+- `limit` (default: 50) — Pagination limit
+- `skip` (default: 0) — Pagination offset
+- `action` — Filter by action type
+- `entityType` — Filter by entity type
+
+### Details Field Structure
+
+The `details` field stores action-specific context:
+
+```javascript
+// Card created
+{ cardTitle: "Task 1" }
+
+// Card moved between lists
+{
+  cardTitle: "Task 1",
+  fromList: "To Do",
+  toList: "In Progress",
+  from: { listId: ObjectId, position: 0 },
+  to: { listId: ObjectId, position: 1 }
+}
+
+// Member assigned
+{
+  cardTitle: "Task 1",
+  assignedUser: "john.doe"
+}
+```
+
+### Frontend Components
+
+- **ActivityFeed.jsx** — Main container fetching and displaying activities
+- **ActivityItem.jsx** — Individual activity entry with formatted messages
+- **BoardPage.jsx** — Drawer integration with activity feed
 
 ## Security
 
@@ -209,6 +363,7 @@ components/
 - User can only access their own resources
 - Middleware checks ownership before operations
 - MongoDB queries include userId filter
+- Activity endpoints protected by `checkWorkspaceAccess` middleware
 
 ### Validation
 - Input validation with express-validator
@@ -310,4 +465,4 @@ src/
 
 ---
 
-**Last Updated:** October 26, 2025
+**Last Updated:** February 21, 2026

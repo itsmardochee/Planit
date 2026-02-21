@@ -44,16 +44,28 @@ Planit provides a solid foundation for team organization and project tracking wh
 - **Boards**: CRUD operations, workspace-based grouping, board settings (title, background, archive).
 - **Lists**: CRUD + drag & drop reordering within a board.
 - **Cards**: CRUD + reordering within lists and between lists.
+- **Activity Log**: Complete activity tracking across workspace → board → list → card hierarchy with 19 integration points.
 - **UI/UX**: Material UI components, snackbars for feedback, responsive dashboard.
+
+### ✨ Implemented Features
+
+- **Workspace members & roles** (Owner, Member)
+- **Comments** on cards
+- **Labels** for card categorization
+- **Due dates** with overdue indicators
+- **Assignees** - assign/unassign members to cards
+- **Activity Log** - Track all actions (create, update, delete, move, assign, comment) with:
+  - Real-time activity feed in BoardPage drawer
+  - Pagination and filtering support
+  - Internationalization (EN/FR)
+  - 50 comprehensive tests
 
 ### 🌟 Stretch Goals
 
-- Workspace members & roles (Owner, Member)
-- Comments, labels, due dates, assignees, checklists
 - File attachments
-- Activity log
 - Real-time updates (Socket.IO)
-- Search and dark mode
+- Search functionality
+- Export boards
 
 ---
 
@@ -95,7 +107,21 @@ Planit provides a solid foundation for team organization and project tracking wh
 client/ (React)
   ├── src/
   │   ├── components/
+  │   │   ├── ActivityFeed.jsx
+  │   │   ├── ActivityItem.jsx
+  │   │   ├── BoardEditModal.jsx
+  │   │   ├── CardModal.jsx
+  │   │   ├── InviteMembers.jsx
+  │   │   ├── KanbanCard.jsx
+  │   │   ├── KanbanList.jsx
+  │   │   ├── LabelManager.jsx
+  │   │   ├── MemberList.jsx
+  │   │   └── MemberSelector.jsx
   │   ├── pages/
+  │   │   ├── Login.jsx
+  │   │   ├── Dashboard.jsx
+  │   │   ├── BoardPage.jsx
+  │   │   └── WorkspacePage.jsx
   │   ├── store/
   │   ├── hooks/
   │   ├── utils/
@@ -104,7 +130,24 @@ server/ (Express)
   ├── src/
   │   ├── routes/
   │   ├── controllers/
+  │   │   ├── authController.js
+  │   │   ├── activityController.js
+  │   │   ├── boardController.js
+  │   │   ├── cardController.js
+  │   │   ├── commentController.js
+  │   │   ├── labelController.js
+  │   │   ├── listController.js
+  │   │   └── workspaceController.js
   │   ├── models/
+  │   │   ├── Activity.js
+  │   │   ├── Board.js
+  │   │   ├── Card.js
+  │   │   ├── Comment.js
+  │   │   ├── Label.js
+  │   │   ├── List.js
+  │   │   ├── User.js
+  │   │   ├── Workspace.js
+  │   │   └── WorkspaceMember.js
   │   ├── middlewares/
   │   └── index.js
 ```
@@ -113,9 +156,12 @@ server/ (Express)
 
 ## 🧪 Testing Strategy
 
-- **Backend:** Jest + Supertest for API endpoints (auth, workspaces, boards, lists, cards).
-- **Frontend:** Jest + React Testing Library for reducers, hooks, and components.
-- **CI:** GitHub Actions runs tests on every PR before merging.
+- **Backend:** Jest + Supertest for API endpoints (auth, workspaces, boards, lists, cards, comments, labels, notifications, activities).
+  - **664 tests passing** including 50 activity-specific tests
+- **Frontend:** Vitest + React Testing Library for components, hooks, and pages.
+  - **658 tests passing** including 30 activity-specific tests
+- **Total:** **1322 tests passing** across backend and frontend
+- **CI:** GitHub Actions runs tests on every PR before merging with automated coverage reporting.
 
 ---
 
