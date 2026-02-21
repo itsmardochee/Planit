@@ -5,6 +5,7 @@ import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
 import Comment from '../models/Comment.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -96,6 +97,15 @@ export const createWorkspace = async (req, res) => {
       name: trimmedName,
       description: trimmedDescription,
       userId: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      workspaceId: workspace._id,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'workspace',
+      details: { workspaceName: workspace.name },
     });
 
     res.status(201).json({
@@ -376,6 +386,18 @@ export const updateWorkspace = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    // Log activity if there were updates
+    const updatedFields = Object.keys(updateData);
+    if (updatedFields.length > 0) {
+      await logActivity({
+        workspaceId: workspace._id,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'workspace',
+        details: { workspaceName: workspace.name, fields: updatedFields },
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: workspace,
@@ -459,6 +481,7 @@ export const deleteWorkspace = async (req, res) => {
     }
 
     const workspaceId = req.workspace._id;
+    const workspaceName = req.workspace.name;
 
     // Cascade delete: Get all boards in this workspace
     const boards = await Board.find({ workspaceId });
@@ -484,6 +507,15 @@ export const deleteWorkspace = async (req, res) => {
 
     // Finally, delete the workspace itself
     await Workspace.findByIdAndDelete(workspaceId);
+
+    // Log activity
+    await logActivity({
+      workspaceId,
+      userId: req.user._id,
+      action: 'deleted',
+      entityType: 'workspace',
+      details: { workspaceName },
+    });
 
     res.status(200).json({
       success: true,

@@ -244,6 +244,132 @@ _Visual indication of a card being moved from one list to another_
 
 ---
 
+### 🏷️ Labels
+
+Labels help you categorize and organize cards with color-coded tags.
+
+#### Creating Labels
+
+1. Open any **Board**
+2. Click the **"🏷️ Manage Labels"** button in the board header
+3. In the Label Manager modal:
+   - Enter a **Label Name**
+   - Choose a **Color** (e.g., blue, red, green, yellow)
+   - Click **"Create"**
+
+#### Assigning Labels to Cards
+
+1. Open the **Card Modal**
+2. In the labels section, click **"Add Label"**
+3. Select labels from the dropdown
+4. Selected labels appear as colored tags on the card
+
+#### Removing Labels
+
+1. Open the Card Modal
+2. Click the **×** button on any label to remove it
+
+---
+
+### 👥 Workspace Members
+
+Collaborate with team members by inviting them to your workspace.
+
+#### Inviting Members
+
+1. Open a **Workspace** (click on the workspace card)
+2. Click the **"👥 Members"** or **"Invite Members"** button
+3. In the invitation modal:
+   - Enter the **email address** of the person you want to invite
+   - Select their **role**:
+     - **Owner**: Full control (manage members, delete workspace)
+     - **Member**: Can view and edit boards (default)
+   - Click **"Invite"**
+
+#### Viewing Members
+
+1. Open a Workspace
+2. The member list shows:
+   - Member name/email
+   - Role (Owner/Member)
+   - Join date
+
+#### Removing Members
+
+1. Open the Members list
+2. Click **"Remove"** next to a member's name
+3. Confirm removal
+4. **Note**: Only workspace owners can remove members
+
+#### Assigning Members to Cards
+
+1. Open a **Card Modal**
+2. In the assignees section, click **"Assign Member"**
+3. Select members from the dropdown
+4. Assigned members appear on the card
+5. To unassign, click the **×** button next to their name
+
+---
+
+### 💬 Comments
+
+Add comments to cards for discussions and notes.
+
+#### Adding a Comment
+
+1. Open the **Card Modal**
+2. Scroll to the **Comments** section at the bottom
+3. Type your comment in the text field
+4. Click **"Add Comment"** or press **Enter**
+
+#### Viewing Comments
+
+- All comments appear in chronological order (oldest first)
+- Each comment shows:
+  - Author name
+  - Comment text
+  - Timestamp (e.g., "2 hours ago")
+
+#### Deleting Comments
+
+1. Locate your comment in the card modal
+2. Click the **Delete** icon (trash bin)
+3. Confirm deletion
+4. **Note**: You can only delete your own comments
+
+---
+
+### 📅 Due Dates
+
+Set deadlines for cards to track task priorities.
+
+#### Setting a Due Date
+
+1. Open the **Card Modal**
+2. In the due date section, click **"Set Due Date"**
+3. Use the date picker to select a date and time
+4. Click **"Save"**
+
+#### Due Date Indicators
+
+- **Overdue**: Cards past their due date show a red indicator
+- **Upcoming**: Cards due soon show a yellow indicator
+- **On Time**: Cards with future due dates show a green indicator
+
+#### Removing Due Dates
+
+1. Open the Card Modal
+2. Click the **×** button next to the due date
+3. Confirm removal
+
+#### Filtering by Due Date
+
+1. In the Board view, use the filter options
+2. Select **"Overdue"** to see cards past their due date
+3. This helps prioritize urgent tasks
+
+---
+
 ## ✨ Advanced Features
 
 ### 🌍 Internationalization (Language Support)
@@ -287,6 +413,84 @@ _Full board view in light mode showing the light theme_
 
 ---
 
+### 📊 Activity Log
+
+Planit tracks all actions performed in your workspace, boards, lists, and cards, providing a complete audit trail of changes.
+
+#### Accessing the Activity Log
+
+1. Open any **Board**
+2. In the board header (top-right), click the **"📊 Activity"** button
+3. A drawer will slide in from the right showing recent activities
+4. Click the **×** button or the overlay to close the drawer
+
+#### What Gets Tracked
+
+The activity log captures:
+
+**Workspace Actions:**
+- Workspace created, updated, deleted
+
+**Board Actions:**
+- Board created, updated, deleted
+
+**List Actions:**
+- List created, updated, moved, deleted
+
+**Card Actions:**
+- Card created, updated, deleted
+- Card moved between lists
+- Card moved within the same list (reordered)
+- Member assigned to card
+- Member unassigned from card
+- Card status changed (archived/active)
+- Label added/removed
+
+**Comment Actions:**
+- Comment added to card
+- Comment deleted
+
+#### Understanding Activity Messages
+
+Each activity entry shows:
+- **Icon** indicating the action type (create, update, delete, move, assign, comment)
+- **Message** describing what happened (e.g., "John Doe moved card 'Task 1' from 'To Do' to 'In Progress'")
+- **Timestamp** showing when the action occurred (e.g., "5 minutes ago", "2 hours ago", "3 days ago")
+
+#### Activity Feed Details
+
+- Shows up to **50 most recent activities** per board
+- Activities are sorted by **newest first**
+- Each message is **internationalized** (displayed in your selected language: EN/FR)
+- Activities include **user information** (who performed the action)
+- **Detailed context** for complex actions (e.g., which list a card was moved from/to)
+
+#### Use Cases
+
+**Project Management:**
+- Track when tasks were created and moved through stages
+- See who made changes to important cards
+- Monitor team activity and progress
+
+**Audit & Compliance:**
+- Complete history of all changes
+- Identify when critical updates occurred
+- Review who deleted or archived items
+
+**Collaboration:**
+- Stay informed about team member actions
+- Understand the context of current board state
+- Coordinate work based on recent changes
+
+#### Technical Details
+
+- Activities are **permanently stored** in the database
+- The activity feed is **read-only** (activities cannot be edited or deleted)
+- Old activities remain accessible through pagination (future enhancement)
+- Each activity is linked to the specific workspace, board, and/or card
+
+---
+
 ### 📱 Responsive Design
 
 Planit is fully responsive and works seamlessly on:
@@ -310,7 +514,7 @@ _Board view on mobile device (responsive mode)_
 
 #### Q: Can I collaborate with team members?
 
-**A:** Multi-user collaboration is not yet implemented in the current version (v1.0). This feature is planned for future releases.
+**A:** Yes! You can invite team members to your workspace. Use the "Invite Members" feature in the Workspace view to add collaborators with Owner or Member roles.
 
 #### Q: Is my data secure?
 

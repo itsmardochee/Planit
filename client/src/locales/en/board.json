@@ -10,6 +10,8 @@
   "allMembers": "All members",
   "unassigned": "Unassigned",
   "overdue": "Overdue",
+  "manageLabels": "Manage Labels",
+  "activity": "Activity",
   "errors": {
     "loadingBoard": "Error loading board",
     "creatingList": "Error creating list"

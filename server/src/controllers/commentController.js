@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
 import Comment from '../models/Comment.js';
 import Card from '../models/Card.js';
+import List from '../models/List.js';
 import {
   ValidationError,
   NotFoundError,
   ForbiddenError,
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -85,6 +87,20 @@ export const createComment = async (req, res, next) => {
       'userId',
       'username email'
     );
+
+    // Log activity
+    const list = await List.findById(card.listId);
+    if (list) {
+      await logActivity({
+        workspaceId: list.workspaceId,
+        boardId: card.boardId,
+        cardId: card._id,
+        userId: req.user._id,
+        action: 'commented',
+        entityType: 'comment',
+        details: { commentId: comment._id },
+      });
+    }
 
     logger.info(`Comment created on card ${cardId} by user ${req.user._id}`);
 
@@ -292,7 +308,26 @@ export const deleteComment = async (req, res, next) => {
       throw new ForbiddenError('Only the author can delete this comment');
     }
 
+    const cardId = comment.cardId;
+
+    // Get workspaceId and boardId for activity logging
+    const card = await Card.findById(cardId);
+    const list = card ? await List.findById(card.listId) : null;
+
     await Comment.findByIdAndDelete(id);
+
+    // Log activity
+    if (card && list) {
+      await logActivity({
+        workspaceId: list.workspaceId,
+        boardId: card.boardId,
+        cardId: card._id,
+        userId: req.user._id,
+        action: 'deleted',
+        entityType: 'comment',
+        details: { commentId: id },
+      });
+    }
 
     logger.info(`Comment ${id} deleted by user ${req.user._id}`);
 

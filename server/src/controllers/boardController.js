@@ -5,6 +5,7 @@ import Card from '../models/Card.js';
 import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -89,6 +90,16 @@ export const createBoard = async (req, res, next) => {
       description: trimmedDescription,
       workspaceId: req.workspace._id,
       userId: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      workspaceId: req.workspace._id,
+      boardId: board._id,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'board',
+      details: { boardName: board.name },
     });
 
     logger.info('Board created', {
@@ -286,6 +297,19 @@ export const updateBoard = async (req, res, next) => {
       runValidators: true,
     });
 
+    // Log activity if there were updates
+    const updatedFields = Object.keys(updateData);
+    if (updatedFields.length > 0) {
+      await logActivity({
+        workspaceId: req.workspace._id,
+        boardId: board._id,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'board',
+        details: { boardName: board.name, fields: updatedFields },
+      });
+    }
+
     logger.info('Board updated', {
       requestId: req.id,
       userId: req.user._id,
@@ -367,6 +391,9 @@ export const deleteBoard = async (req, res, next) => {
 
     // No need to check board.userId - workspace access is already verified by middleware
 
+    const boardName = board.name;
+    const workspaceId = board.workspaceId;
+
     // Cascade delete: Delete all comments on cards in this board
     const cardIds = (await Card.find({ boardId: id }).select('_id')).map(
       c => c._id
@@ -381,6 +408,16 @@ export const deleteBoard = async (req, res, next) => {
 
     // Finally, delete the board itself
     await Board.findByIdAndDelete(id);
+
+    // Log activity
+    await logActivity({
+      workspaceId,
+      boardId: id,
+      userId: req.user._id,
+      action: 'deleted',
+      entityType: 'board',
+      details: { boardName },
+    });
 
     logger.info('Board deleted', {
       requestId: req.id,

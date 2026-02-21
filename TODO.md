@@ -215,30 +215,67 @@
 
 #### Backend
 
-- [ ] Créer modèle `Activity` (workspaceId, boardId, cardId, userId, action, details, createdAt)
-- [ ] Actions à tracker:
-  - [ ] Création/modification/suppression de cartes
-  - [ ] Déplacement de cartes entre listes
-  - [ ] Ajout/retrait de membres
-  - [ ] Ajout de commentaires
-  - [ ] Changement de statut/labels
-  - [ ] Modification de date d'échéance
-- [ ] Créer endpoint `GET /api/boards/:id/activity` pour récupérer l'historique
-- [ ] Créer endpoint `GET /api/cards/:id/activity` pour l'historique d'une carte
-- [ ] Pagination de l'historique (limit, skip)
-- [ ] Filtres par type d'action, utilisateur, date
-- [ ] Tests pour l'historique d'activités
+- [x] Créer modèle `Activity` (workspaceId, boardId, cardId, userId, action, details, createdAt)
+- [x] Actions à tracker:
+  - [x] Création/modification/suppression de cartes
+  - [x] Déplacement de cartes entre listes
+  - [x] Ajout/retrait de membres (assignation)
+  - [x] Ajout de commentaires
+  - [x] Changement de statut
+  - [ ] Modification de dates d'échéance (quand Feature 5 sera implémentée)
+  - [x] Création/modification/suppression de listes
+  - [x] Création/modification/suppression de boards
+  - [x] Création/modification/suppression de workspaces
+- [x] Créer endpoints pour récupérer l'historique:
+  - [x] `GET /api/workspaces/:id/activity` - Historique workspace
+  - [x] `GET /api/boards/:id/activity` - Historique board
+  - [x] `GET /api/cards/:id/activity` - Historique carte
+- [x] Pagination de l'historique (limit, skip)
+- [x] Filtres par type d'action (action, entityType)
+- [x] Créer utilitaire `logActivity` pour enregistrer automatiquement
+- [x] Intégrer logActivity dans tous les controllers
+- [x] Ajouter indexes pour performance (workspaceId, boardId, cardId, userId)
+- [x] Tests pour l'historique d'activités (32 model tests + 18 controller tests)
+- [x] Swagger documentation pour tous les endpoints
+
+**Status:** ✅ Backend complet - 664 tests passing
 
 #### Frontend
 
-- [ ] Créer composant `ActivityFeed` pour afficher l'historique
-- [ ] Créer composant `ActivityItem` avec icône, message, timestamp
-- [ ] Afficher l'activité récente dans le sidebar du board
-- [ ] Créer page dédiée "Activity Log" pour l'historique complet
-- [ ] Implémenter infinite scroll ou pagination
-- [ ] Formater les messages d'activité ("Mardochée a déplacé la carte X vers Y")
-- [ ] Ajouter filtres par action/utilisateur/date
-- [ ] Tests pour les composants d'historique
+- [x] Créer composant `ActivityFeed` pour afficher l'historique
+- [x] Créer composant `ActivityItem` avec icône, message, timestamp
+- [x] Afficher l'activité récente dans le drawer du board (BoardPage.jsx)
+- [x] Implémenter pagination via API (limit param)
+- [x] Formater les messages d'activité avec i18n ("User a déplacé la carte X vers Y")
+- [x] Support filtres via API (action, entityType params)
+- [x] Tests pour les composants d'historique (10 tests: ActivityFeed + ActivityItem)
+- [x] Intégration dans BoardPage avec drawer animé
+
+**Status:** ✅ Frontend complet - 658 tests passing
+
+**Feature Status:** ✅ **COMPLETE** - Activity Log fonctionnel (backend + frontend) - PR #147
+
+#### Future Enhancements (Bonnes idées pour v2)
+
+- [ ] **Activity drawer dans WorkspacePage**
+  - [ ] Ajouter bouton "📊 Activity" dans le header du workspace
+  - [ ] Implémenter drawer similaire à BoardPage
+  - [ ] Utiliser `activityAPI.getByWorkspace(workspaceId)`
+  - [ ] Afficher création/suppression de boards, ajout/retrait de membres
+  - [ ] Tests pour le nouveau drawer
+
+- [ ] **Historique de carte dans CardModal**
+  - [ ] Ajouter section "Activity" en bas du modal (après Comments)
+  - [ ] Utiliser `activityAPI.getByCard(cardId)`
+  - [ ] Timeline verticale compacte montrant :
+    - [ ] Création de la carte
+    - [ ] Modifications (titre, description, date d'échéance)
+    - [ ] Déplacements entre listes
+    - [ ] Assignations/désassignations de membres
+    - [ ] Ajout/retrait de labels
+    - [ ] Changements de statut
+  - [ ] Format condensé (sans détails excessifs)
+  - [ ] Tests pour la section Activity dans CardModal
 
 ---
 

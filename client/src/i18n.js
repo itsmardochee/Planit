@@ -12,6 +12,7 @@ import listsEN from './locales/en/lists.json';
 import modalsEN from './locales/en/modals.json';
 import cardsEN from './locales/en/cards.json';
 import notificationsEN from './locales/en/notifications.json';
+import activityEN from './locales/en/activity.json';
 
 import commonFR from './locales/fr/common.json';
 import dashboardFR from './locales/fr/dashboard.json';
@@ -23,6 +24,7 @@ import listsFR from './locales/fr/lists.json';
 import modalsFR from './locales/fr/modals.json';
 import cardsFR from './locales/fr/cards.json';
 import notificationsFR from './locales/fr/notifications.json';
+import activityFR from './locales/fr/activity.json';
 
 const resources = {
   en: {
@@ -36,6 +38,7 @@ const resources = {
     modals: modalsEN,
     cards: cardsEN,
     notifications: notificationsEN,
+    activity: activityEN,
   },
   fr: {
     common: commonFR,
@@ -48,6 +51,7 @@ const resources = {
     modals: modalsFR,
     cards: cardsFR,
     notifications: notificationsFR,
+    activity: activityFR,
   },
 };
 
@@ -68,6 +72,8 @@ i18n
       'lists',
       'modals',
       'cards',
+      'notifications',
+      'activity',
     ],
 
     interpolation: {
