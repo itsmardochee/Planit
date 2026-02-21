@@ -56,7 +56,7 @@ const ActivityFeed = ({ scope, scopeId, limit = 20, filters = {} }) => {
             throw new Error(`Invalid scope: ${scope}`);
         }
 
-        setActivities(response.data.activities || []);
+        setActivities(response.data.data || []);
       } catch (err) {
         console.error('Failed to fetch activities:', err);
         setError(err.message || 'Failed to load activities');

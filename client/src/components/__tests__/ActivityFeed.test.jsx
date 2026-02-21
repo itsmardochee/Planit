@@ -55,7 +55,7 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByBoard.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(<ActivityFeed scope="board" scopeId="board123" />);
@@ -86,7 +86,7 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByWorkspace.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(<ActivityFeed scope="workspace" scopeId="workspace123" />);
@@ -116,7 +116,7 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByCard.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(<ActivityFeed scope="card" scopeId="card123" />);
@@ -134,7 +134,7 @@ describe('ActivityFeed', () => {
 
   describe('Empty State', () => {
     it('should display empty state when no activities exist', async () => {
-      activityAPI.getByBoard.mockResolvedValue({ data: { activities: [] } });
+      activityAPI.getByBoard.mockResolvedValue({ data: { data: [] } });
 
       renderWithI18n(<ActivityFeed scope="board" scopeId="board123" />);
 
@@ -172,7 +172,7 @@ describe('ActivityFeed', () => {
       }));
 
       activityAPI.getByBoard.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(
@@ -204,7 +204,7 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByBoard.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(
@@ -239,7 +239,7 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByBoard.mockResolvedValue({
-        data: { activities: mockActivities },
+        data: { data: mockActivities },
       });
 
       renderWithI18n(
@@ -287,10 +287,10 @@ describe('ActivityFeed', () => {
       ];
 
       activityAPI.getByBoard.mockResolvedValueOnce({
-        data: { activities: mockActivities1 },
+        data: { data: mockActivities1 },
       });
       activityAPI.getByBoard.mockResolvedValueOnce({
-        data: { activities: mockActivities2 },
+        data: { data: mockActivities2 },
       });
 
       const { rerender } = renderWithI18n(
