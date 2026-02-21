@@ -82,7 +82,7 @@ const formatActivityMessage = activity => {
   const username = userId?.username || 'Unknown user';
 
   // Card activities
-  if (entityType === 'Card') {
+  if (entityType === 'card') {
     const cardTitle = details?.cardTitle || 'a card';
 
     switch (action) {
@@ -141,7 +141,7 @@ const formatActivityMessage = activity => {
   }
 
   // List activities
-  if (entityType === 'List') {
+  if (entityType === 'list') {
     const listName = details?.listName || 'a list';
 
     switch (action) {
@@ -155,6 +155,12 @@ const formatActivityMessage = activity => {
         return (
           <>
             <strong>{username}</strong> updated list <strong>{listName}</strong>
+          </>
+        );
+      case 'moved':
+        return (
+          <>
+            <strong>{username}</strong> moved list <strong>{listName}</strong>
           </>
         );
       case 'deleted':
@@ -173,7 +179,7 @@ const formatActivityMessage = activity => {
   }
 
   // Comment activities
-  if (entityType === 'Comment') {
+  if (entityType === 'comment') {
     const cardTitle = details?.cardTitle || 'a card';
 
     if (action === 'commented') {
@@ -182,6 +188,77 @@ const formatActivityMessage = activity => {
           <strong>{username}</strong> commented on <strong>{cardTitle}</strong>
         </>
       );
+    }
+  }
+
+  // Board activities
+  if (entityType === 'board') {
+    const boardName = details?.boardName || 'a board';
+
+    switch (action) {
+      case 'created':
+        return (
+          <>
+            <strong>{username}</strong> created board{' '}
+            <strong>{boardName}</strong>
+          </>
+        );
+      case 'updated':
+        return (
+          <>
+            <strong>{username}</strong> updated board{' '}
+            <strong>{boardName}</strong>
+          </>
+        );
+      case 'deleted':
+        return (
+          <>
+            <strong>{username}</strong> deleted board{' '}
+            <strong>{boardName}</strong>
+          </>
+        );
+      default:
+        return (
+          <>
+            <strong>{username}</strong> modified <strong>{boardName}</strong>
+          </>
+        );
+    }
+  }
+
+  // Workspace activities
+  if (entityType === 'workspace') {
+    const workspaceName = details?.workspaceName || 'a workspace';
+
+    switch (action) {
+      case 'created':
+        return (
+          <>
+            <strong>{username}</strong> created workspace{' '}
+            <strong>{workspaceName}</strong>
+          </>
+        );
+      case 'updated':
+        return (
+          <>
+            <strong>{username}</strong> updated workspace{' '}
+            <strong>{workspaceName}</strong>
+          </>
+        );
+      case 'deleted':
+        return (
+          <>
+            <strong>{username}</strong> deleted workspace{' '}
+            <strong>{workspaceName}</strong>
+          </>
+        );
+      default:
+        return (
+          <>
+            <strong>{username}</strong> modified{' '}
+            <strong>{workspaceName}</strong>
+          </>
+        );
     }
   }
 

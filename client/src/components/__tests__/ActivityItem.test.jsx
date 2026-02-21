@@ -18,7 +18,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity1',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'John Doe' },
         details: { cardTitle: 'New Task' },
         createdAt: new Date().toISOString(),
@@ -35,7 +35,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity2',
         action: 'updated',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Jane Smith' },
         details: { cardTitle: 'Updated Task' },
         createdAt: new Date().toISOString(),
@@ -51,7 +51,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity3',
         action: 'deleted',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Bob Johnson' },
         details: { cardTitle: 'Deleted Task' },
         createdAt: new Date().toISOString(),
@@ -67,7 +67,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity4',
         action: 'moved',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Alice Brown' },
         details: {
           cardTitle: 'Task 1',
@@ -91,7 +91,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity5',
         action: 'created',
-        entityType: 'List',
+        entityType: 'list',
         userId: { username: 'Charlie Wilson' },
         details: { listName: 'New List' },
         createdAt: new Date().toISOString(),
@@ -108,7 +108,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity6',
         action: 'deleted',
-        entityType: 'List',
+        entityType: 'list',
         userId: { username: 'Diana Prince' },
         details: { listName: 'Old List' },
         createdAt: new Date().toISOString(),
@@ -126,7 +126,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity7',
         action: 'commented',
-        entityType: 'Comment',
+        entityType: 'comment',
         userId: { username: 'Eve Adams' },
         details: {
           cardTitle: 'Task 1',
@@ -147,7 +147,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity8',
         action: 'assigned',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Frank Miller' },
         details: {
           cardTitle: 'Task 1',
@@ -167,7 +167,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity9',
         action: 'unassigned',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Henry Clark' },
         details: {
           cardTitle: 'Task 1',
@@ -195,7 +195,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity10',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Jack Thompson' },
         details: { cardTitle: 'Recent Task' },
         createdAt: now.toISOString(),
@@ -212,7 +212,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity11',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Karen Davis' },
         details: { cardTitle: 'Old Task' },
         createdAt: pastDate.toISOString(),
@@ -229,7 +229,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-hours',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: pastDate.toISOString(),
@@ -245,7 +245,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-minutes',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: pastDate.toISOString(),
@@ -261,7 +261,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-months',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: pastDate.toISOString(),
@@ -277,7 +277,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-years',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: pastDate.toISOString(),
@@ -294,7 +294,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity12',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Leo Turner' },
         details: { cardTitle: 'Task' },
         createdAt: new Date().toISOString(),
@@ -315,7 +315,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-default',
         action: 'unknown-action',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: new Date().toISOString(),
@@ -337,7 +337,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-no-details',
         action: 'updated',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: {},
         createdAt: new Date().toISOString(),
@@ -353,7 +353,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-no-user',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: {},
         details: { cardTitle: 'Task' },
         createdAt: new Date().toISOString(),
@@ -369,7 +369,7 @@ describe('ActivityItem', () => {
       const activity = {
         _id: 'activity-single-minute',
         action: 'created',
-        entityType: 'Card',
+        entityType: 'card',
         userId: { username: 'Test User' },
         details: { cardTitle: 'Task' },
         createdAt: pastDate.toISOString(),
