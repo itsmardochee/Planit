@@ -172,25 +172,61 @@ const WorkspacePage = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Members Section */}
-        <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold dark:text-white">
-              {t('workspace:members', 'Members')}
-            </h2>
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-trello-blue dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                {t('workspace:members', 'Members')}
+              </h2>
+              {members.length > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                  {members.length}
+                </span>
+              )}
+            </div>
             <button
               onClick={() => setShowInviteModal(true)}
-              className="bg-trello-blue hover:bg-blue-600 text-white px-4 py-2 rounded transition flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-trello-blue hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow transition-all duration-150"
             >
-              <span>+</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
               {t('workspace:inviteMembers', 'Invite Members')}
             </button>
           </div>
-          <MemberList
-            members={members}
-            workspaceId={workspaceId}
-            currentUserId={currentUser?._id}
-            onMemberRemoved={handleMemberRemoved}
-          />
+          <div className="p-6">
+            <MemberList
+              members={members}
+              workspaceId={workspaceId}
+              currentUserId={currentUser?._id}
+              onMemberRemoved={handleMemberRemoved}
+            />
+          </div>
         </div>
 
         {/* New Board Form */}
