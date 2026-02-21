@@ -95,7 +95,7 @@ describe('LabelManager', () => {
       });
 
       // Click "Add Label" button
-      const addButton = screen.getByRole('button', { name: /add label/i });
+      const addButton = screen.getByRole('button', { name: /add new label/i });
       await user.click(addButton);
 
       // Fill in the form
@@ -112,7 +112,7 @@ describe('LabelManager', () => {
       await waitFor(() => {
         expect(labelAPI.create).toHaveBeenCalledWith(mockBoardId, {
           name: 'Documentation',
-          color: '#0000ff',
+          color: '#0000FF',
         });
       });
 
@@ -132,7 +132,7 @@ describe('LabelManager', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add label/i });
+      const addButton = screen.getByRole('button', { name: /add new label/i });
       await user.click(addButton);
 
       // Try to save without entering a name
@@ -158,7 +158,7 @@ describe('LabelManager', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add label/i });
+      const addButton = screen.getByRole('button', { name: /add new label/i });
       await user.click(addButton);
 
       const nameInput = screen.getByLabelText(/label name/i);
@@ -191,15 +191,16 @@ describe('LabelManager', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add label/i });
+      const addButton = screen.getByRole('button', { name: /add new label/i });
       await user.click(addButton);
 
       // Verify that the color input is of type "color" which prevents invalid input
-      const colorInput = screen.getByLabelText(/color/i);
+      const colorTextInput = screen.getByLabelText(/color/i);
+      const colorInput = colorTextInput.closest('div').querySelector('input[type="color"]');
       expect(colorInput).toHaveAttribute('type', 'color');
 
       // HTML color inputs only accept valid hex colors, so we verify it has a default valid color
-      expect(colorInput.value).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(colorTextInput.value).toMatch(/^#[0-9A-Fa-f]{6}$/);
     });
   });
 
@@ -244,7 +245,7 @@ describe('LabelManager', () => {
       await waitFor(() => {
         expect(labelAPI.update).toHaveBeenCalledWith('label1', {
           name: 'Critical Bug',
-          color: '#ff5500',
+          color: '#FF5500',
         });
       });
 
@@ -312,7 +313,7 @@ describe('LabelManager', () => {
       });
 
       const confirmDeleteButton = screen.getByRole('button', {
-        name: /^delete$/i,
+        name: /confirm delete/i,
       });
       await user.click(confirmDeleteButton);
 
@@ -373,7 +374,7 @@ describe('LabelManager', () => {
       });
 
       // Click close button
-      const closeButton = screen.getByRole('button', { name: /close/i });
+      const closeButton = screen.getByRole('button', { name: /close dialog/i });
       await user.click(closeButton);
 
       expect(onClose).toHaveBeenCalled();

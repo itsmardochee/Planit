@@ -58,7 +58,8 @@ describe('KanbanCard - Due Date Display', () => {
 
       const badge = screen.getByTestId('due-date-badge');
       expect(badge).toBeInTheDocument();
-      expect(badge).toHaveTextContent('📅');
+      expect(badge.querySelector('svg')).toBeInTheDocument();
+      expect(badge).toHaveTextContent(/\w+ \d+/); // Format: "Feb 26" ou similaire
     });
 
     it('should display formatted date (MMM D)', () => {

@@ -79,9 +79,10 @@ describe('KanbanCard - Comment Count Display', () => {
       />
     );
 
-    // Should have a comment icon (💬 or similar)
+    // Should have a comment icon (SVG) and count
     const commentBadge = screen.getByTestId('comment-count');
-    expect(commentBadge).toHaveTextContent(/💬|comment/i);
+    expect(commentBadge).toHaveTextContent('5');
+    expect(commentBadge.querySelector('svg')).toBeInTheDocument();
   });
 
   it('should display correct count for single comment', () => {

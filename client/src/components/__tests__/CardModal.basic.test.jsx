@@ -258,7 +258,7 @@ describe('CardModal - Basic Fields', () => {
   it('calls onClose when close button is clicked', () => {
     renderCardModal();
 
-    const closeButton = screen.getByText('✕');
+    const closeButton = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();
@@ -310,11 +310,17 @@ describe('CardModal - Basic Fields', () => {
     expect(screen.getByText(/status/i)).toBeInTheDocument();
   });
 
-  it('renders card information section', () => {
+  it('renders card information section', async () => {
     renderCardModal();
 
-    expect(screen.getByText(/created on/i)).toBeInTheDocument();
-    expect(screen.getByText(/modified on/i)).toBeInTheDocument();
+    // Click on Info tab to show card information
+    const infoTab = screen.getByRole('button', { name: /info/i });
+    fireEvent.click(infoTab);
+
+    await waitFor(() => {
+      expect(screen.getByText(/created on/i)).toBeInTheDocument();
+      expect(screen.getByText(/modified on/i)).toBeInTheDocument();
+    });
   });
 
   it('disables save and delete buttons when saving', async () => {

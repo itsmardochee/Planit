@@ -264,10 +264,11 @@ const LabelManager = ({ boardId, open, onClose }) => {
                   <div className="space-y-4">
                     {/* Label Name */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <label htmlFor="label-name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Label Name
                       </label>
                       <input
+                        id="label-name"
                         type="text"
                         value={formData.name}
                         onChange={e =>
@@ -284,7 +285,7 @@ const LabelManager = ({ boardId, open, onClose }) => {
 
                     {/* Color Picker */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <label htmlFor="label-color-hex" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Color
                       </label>
                       <div className="flex items-center gap-3">
@@ -297,6 +298,7 @@ const LabelManager = ({ boardId, open, onClose }) => {
                           className="h-12 w-20 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer"
                         />
                         <input
+                          id="label-color-hex"
                           type="text"
                           value={formData.color}
                           onChange={e =>
@@ -465,6 +467,7 @@ const LabelManager = ({ boardId, open, onClose }) => {
             <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
               <button
                 onClick={handleClose}
+                aria-label="Close dialog"
                 className="w-full px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-all font-medium"
               >
                 Close
@@ -516,6 +519,7 @@ const LabelManager = ({ boardId, open, onClose }) => {
               </button>
               <button
                 onClick={handleDeleteConfirm}
+                aria-label="Confirm delete"
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
               >
                 <svg
