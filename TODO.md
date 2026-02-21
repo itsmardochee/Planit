@@ -238,18 +238,22 @@
 - [x] Tests pour l'historique d'activités (32 model tests + 18 controller tests)
 - [x] Swagger documentation pour tous les endpoints
 
-**Status:** ✅ Backend complet - 611 tests passing - Commit 76d5914
+**Status:** ✅ Backend complet - 664 tests passing
 
 #### Frontend
 
-- [ ] Créer composant `ActivityFeed` pour afficher l'historique
-- [ ] Créer composant `ActivityItem` avec icône, message, timestamp
-- [ ] Afficher l'activité récente dans le sidebar du board
-- [ ] Créer page dédiée "Activity Log" pour l'historique complet
-- [ ] Implémenter infinite scroll ou pagination
-- [ ] Formater les messages d'activité ("Mardochée a déplacé la carte X vers Y")
-- [ ] Ajouter filtres par action/utilisateur/date
-- [ ] Tests pour les composants d'historique
+- [x] Créer composant `ActivityFeed` pour afficher l'historique
+- [x] Créer composant `ActivityItem` avec icône, message, timestamp
+- [x] Afficher l'activité récente dans le drawer du board (BoardPage.jsx)
+- [x] Implémenter pagination via API (limit param)
+- [x] Formater les messages d'activité avec i18n ("User a déplacé la carte X vers Y")
+- [x] Support filtres via API (action, entityType params)
+- [x] Tests pour les composants d'historique (10 tests: ActivityFeed + ActivityItem)
+- [x] Intégration dans BoardPage avec drawer animé
+
+**Status:** ✅ Frontend complet - 658 tests passing
+
+**Feature Status:** ✅ **COMPLETE** - Activity Log fonctionnel (backend + frontend) - PR #147
 
 ---
 

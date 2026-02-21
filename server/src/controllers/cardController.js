@@ -134,7 +134,7 @@ export const createCard = async (req, res, next) => {
       userId: req.user._id,
       action: 'created',
       entityType: 'card',
-      details: { title: card.title },
+      details: { cardTitle: card.title },
     });
 
     logger.info(`Card created: ${card._id} by user ${req.user._id}`);
@@ -403,7 +403,7 @@ export const updateCard = async (req, res, next) => {
         userId: req.user._id,
         action: 'updated',
         entityType: 'card',
-        details: { fields: updatedFields },
+        details: { cardTitle: card.title, fields: updatedFields },
       });
     }
 
@@ -487,7 +487,7 @@ export const deleteCard = async (req, res, next) => {
         userId: req.user._id,
         action: 'deleted',
         entityType: 'card',
-        details: { title: cardTitle },
+        details: { cardTitle },
       });
     }
 
@@ -648,6 +648,9 @@ export const reorderCard = async (req, res, next) => {
         action: 'moved',
         entityType: 'card',
         details: {
+          cardTitle: card.title,
+          fromList: oldList.name,
+          toList: targetList.name,
           from: { listId: oldListId, position: oldPosition },
           to: { listId: targetListId, position },
         },
@@ -700,6 +703,8 @@ export const reorderCard = async (req, res, next) => {
       action: 'moved',
       entityType: 'card',
       details: {
+        cardTitle: card.title,
+        listName: list.name,
         from: { position: oldPosition },
         to: { position },
       },
@@ -827,8 +832,8 @@ export const assignMember = async (req, res, next) => {
       action: 'assigned',
       entityType: 'card',
       details: {
-        assignedUserId: userId,
-        assignedUsername: userToAssign.username,
+        cardTitle: card.title,
+        assignedUser: userToAssign.username,
       },
     });
 
@@ -917,9 +922,12 @@ export const unassignMember = async (req, res, next) => {
       boardId: card.boardId,
       cardId: card._id,
       userId: req.user._id,
-      action: 'assigned',
+      action: 'unassigned',
       entityType: 'card',
-      details: { unassignedUserId: userId, unassignedUsername: user?.username },
+      details: {
+        cardTitle: card.title,
+        unassignedUser: user?.username,
+      },
     });
 
     logger.info(`User ${userId} unassigned from card ${id}`);
@@ -1009,8 +1017,12 @@ export const assignLabel = async (req, res, next) => {
       cardId: card._id,
       userId: req.user._id,
       action: 'updated',
-      entityType: 'label',
-      details: { labelId, labelName: label.name, action: 'assigned' },
+      entityType: 'card',
+      details: {
+        cardTitle: card.title,
+        labelName: label.name,
+        action: 'label_added',
+      },
     });
 
     logger.info(`Label ${labelId} assigned to card ${id}`);
@@ -1089,8 +1101,12 @@ export const removeLabel = async (req, res, next) => {
       cardId: card._id,
       userId: req.user._id,
       action: 'updated',
-      entityType: 'label',
-      details: { labelId, labelName: label?.name, action: 'removed' },
+      entityType: 'card',
+      details: {
+        cardTitle: card.title,
+        labelName: label?.name,
+        action: 'label_removed',
+      },
     });
 
     logger.info(`Label ${labelId} removed from card ${id}`);
@@ -1174,7 +1190,12 @@ export const updateCardStatus = async (req, res, next) => {
       userId: req.user._id,
       action: 'updated',
       entityType: 'card',
-      details: { field: 'status', oldValue: oldStatus, newValue: status },
+      details: {
+        cardTitle: card.title,
+        field: 'status',
+        oldValue: oldStatus,
+        newValue: status,
+      },
     });
 
     logger.info(`Card ${id} status updated to ${status}`);

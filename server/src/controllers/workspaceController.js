@@ -105,7 +105,7 @@ export const createWorkspace = async (req, res) => {
       userId: req.user._id,
       action: 'created',
       entityType: 'workspace',
-      details: { name: workspace.name },
+      details: { workspaceName: workspace.name },
     });
 
     res.status(201).json({
@@ -394,7 +394,7 @@ export const updateWorkspace = async (req, res) => {
         userId: req.user._id,
         action: 'updated',
         entityType: 'workspace',
-        details: { fields: updatedFields },
+        details: { workspaceName: workspace.name, fields: updatedFields },
       });
     }
 
@@ -514,7 +514,7 @@ export const deleteWorkspace = async (req, res) => {
       userId: req.user._id,
       action: 'deleted',
       entityType: 'workspace',
-      details: { name: workspaceName },
+      details: { workspaceName },
     });
 
     res.status(200).json({

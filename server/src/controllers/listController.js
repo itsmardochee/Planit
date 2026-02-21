@@ -131,7 +131,7 @@ export const createList = async (req, res, next) => {
       userId: req.user._id,
       action: 'created',
       entityType: 'list',
-      details: { name: list.name },
+      details: { listName: list.name },
     });
 
     logger.info(`List created: ${list._id} by user ${req.user._id}`);
@@ -388,7 +388,7 @@ export const updateList = async (req, res, next) => {
         userId: req.user._id,
         action: 'updated',
         entityType: 'list',
-        details: { fields: updatedFields },
+        details: { listName: list.name, fields: updatedFields },
       });
     }
 
@@ -520,6 +520,7 @@ export const reorderList = async (req, res, next) => {
         action: 'moved',
         entityType: 'list',
         details: {
+          listName: list.name,
           from: { position: oldPosition },
           to: { position: newPosition },
         },
@@ -617,7 +618,7 @@ export const deleteList = async (req, res, next) => {
       userId: req.user._id,
       action: 'deleted',
       entityType: 'list',
-      details: { name: listName },
+      details: { listName },
     });
 
     logger.info(`List deleted: ${id}`);

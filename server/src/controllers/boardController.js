@@ -99,7 +99,7 @@ export const createBoard = async (req, res, next) => {
       userId: req.user._id,
       action: 'created',
       entityType: 'board',
-      details: { name: board.name },
+      details: { boardName: board.name },
     });
 
     logger.info('Board created', {
@@ -306,7 +306,7 @@ export const updateBoard = async (req, res, next) => {
         userId: req.user._id,
         action: 'updated',
         entityType: 'board',
-        details: { fields: updatedFields },
+        details: { boardName: board.name, fields: updatedFields },
       });
     }
 
@@ -416,7 +416,7 @@ export const deleteBoard = async (req, res, next) => {
       userId: req.user._id,
       action: 'deleted',
       entityType: 'board',
-      details: { name: boardName },
+      details: { boardName },
     });
 
     logger.info('Board deleted', {
