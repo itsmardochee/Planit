@@ -224,7 +224,9 @@ const MemberList = ({
                 {canChangeRole(member) ? (
                   <RoleSelector
                     currentRole={member.role}
-                    canModifyUserRole={canModifyUserRolePermission || (() => false)}
+                    canModifyUserRole={
+                      canModifyUserRolePermission || (() => false)
+                    }
                     onRoleChange={newRole => handleRoleChange(member, newRole)}
                     loading={roleUpdateLoading === member._id}
                   />

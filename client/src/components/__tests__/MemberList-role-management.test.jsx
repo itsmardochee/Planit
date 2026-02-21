@@ -442,7 +442,9 @@ describe('MemberList Component - Role Display & Management', () => {
       );
 
       // Jane's row should not have a remove button
-      const janeRow = screen.getByText('jane_smith').closest('div[class*="relative"]');
+      const janeRow = screen
+        .getByText('jane_smith')
+        .closest('div[class*="relative"]');
       const removeButton = janeRow?.querySelector('[aria-label*="remove"]');
       expect(removeButton).toBeNull();
     });
