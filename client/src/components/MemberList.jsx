@@ -1,15 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Alert,
-  Typography,
-} from '@mui/material';
+import { Chip } from '@mui/material';
 import { memberAPI } from '../utils/api';
 
 const MemberList = ({
@@ -152,12 +143,15 @@ const MemberList = ({
 
   return (
     <>
-      {/* Member cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Member cards grid — aria-hidden when modal is open (mirrors MUI Dialog behavior) */}
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        aria-hidden={!!confirmDialog}
+      >
         {members.map(member => (
           <div
             key={member._id}
-            className="group relative flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-150"
+            className="relative flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-150"
           >
             {/* Colored avatar circle with initials */}
             <div
@@ -186,7 +180,7 @@ const MemberList = ({
               </p>
             </div>
 
-            {/* Remove button — appears on card hover */}
+            {/* Remove button */}
             {canRemoveMember(member) && (
               <button
                 aria-label={`remove ${member.userId?.username || 'member'}`}
@@ -194,7 +188,7 @@ const MemberList = ({
                 title={t('workspace:members.remove', {
                   defaultValue: 'Remove member',
                 })}
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-150"
+                className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-150"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -216,42 +210,70 @@ const MemberList = ({
         ))}
       </div>
 
-      {/* Confirmation Dialog (MUI for proper aria-modal behavior in tests) */}
-      <Dialog open={!!confirmDialog} onClose={handleCancelRemove}>
-        <DialogTitle>
-          {t('workspace:members.confirmRemoveTitle', {
-            defaultValue: 'Remove Member',
-          })}
-        </DialogTitle>
-        <DialogContent>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Typography>
-            {t('workspace:members.confirmRemoveMessage', {
-              username: confirmDialog?.userId?.username || 'this member',
-              defaultValue: `Are you sure you want to remove ${confirmDialog?.userId?.username || 'this member'} from this workspace?`,
-            })}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelRemove} disabled={loading}>
-            {t('common:buttons.cancel', { defaultValue: 'Cancel' })}
-          </Button>
-          <Button
-            onClick={handleConfirmRemove}
-            color="error"
-            variant="contained"
-            disabled={loading}
-          >
-            {loading
-              ? t('common:messages.loading', { defaultValue: 'Removing...' })
-              : t('common:buttons.remove', { defaultValue: 'Remove' })}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Confirmation modal (Tailwind) */}
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={handleCancelRemove}
+          />
+
+          {/* Panel */}
+          <div className="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                {t('workspace:members.confirmRemoveTitle', {
+                  defaultValue: 'Remove Member',
+                })}
+              </h3>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-4 space-y-3">
+              {error && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {error}
+                </div>
+              )}
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {t('workspace:members.confirmRemoveMessage', {
+                  username: confirmDialog?.userId?.username || 'this member',
+                  defaultValue: `Are you sure you want to remove ${confirmDialog?.userId?.username || 'this member'} from this workspace?`,
+                })}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={handleCancelRemove}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+              >
+                {t('common:buttons.cancel', { defaultValue: 'Cancel' })}
+              </button>
+              <button
+                onClick={handleConfirmRemove}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm disabled:opacity-50 transition-colors"
+              >
+                {loading
+                  ? t('common:messages.loading', { defaultValue: 'Removing...' })
+                  : t('common:buttons.remove', { defaultValue: 'Remove' })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
