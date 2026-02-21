@@ -1,6 +1,6 @@
 # Planit - TODO List
 
-**Last Updated:** February 20, 2026
+**Last Updated:** February 21, 2026
 **Status:** Feature Roadmap for Future Releases
 
 **Recent Completions:**
@@ -10,7 +10,9 @@
 - ✅ Feature 3: Labels & Status (Backend) - PR #144
 - ✅ Feature 4: Comments (Backend + Frontend) - PR #145
 - ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
-- ✅ Feature 6: RBAC Roles & Permissions (Backend) - Committed locally (a2b06ed), awaiting PR #146 merge
+- ✅ Feature 6: RBAC Backend - PR #148
+- ✅ Feature 6: RBAC Frontend (partiel) - PR #148 (en cours)
+- ✅ Feature 7: Activity Log (Backend + Frontend) - PR #147
 
 ---
 
@@ -210,22 +212,34 @@
 - [x] Tests pour les permissions et autorisations (permissions.test.js, checkPermission, controllers)
 - [x] Backward compatibility: workspace.userId traité comme owner même sans WorkspaceMember
 
-**Status:** ✅ Backend complet - 666 tests passing - Committed localement (a2b06ed)
+**Status:** ✅ Backend complet - 716 tests passing - PR #148
 
 #### Frontend
 
-- [ ] Créer hook `usePermissions` et utilitaire permissions.js (mirror backend)
-- [ ] Afficher le rôle dans `MemberList` avec badge coloré
-- [ ] Créer composant `RoleSelector` pour changer les rôles (admin+)
-- [ ] Masquer/désactiver les boutons selon les permissions:
-  - [ ] Workspace (delete, edit, create board, invite)
-  - [ ] Board (edit, delete, create list, drag & drop)
-  - [ ] Cards (edit, delete, assignation si viewer)
-- [ ] Afficher tooltips/messages pour actions non autorisées
-- [ ] Créer page `WorkspaceSettings` avec tableau des permissions
-- [ ] Tests pour composants et UI basée sur les rôles
+- [x] Créer hook `usePermissions` et utilitaire `permissions.js` (mirror backend)
+- [x] Afficher le rôle dans `MemberList` avec badge coloré (Chip MUI coloré par rôle)
+- [x] Créer composant `RoleSelector` pour changer les rôles (admin+)
+- [x] Masquer/désactiver les boutons selon les permissions:
+  - [x] Workspace: `board:create` (avec Tooltip d'info pour les non-autorisés)
+  - [x] Workspace: `board:update` (bouton Edit masqué selon le rôle)
+  - [x] Workspace: `board:delete` (bouton Delete masqué selon le rôle)
+  - [ ] Workspace: `workspace:update` (edit workspace name/description — non implémenté)
+  - [ ] Workspace: `workspace:delete` (supprimer workspace — non implémenté)
+  - [ ] Workspace: `member:invite` (bouton Invite non conditionnel au rôle)
+  - [x] Board: `list:create` (bouton "Add List" avec Tooltip pour non-autorisés)
+  - [x] Board: `card:create` (bouton "Add Card" dans KanbanList masqué selon le rôle)
+  - [ ] Board: drag & drop désactivé pour viewers (non implémenté)
+  - [ ] Cards: boutons edit/delete dans CardModal non conditionnels (hook importé mais non utilisé)
+  - [ ] Cards: assignation désactivée pour viewers dans CardModal (non implémenté)
+- [x] `CommentSection`: champ de commentaire désactivé si `!can('comment:create')`
+- [x] Afficher tooltips pour actions non autorisées (`board:create`, `list:create`)
+- [x] Créer page `WorkspaceSettings` avec tableau des permissions par rôle (lecture seule)
+- [x] Route `/workspace/:workspaceId/settings` et bouton ⚙️ Permissions dans WorkspacePage
+- [x] Tests pour composants RBAC (RoleSelector, usePermissions, permissions, MemberList-role-management)
 
-**Status:** ⬜ Frontend à faire
+**Status:** 🚧 Frontend 65% complet — permissions sur boards/listes/cartes (create) ✅ ; edit/delete cartes, invite membres, workspace edit/delete restants
+
+**Feature Status:** 🚧 **EN COURS** - Backend 100% + Frontend partiel - PR #148
 
 ---
 
@@ -357,19 +371,23 @@
 ✅ **COMPLÉTÉES:**
 
 1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration → PR #133 merged
-2. **Gestion des droits (Feature 6)** - Backend RBAC complet → Committed (a2b06ed), awaiting PR #146 merge
+2. **Gestion des droits (Feature 6)** - Backend RBAC complet + Frontend partiel → PR #148
 3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs → PR #143 merged
 4. **Labels et statuts (Feature 3)** - Backend complet → PR #144 merged
 5. **Commentaires (Feature 4)** - Backend + Frontend complets → PR #145
 6. **Dates d'échéance (Feature 5)** - Backend complet → PR #146 (en attente de merge)
+7. **Historique d'activités (Feature 7)** - Backend + Frontend complets → PR #147
 
 🚧 **PROCHAINES PRIORITÉS:**
 
-1. **Frontend Feature 3**: Labels & Status UI (LabelManager, LabelPicker, StatusSelector)
-2. **Frontend Feature 6**: RBAC UI (RoleSelector, permissions-based UI, settings page)
-3. **Frontend Feature 5**: Due Dates & Notifications UI (DatePicker, NotificationBell)
-4. **Feature 7 (Bonus)**: Historique d'activités - Traçabilité
-5. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
+1. **Frontend Feature 6 (suite)**: finaliser le RBAC UI manquant:
+   - `member:invite` conditionnel dans WorkspacePage
+   - `workspace:update` / `workspace:delete` conditionnels
+   - Card edit/delete gating dans CardModal (le hook `usePermissions` est déjà importé)
+   - Drag & drop désactivé pour viewers
+2. **Frontend Feature 3**: Filtres par label et statut dans la vue board (seul item manquant)
+3. **Frontend Feature 5**: NotificationBell dans navbar + intégration NotificationList API
+4. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
 
 ---
 
