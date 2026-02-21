@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Tooltip } from '@mui/material';
 import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -14,6 +15,7 @@ import ConfirmModal from './ConfirmModal';
 const KanbanList = ({
   list,
   boardId,
+  workspaceId,
   onCardClick,
   onListUpdate,
   onEditList,
@@ -22,6 +24,9 @@ const KanbanList = ({
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Get permissions
+  const { can } = usePermissions(workspaceId);
 
   // Make the list itself draggable
   const {
@@ -244,7 +249,7 @@ const KanbanList = ({
             </button>
           </div>
         </form>
-      ) : (
+      ) : can && can('card:create') ? (
         <button
           onClick={() => setShowNewCardForm(true)}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
@@ -263,6 +268,22 @@ const KanbanList = ({
           </svg>
           {t('lists:addAnotherCard')}
         </button>
+      ) : (
+        <Tooltip
+          title={t(
+            'common:messages.noPermissionCreate',
+            'You do not have permission to create cards'
+          )}
+        >
+          <span className="block">
+            <button
+              disabled
+              className="w-full text-left px-3 py-2 bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
+            >
+              + {t('lists:addAnotherCard')}
+            </button>
+          </span>
+        </Tooltip>
       )}
 
       <ConfirmModal

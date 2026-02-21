@@ -49,6 +49,9 @@ const BoardPage = () => {
   const [showLabelManager, setShowLabelManager] = useState(false);
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
 
+  // Get permissions
+  const { can } = usePermissions(board?.workspaceId);
+
   // Simple UI handlers
   const handleCreateList = async e => {
     e.preventDefault();
@@ -304,6 +307,7 @@ const BoardPage = () => {
                   key={list._id}
                   list={list}
                   boardId={boardId}
+                  workspaceId={board?.workspaceId}
                   onCardClick={card => handleOpenCardModal(card, list)}
                   onListUpdate={refetch}
                   onEditList={handleEditList}
@@ -356,7 +360,7 @@ const BoardPage = () => {
                     </div>
                   </form>
                 </div>
-              ) : (
+              ) : can && can('list:create') ? (
                 <button
                   onClick={() => setShowNewListForm(true)}
                   className="w-80 bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 backdrop-blur-sm text-white rounded-lg p-4 font-semibold transition-all border border-white/20 dark:border-gray-700 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
@@ -376,6 +380,22 @@ const BoardPage = () => {
                   </svg>
                   {t('board:addAnotherList')}
                 </button>
+              ) : (
+                <Tooltip
+                  title={t(
+                    'board:noPermission',
+                    'You do not have permission to create lists'
+                  )}
+                >
+                  <span>
+                    <button
+                      disabled
+                      className="w-80 bg-gray-500 dark:bg-gray-700 text-gray-300 dark:text-gray-500 rounded-lg p-4 font-semibold cursor-not-allowed flex items-center gap-2"
+                    >
+                      + {t('board:addAnotherList')}
+                    </button>
+                  </span>
+                </Tooltip>
               )}
             </div>
           </div>
@@ -404,6 +424,7 @@ const BoardPage = () => {
           <CardModal
             card={selectedCard}
             boardId={boardId}
+            workspaceId={board?.workspaceId}
             members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}

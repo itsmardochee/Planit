@@ -5,6 +5,30 @@ import i18n from '../../i18n';
 import MemberList from '../MemberList';
 import * as apiModule from '../../utils/api';
 
+// Mock usePermissions hook
+vi.mock('../../hooks/usePermissions', () => ({
+  default: vi.fn(() => ({
+    role: 'owner',
+    loading: false,
+    error: null,
+    can: vi.fn(() => true),
+    isAtLeast: vi.fn(() => true),
+    canModifyUserRole: vi.fn(() => true),
+    roleInfo: {
+      owner: { label: 'Owner', color: 'purple' },
+      admin: { label: 'Admin', color: 'blue' },
+      member: { label: 'Member', color: 'green' },
+      viewer: { label: 'Viewer', color: 'grey' },
+    },
+  })),
+  ROLE_INFO: {
+    owner: { label: 'Owner', color: 'purple' },
+    admin: { label: 'Admin', color: 'blue' },
+    member: { label: 'Member', color: 'green' },
+    viewer: { label: 'Viewer', color: 'grey' },
+  },
+}));
+
 // TDD Red Phase: Tests for MemberList component
 
 describe('MemberList Component', () => {

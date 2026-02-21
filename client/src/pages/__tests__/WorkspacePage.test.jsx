@@ -7,6 +7,32 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 import * as apiModule from '../../utils/api';
 
+// Mock usePermissions hook
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+  usePermissions: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+  ROLE_INFO: {
+    owner: { label: 'Owner', color: 'purple', description: 'Full control' },
+    admin: { label: 'Admin', color: 'blue', description: 'Can manage' },
+    member: { label: 'Member', color: 'green', description: 'Can edit' },
+    viewer: { label: 'Viewer', color: 'gray', description: 'Read-only' },
+  },
+}));
+
 // Mock react-router-dom
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

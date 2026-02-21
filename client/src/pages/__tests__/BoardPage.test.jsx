@@ -7,6 +7,26 @@ import * as listAPI from '../../utils/api';
 import * as cardAPI from '../../utils/api';
 import * as memberAPI from '../../utils/api';
 
+// Mock usePermissions hook
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+  usePermissions: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+}));
+
 // Mock the API modules
 vi.mock('../../utils/api', async () => {
   const actual = await vi.importActual('../../utils/api');

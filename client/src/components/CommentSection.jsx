@@ -3,12 +3,16 @@ import PropTypes from 'prop-types';
 import CommentItem from './CommentItem';
 import AddComment from './AddComment';
 import { commentAPI } from '../utils/api';
+import { usePermissions } from '../hooks/usePermissions';
 
-const CommentSection = ({ cardId }) => {
+const CommentSection = ({ cardId, workspaceId, workspaceId }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Get permissions
+  const { can } = usePermissions(workspaceId);
 
   useEffect(() => {
     // Get current user from localStorage
@@ -111,13 +115,17 @@ const CommentSection = ({ cardId }) => {
       </div>
 
       {/* Add comment form */}
-      <AddComment onSubmit={handleAddComment} />
+      <AddComment
+        onSubmit={handleAddComment}
+        disabled={!can || !can('comment:create')}
+      />
     </div>
   );
 };
 
 CommentSection.propTypes = {
   cardId: PropTypes.string.isRequired,
+  workspaceId: PropTypes.string,
 };
 
 export default CommentSection;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Tooltip } from '@mui/material';
 import { cardAPI } from '../utils/api';
 import MemberSelector from './MemberSelector';
 import LabelPicker from './LabelPicker';
@@ -7,7 +8,14 @@ import StatusSelector from './StatusSelector';
 import CommentSection from './CommentSection';
 import ConfirmModal from './ConfirmModal';
 
-const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
+const CardModal = ({
+  card,
+  boardId,
+  workspaceId,
+  members,
+  onClose,
+  onCardUpdate,
+}) => {
   const { t } = useTranslation(['cards', 'common']);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
@@ -19,6 +27,9 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
   );
   const [activeTab, setActiveTab] = useState('details');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Get permissions
+  const { can } = usePermissions(workspaceId);
 
   const handleSave = async () => {
     try {
