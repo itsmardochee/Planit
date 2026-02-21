@@ -97,13 +97,6 @@ const MemberList = ({
     }
   };
 
-  const isCurrentUser = member => member.userId?._id === currentUserId;
-
-  const canRemoveMember = member => {
-    if (isCurrentUser(member)) return false;
-    return true;
-  };
-
   const handleRemoveClick = member => {
     setConfirmDialog(member);
     setError('');

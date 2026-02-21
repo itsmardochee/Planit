@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { setBoards } from '../store/index';
+import usePermissions from '../hooks/usePermissions';
+import { Tooltip } from '@mui/material';
 import { workspaceAPI, boardAPI, memberAPI } from '../utils/api';
 import BoardEditModal from '../components/BoardEditModal';
 import MemberList from '../components/MemberList';

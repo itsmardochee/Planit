@@ -115,18 +115,20 @@ const RoleSelector = ({
         disabled={isDisabled}
         renderValue={value => {
           const roleInfo = ROLE_INFO[value];
+          const label = roleInfo?.label || (value ? value.charAt(0).toUpperCase() + value.slice(1) : value);
+          const color = roleInfo?.color || 'default';
           return (
             <Chip
-              label={roleInfo.label}
+              label={label}
               size="small"
-              sx={{
-                backgroundColor: `${roleInfo.color}.main`,
+              sx={roleInfo ? {
+                backgroundColor: `${color}.main`,
                 color: theme =>
                   theme.palette.getContrastText(
-                    theme.palette[roleInfo.color]?.main || '#000'
+                    theme.palette[color]?.main || '#000'
                   ),
                 fontWeight: 600,
-              }}
+              } : { fontWeight: 600 }}
             />
           );
         }}

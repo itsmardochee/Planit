@@ -11,6 +11,7 @@ import {
 import { cardAPI, listAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
 import ConfirmModal from './ConfirmModal';
+import usePermissions from '../hooks/usePermissions';
 
 const KanbanList = ({
   list,

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { listAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
+import usePermissions from '../hooks/usePermissions';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
@@ -12,6 +13,7 @@ import useBoardData from '../hooks/useBoardData';
 import useBoardFilters from '../hooks/useBoardFilters';
 import useBoardDrag from '../hooks/useBoardDrag';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { Tooltip } from '@mui/material';
 import {
   SortableContext,
   horizontalListSortingStrategy,

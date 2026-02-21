@@ -13,6 +13,14 @@ vi.mock('../../utils/api', () => ({
   },
 }));
 
+// Mock usePermissions to allow comment:create by default
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    can: () => true,
+    role: 'member',
+  }),
+}));
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store = {};

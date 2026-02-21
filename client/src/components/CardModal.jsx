@@ -7,6 +7,7 @@ import LabelPicker from './LabelPicker';
 import StatusSelector from './StatusSelector';
 import CommentSection from './CommentSection';
 import ConfirmModal from './ConfirmModal';
+import usePermissions from '../hooks/usePermissions';
 
 const CardModal = ({
   card,

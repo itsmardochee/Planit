@@ -40,6 +40,18 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+// Mock usePermissions to allow all actions by default
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    can: () => true,
+    role: 'owner',
+    loading: false,
+    error: null,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+  }),
+}));
+
 const Wrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>;
 
 describe('BoardPage - General', () => {

@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import CommentItem from './CommentItem';
 import AddComment from './AddComment';
 import { commentAPI } from '../utils/api';
-import { usePermissions } from '../hooks/usePermissions';
+import usePermissions from '../hooks/usePermissions';
 
-const CommentSection = ({ cardId, workspaceId, workspaceId }) => {
+const CommentSection = ({ cardId, workspaceId }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

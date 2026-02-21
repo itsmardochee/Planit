@@ -4,11 +4,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 import MemberList from '../MemberList';
-import * as apiModule from '../../utils/api';
+import { memberAPI } from '../../utils/api';
 
 // Mock usePermissions hook
 vi.mock('../../hooks/usePermissions', () => ({
-  default: vi.fn(),
+  default: vi.fn(() => ({
+    can: vi.fn(() => true),
+    role: 'owner',
+    loading: false,
+    error: null,
+    isAtLeast: vi.fn(() => true),
+    canModifyUserRole: vi.fn(() => true),
+  })),
   ROLE_INFO: {
     owner: {
       label: 'Owner',
@@ -26,6 +33,14 @@ vi.mock('../../hooks/usePermissions', () => ({
       description: 'Create and edit content',
     },
     viewer: { label: 'Viewer', color: 'grey', description: 'View only access' },
+  },
+}));
+
+// Mock the API module
+vi.mock('../../utils/api', () => ({
+  memberAPI: {
+    remove: vi.fn(),
+    updateRole: vi.fn(),
   },
 }));
 
@@ -81,14 +96,10 @@ describe('MemberList Component - Role Display & Management', () => {
   const mockOnRoleUpdated = vi.fn();
 
   // Mock memberAPI
-  const mockMemberAPI = {
-    remove: vi.fn(),
-    updateRole: vi.fn(),
-  };
+  const mockMemberAPI = memberAPI;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    apiModule.memberAPI = mockMemberAPI;
   });
 
   describe('Role Badge Display', () => {
@@ -354,7 +365,7 @@ describe('MemberList Component - Role Display & Management', () => {
       );
 
       // Owner role should be protected (john_doe)
-      const ownerBadge = screen.getByText('john_doe').closest('li');
+      const ownerBadge = screen.getByText('john_doe').closest('div');
       expect(ownerBadge).toBeInTheDocument();
     });
 
@@ -431,7 +442,7 @@ describe('MemberList Component - Role Display & Management', () => {
       );
 
       // Jane's row should not have a remove button
-      const janeRow = screen.getByText('jane_smith').closest('li');
+      const janeRow = screen.getByText('jane_smith').closest('div[class*="relative"]');
       const removeButton = janeRow?.querySelector('[aria-label*="remove"]');
       expect(removeButton).toBeNull();
     });
