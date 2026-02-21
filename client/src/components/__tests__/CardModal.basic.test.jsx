@@ -199,7 +199,6 @@ describe('CardModal - Basic Fields', () => {
   });
 
   it('calls delete API and callbacks when delete button is clicked', async () => {
-    window.confirm = vi.fn(() => true);
     cardAPI.delete.mockResolvedValue({ data: { success: true } });
 
     renderCardModal();
@@ -209,6 +208,10 @@ describe('CardModal - Basic Fields', () => {
     });
     fireEvent.click(deleteButton);
 
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(cardAPI.delete).toHaveBeenCalledWith('card-123');
       expect(mockOnCardUpdate).toHaveBeenCalled();
@@ -217,8 +220,6 @@ describe('CardModal - Basic Fields', () => {
   });
 
   it('does not delete card when confirmation is cancelled', async () => {
-    window.confirm = vi.fn(() => false);
-
     renderCardModal();
 
     const deleteButton = screen.getByRole('button', {
@@ -226,13 +227,16 @@ describe('CardModal - Basic Fields', () => {
     });
     fireEvent.click(deleteButton);
 
+    // Cancel in the modal
+    const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelBtn);
+
     await waitFor(() => {
       expect(cardAPI.delete).not.toHaveBeenCalled();
     });
   });
 
   it('handles delete error gracefully', async () => {
-    window.confirm = vi.fn(() => true);
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -244,6 +248,10 @@ describe('CardModal - Basic Fields', () => {
       name: /delete|supprimer/i,
     });
     fireEvent.click(deleteButton);
+
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
 
     await waitFor(() => {
       expect(consoleError).toHaveBeenCalledWith(
@@ -258,7 +266,7 @@ describe('CardModal - Basic Fields', () => {
   it('calls onClose when close button is clicked', () => {
     renderCardModal();
 
-    const closeButton = screen.getByText('✕');
+    const closeButton = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();
@@ -310,11 +318,17 @@ describe('CardModal - Basic Fields', () => {
     expect(screen.getByText(/status/i)).toBeInTheDocument();
   });
 
-  it('renders card information section', () => {
+  it('renders card information section', async () => {
     renderCardModal();
 
-    expect(screen.getByText(/created on/i)).toBeInTheDocument();
-    expect(screen.getByText(/modified on/i)).toBeInTheDocument();
+    // Click on Info tab to show card information
+    const infoTab = screen.getByRole('button', { name: /info/i });
+    fireEvent.click(infoTab);
+
+    await waitFor(() => {
+      expect(screen.getByText(/created on/i)).toBeInTheDocument();
+      expect(screen.getByText(/modified on/i)).toBeInTheDocument();
+    });
   });
 
   it('disables save and delete buttons when saving', async () => {

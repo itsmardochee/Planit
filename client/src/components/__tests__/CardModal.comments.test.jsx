@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CardModal from '../CardModal';
 import { cardAPI } from '../../utils/api';
 
@@ -67,6 +67,10 @@ describe('CardModal - Comment Integration', () => {
       />
     );
 
+    // Click on Comments tab to show CommentSection
+    const commentsTab = screen.getByRole('button', { name: /comments/i });
+    fireEvent.click(commentsTab);
+
     await waitFor(() => {
       expect(screen.getByTestId('comment-section')).toBeInTheDocument();
     });
@@ -82,6 +86,10 @@ describe('CardModal - Comment Integration', () => {
         onCardUpdate={mockOnCardUpdate}
       />
     );
+
+    // Click on Comments tab
+    const commentsTab = screen.getByRole('button', { name: /comments/i });
+    fireEvent.click(commentsTab);
 
     await waitFor(() => {
       const commentSection = screen.getByTestId('comment-section');
@@ -100,11 +108,12 @@ describe('CardModal - Comment Integration', () => {
       />
     );
 
+    // Click on Comments tab
+    const commentsTab = screen.getByRole('button', { name: /comments/i });
+    fireEvent.click(commentsTab);
+
     await waitFor(() => {
       const commentSection = screen.getByTestId('comment-section');
-      // Check that comment section appears after card info section
-      const cardInfoSection = screen.getByText(/cards:informationTitle/);
-      expect(cardInfoSection).toBeInTheDocument();
       expect(commentSection).toBeInTheDocument();
     });
   });

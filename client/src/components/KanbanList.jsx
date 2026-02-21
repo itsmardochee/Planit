@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/sortable';
 import { cardAPI, listAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
+import ConfirmModal from './ConfirmModal';
 
 const KanbanList = ({
   list,
@@ -20,6 +21,7 @@ const KanbanList = ({
   const { t } = useTranslation(['lists', 'common']);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Make the list itself draggable
   const {
@@ -85,22 +87,18 @@ const KanbanList = ({
     onListUpdate();
   };
 
-  const handleDeleteList = async () => {
-    if (
-      !window.confirm(
-        t('common:messages.confirmDeleteList', { name: list.name })
-      )
-    ) {
-      return;
-    }
+  const handleDeleteList = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const handleConfirmDeleteList = async () => {
     try {
       await listAPI.delete(list._id);
-      // Notify parent to refresh
       onListUpdate();
     } catch (err) {
       console.error('Error deleting list', err);
-      alert('Error deleting list');
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -128,20 +126,45 @@ const KanbanList = ({
             {t('lists:cardsCount', { count: cards.length })}
           </p>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           {onEditList && (
             <button
               onClick={() => onEditList(list)}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+              className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+              title={t('lists:edit')}
             >
-              {t('lists:edit')}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                <path
+                  fillRule="evenodd"
+                  d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </button>
           )}
           <button
             onClick={handleDeleteList}
-            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-gray-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-300 dark:border-red-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+            title={t('lists:delete')}
           >
-            {t('lists:delete')}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
           </button>
         </div>
       </div>
@@ -181,8 +204,20 @@ const KanbanList = ({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-3 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
               {t('lists:addCard')}
             </button>
             <button
@@ -191,8 +226,20 @@ const KanbanList = ({
                 setShowNewCardForm(false);
                 setNewCardTitle('');
               }}
-              className="px-3 py-2 bg-gray-400 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-700 text-white rounded-lg text-sm transition"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
               {t('lists:cancel')}
             </button>
           </div>
@@ -200,11 +247,37 @@ const KanbanList = ({
       ) : (
         <button
           onClick={() => setShowNewCardForm(true)}
-          className="w-full text-left px-3 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
         >
-          + {t('lists:addAnotherCard')}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {t('lists:addAnotherCard')}
         </button>
       )}
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title={t('common:messages.confirmDeleteList', {
+          name: list.name,
+          defaultValue: `Delete list "${list.name}"?`,
+        })}
+        message={t('lists:confirmDeleteMessage', {
+          name: list.name,
+          defaultValue: `Are you sure you want to delete "${list.name}" and all its cards?`,
+        })}
+        onConfirm={handleConfirmDeleteList}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };

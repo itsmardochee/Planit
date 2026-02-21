@@ -137,7 +137,7 @@ describe('BoardPage - Overdue Filter', () => {
       });
 
       // Use more specific selector to find the overdue filter button
-      const filterButton = screen.getByText(/🕒.*Overdue/i);
+      const filterButton = screen.getByText(/Overdue.*\(\d+\)/i);
       expect(filterButton).toBeInTheDocument();
     });
 
@@ -149,7 +149,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue/i);
+      const filterButton = screen.getByText(/Overdue.*\(\d+\)/i);
 
       // Initially not active (should have white/gray background)
       expect(filterButton).toHaveClass('bg-white');
@@ -185,7 +185,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue/i);
+      const filterButton = screen.getByText(/Overdue.*\(\d+\)/i);
       await user.click(filterButton);
 
       await waitFor(() => {
@@ -209,7 +209,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue/i);
+      const filterButton = screen.getByText(/Overdue.*\(\d+\)/i);
       await user.click(filterButton);
 
       await waitFor(() => {
@@ -227,7 +227,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue/i);
+      const filterButton = screen.getByText(/Overdue.*\(\d+\)/i);
       await user.click(filterButton);
 
       await waitFor(() => {
@@ -248,7 +248,7 @@ describe('BoardPage - Overdue Filter', () => {
       });
 
       // Should display "2" indicating 2 overdue cards
-      const filterButton = screen.getByText(/🕒.*Overdue.*\(2\)/i);
+      const filterButton = screen.getByText(/Overdue.*\(2\)/i);
       expect(filterButton).toBeInTheDocument();
     });
 
@@ -260,7 +260,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue.*\(2\)/i);
+      const filterButton = screen.getByText(/Overdue.*\(2\)/i);
       expect(filterButton).toBeInTheDocument();
 
       // Count should persist after activating filter
@@ -294,7 +294,7 @@ describe('BoardPage - Overdue Filter', () => {
         expect(screen.getByText('Test Board')).toBeInTheDocument();
       });
 
-      const filterButton = screen.getByText(/🕒.*Overdue.*\(0\)/i);
+      const filterButton = screen.getByText(/Overdue.*\(0\)/i);
       expect(filterButton).toBeInTheDocument();
     });
   });

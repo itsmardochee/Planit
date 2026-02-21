@@ -270,7 +270,6 @@ describe('WorkspacePage', () => {
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    vi.stubGlobal('alert', vi.fn());
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -291,11 +290,10 @@ describe('WorkspacePage', () => {
     fireEvent.click(createButton);
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Failed to create board');
+      expect(screen.getByText('Failed to create board')).toBeInTheDocument();
     });
 
     consoleErrorSpy.mockRestore();
-    vi.unstubAllGlobals();
   });
 
   it('prevents creating board with empty name', async () => {
@@ -344,10 +342,6 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    );
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -361,11 +355,13 @@ describe('WorkspacePage', () => {
     });
     fireEvent.click(deleteButton);
 
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(apiModule.boardAPI.delete).toHaveBeenCalledWith('board1');
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('cancels board deletion when user declines confirmation', async () => {
@@ -381,10 +377,6 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => false)
-    );
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -398,10 +390,12 @@ describe('WorkspacePage', () => {
     });
     fireEvent.click(deleteButton);
 
+    // Cancel in the modal
+    const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelBtn);
+
     // Should not call delete
     expect(apiModule.boardAPI.delete).not.toHaveBeenCalled();
-
-    vi.unstubAllGlobals();
   });
 
   it('shows error alert when deleting board fails', async () => {
@@ -417,14 +411,9 @@ describe('WorkspacePage', () => {
     vi.spyOn(apiModule.boardAPI, 'delete').mockRejectedValue({
       response: { data: { message: 'Failed to delete' } },
     });
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    );
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    vi.stubGlobal('alert', vi.fn());
 
     const store = getStore();
     renderWithProviders(<WorkspacePage />, { store });
@@ -438,8 +427,12 @@ describe('WorkspacePage', () => {
     });
     fireEvent.click(deleteButton);
 
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Failed to delete');
+      expect(screen.getByText('Failed to delete')).toBeInTheDocument();
     });
 
     vi.unstubAllGlobals();

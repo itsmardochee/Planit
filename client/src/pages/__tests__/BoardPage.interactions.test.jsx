@@ -200,10 +200,10 @@ describe('BoardPage - Interactions', () => {
       render(<BoardPage />, { wrapper: Wrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('lists:edit')).toBeInTheDocument();
+        expect(screen.getByTitle('lists:edit')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('lists:edit'));
+      await user.click(screen.getByTitle('lists:edit'));
 
       await waitFor(() => {
         expect(screen.getByTestId('list-edit-modal')).toBeInTheDocument();
@@ -216,10 +216,10 @@ describe('BoardPage - Interactions', () => {
       render(<BoardPage />, { wrapper: Wrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('lists:edit')).toBeInTheDocument();
+        expect(screen.getByTitle('lists:edit')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('lists:edit'));
+      await user.click(screen.getByTitle('lists:edit'));
       await waitFor(() =>
         expect(screen.getByTestId('list-edit-modal')).toBeInTheDocument()
       );
@@ -243,10 +243,10 @@ describe('BoardPage - Interactions', () => {
       render(<BoardPage />, { wrapper: Wrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('lists:edit')).toBeInTheDocument();
+        expect(screen.getByTitle('lists:edit')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('lists:edit'));
+      await user.click(screen.getByTitle('lists:edit'));
       await waitFor(() =>
         expect(screen.getByTestId('list-edit-modal')).toBeInTheDocument()
       );
@@ -267,10 +267,10 @@ describe('BoardPage - Interactions', () => {
       render(<BoardPage />, { wrapper: Wrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('lists:edit')).toBeInTheDocument();
+        expect(screen.getByTitle('lists:edit')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('lists:edit'));
+      await user.click(screen.getByTitle('lists:edit'));
       await waitFor(() =>
         expect(screen.getByTestId('list-edit-modal')).toBeInTheDocument()
       );

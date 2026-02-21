@@ -7,6 +7,7 @@ import { workspaceAPI, boardAPI, memberAPI } from '../utils/api';
 import BoardEditModal from '../components/BoardEditModal';
 import MemberList from '../components/MemberList';
 import InviteMembers from '../components/InviteMembers';
+import ConfirmModal from '../components/ConfirmModal';
 
 const WorkspacePage = () => {
   const { t } = useTranslation(['workspace', 'common']);
@@ -22,6 +23,8 @@ const WorkspacePage = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [editingBoard, setEditingBoard] = useState(null);
+  const [confirmDeleteBoard, setConfirmDeleteBoard] = useState(null);
+  const [pageError, setPageError] = useState('');
 
   useEffect(() => {
     const fetchWorkspaceAndBoards = async () => {
@@ -68,7 +71,9 @@ const WorkspacePage = () => {
       }
     } catch (err) {
       console.error('Error creating board', err);
-      alert(err.response?.data?.message || t('workspace:errors.creatingBoard'));
+      setPageError(
+        err.response?.data?.message || t('workspace:errors.creatingBoard')
+      );
     }
   };
 
@@ -96,25 +101,25 @@ const WorkspacePage = () => {
     }
   };
 
-  const handleDeleteBoard = async (e, boardId, boardName) => {
+  const handleDeleteBoard = (e, boardId, boardName) => {
     e.stopPropagation();
+    setConfirmDeleteBoard({ id: boardId, name: boardName });
+  };
 
-    if (
-      !window.confirm(
-        t('common:messages.confirmDeleteBoard', { name: boardName })
-      )
-    ) {
-      return;
-    }
-
+  const handleConfirmDeleteBoard = async () => {
     try {
-      await boardAPI.delete(boardId);
-      const updatedBoards = boards.filter(b => b._id !== boardId);
+      await boardAPI.delete(confirmDeleteBoard.id);
+      const updatedBoards = boards.filter(b => b._id !== confirmDeleteBoard.id);
       setLocalBoards(updatedBoards);
       dispatch(setBoards(updatedBoards));
+      setPageError('');
     } catch (err) {
       console.error('Error deleting board', err);
-      alert(err.response?.data?.message || t('workspace:errors.deletingBoard'));
+      setPageError(
+        err.response?.data?.message || t('workspace:errors.deletingBoard')
+      );
+    } finally {
+      setConfirmDeleteBoard(null);
     }
   };
 
@@ -172,25 +177,61 @@ const WorkspacePage = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Members Section */}
-        <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold dark:text-white">
-              {t('workspace:members', 'Members')}
-            </h2>
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-trello-blue dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                {t('workspace:members', 'Members')}
+              </h2>
+              {members.length > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                  {members.length}
+                </span>
+              )}
+            </div>
             <button
               onClick={() => setShowInviteModal(true)}
-              className="bg-trello-blue hover:bg-blue-600 text-white px-4 py-2 rounded transition flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-trello-blue hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow transition-all duration-150"
             >
-              <span>+</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
               {t('workspace:inviteMembers', 'Invite Members')}
             </button>
           </div>
-          <MemberList
-            members={members}
-            workspaceId={workspaceId}
-            currentUserId={currentUser?._id}
-            onMemberRemoved={handleMemberRemoved}
-          />
+          <div className="p-6">
+            <MemberList
+              members={members}
+              workspaceId={workspaceId}
+              currentUserId={currentUser?._id}
+              onMemberRemoved={handleMemberRemoved}
+            />
+          </div>
         </div>
 
         {/* New Board Form */}
@@ -234,6 +275,26 @@ const WorkspacePage = () => {
 
         {/* Boards Grid */}
         <div>
+          {/* Page-level error (create / delete board) */}
+          {pageError && (
+            <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {pageError}
+            </div>
+          )}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">
               {t('workspace:boardsTitle')}
@@ -302,6 +363,21 @@ const WorkspacePage = () => {
         workspaceId={workspaceId}
         onClose={() => setShowInviteModal(false)}
         onMemberInvited={handleMemberInvited}
+      />
+
+      {/* Delete Board Confirm Modal */}
+      <ConfirmModal
+        open={!!confirmDeleteBoard}
+        title={t('common:messages.confirmDeleteBoard', {
+          name: confirmDeleteBoard?.name,
+          defaultValue: `Delete board "${confirmDeleteBoard?.name}"?`,
+        })}
+        message={t('workspace:confirmDeleteBoardMessage', {
+          name: confirmDeleteBoard?.name,
+          defaultValue: `Are you sure you want to permanently delete "${confirmDeleteBoard?.name}"? This will also delete all lists and cards inside.`,
+        })}
+        onConfirm={handleConfirmDeleteBoard}
+        onCancel={() => setConfirmDeleteBoard(null)}
       />
     </div>
   );

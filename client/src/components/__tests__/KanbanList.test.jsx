@@ -131,7 +131,7 @@ describe('KanbanList', () => {
 
     it('shows edit button when onEditList prop is provided', () => {
       renderKanbanList(mockList, { onEditList: mockOnEditList });
-      expect(screen.getByText('lists:edit')).toBeInTheDocument();
+      expect(screen.getByTitle('lists:edit')).toBeInTheDocument();
     });
 
     it('does not show edit button when onEditList is not provided', () => {
@@ -258,11 +258,16 @@ describe('KanbanList', () => {
 
   describe('Delete List', () => {
     it('deletes list and notifies parent when confirmed', async () => {
-      window.confirm = vi.fn(() => true);
       listAPI.delete.mockResolvedValue({ data: { success: true } });
 
       renderKanbanList();
-      fireEvent.click(screen.getByText('lists:delete'));
+      fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Confirm in the modal
+      const confirmBtn = await screen.findByRole('button', {
+        name: /confirm/i,
+      });
+      fireEvent.click(confirmBtn);
 
       await waitFor(() => {
         expect(listAPI.delete).toHaveBeenCalledWith('list-1');
@@ -271,9 +276,12 @@ describe('KanbanList', () => {
     });
 
     it('does not delete list when confirmation is cancelled', async () => {
-      window.confirm = vi.fn(() => false);
       renderKanbanList();
-      fireEvent.click(screen.getByText('lists:delete'));
+      fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Cancel in the modal
+      const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+      fireEvent.click(cancelBtn);
 
       await waitFor(() => {
         expect(listAPI.delete).not.toHaveBeenCalled();
@@ -281,15 +289,19 @@ describe('KanbanList', () => {
     });
 
     it('handles delete error gracefully', async () => {
-      window.confirm = vi.fn(() => true);
-      window.alert = vi.fn();
       const consoleSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
       listAPI.delete.mockRejectedValue(new Error('API Error'));
 
       renderKanbanList();
-      fireEvent.click(screen.getByText('lists:delete'));
+      fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Confirm in the modal
+      const confirmBtn = await screen.findByRole('button', {
+        name: /confirm/i,
+      });
+      fireEvent.click(confirmBtn);
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -304,7 +316,7 @@ describe('KanbanList', () => {
   describe('Edit List Button', () => {
     it('calls onEditList with the list when edit button is clicked', () => {
       renderKanbanList(mockList, { onEditList: mockOnEditList });
-      fireEvent.click(screen.getByText('lists:edit'));
+      fireEvent.click(screen.getByTitle('lists:edit'));
       expect(mockOnEditList).toHaveBeenCalledWith(mockList);
     });
   });

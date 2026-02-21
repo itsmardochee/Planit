@@ -6,6 +6,7 @@ import { logout, setWorkspaces } from '../store/index';
 import { useAuth } from '../hooks/useAuth';
 import { workspaceAPI } from '../utils/api';
 import WorkspaceEditModal from '../components/WorkspaceEditModal';
+import ConfirmModal from '../components/ConfirmModal';
 import DarkModeToggle from '../components/DarkModeToggle';
 import LanguageSelector from '../components/LanguageSelector';
 
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [editingWorkspace, setEditingWorkspace] = useState(null);
+  const [confirmDeleteTarget, setConfirmDeleteTarget] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -86,25 +88,24 @@ const Dashboard = () => {
     setError('');
   };
 
-  const handleDeleteWorkspace = async (e, workspaceId, workspaceName) => {
+  const handleDeleteWorkspace = (e, workspaceId, workspaceName) => {
     e.stopPropagation();
+    setConfirmDeleteTarget({ id: workspaceId, name: workspaceName });
+  };
 
-    if (
-      !window.confirm(
-        t('common:messages.confirmDeleteWorkspace', { name: workspaceName })
-      )
-    ) {
-      return;
-    }
-
+  const handleConfirmDeleteWorkspace = async () => {
     try {
-      await workspaceAPI.delete(workspaceId);
-      const updatedWorkspaces = workspaces.filter(w => w._id !== workspaceId);
+      await workspaceAPI.delete(confirmDeleteTarget.id);
+      const updatedWorkspaces = workspaces.filter(
+        w => w._id !== confirmDeleteTarget.id
+      );
       dispatch(setWorkspaces(updatedWorkspaces));
       setError('');
     } catch (err) {
       setError(t('dashboard:errors.deletingWorkspace'));
       console.error(err);
+    } finally {
+      setConfirmDeleteTarget(null);
     }
   };
 
@@ -264,6 +265,20 @@ const Dashboard = () => {
         workspace={editingWorkspace}
         onClose={() => setEditingWorkspace(null)}
         onSave={handleSaveWorkspace}
+      />
+
+      {/* Delete Workspace Confirm Modal */}
+      <ConfirmModal
+        open={!!confirmDeleteTarget}
+        title={t('common:messages.confirmDeleteTitle', {
+          defaultValue: 'Delete Workspace',
+        })}
+        message={t('common:messages.confirmDeleteWorkspace', {
+          name: confirmDeleteTarget?.name,
+          defaultValue: `Delete workspace "${confirmDeleteTarget?.name}"?`,
+        })}
+        onConfirm={handleConfirmDeleteWorkspace}
+        onCancel={() => setConfirmDeleteTarget(null)}
       />
     </div>
   );

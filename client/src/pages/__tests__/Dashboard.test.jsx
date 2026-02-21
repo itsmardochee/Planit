@@ -266,12 +266,6 @@ describe('Dashboard Page', () => {
       data: { success: true },
     });
 
-    // Mock window.confirm to return true
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    );
-
     const store = getStore();
     renderWithProviders(<Dashboard />, { store });
 
@@ -282,11 +276,13 @@ describe('Dashboard Page', () => {
     const deleteButtons = screen.getAllByTitle(/delete workspace/i);
     fireEvent.click(deleteButtons[0]);
 
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(apiModule.workspaceAPI.delete).toHaveBeenCalledWith('1');
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('cancels workspace deletion when user declines confirmation', async () => {
@@ -296,12 +292,6 @@ describe('Dashboard Page', () => {
     vi.spyOn(apiModule.workspaceAPI, 'delete').mockResolvedValue({
       data: { success: true },
     });
-
-    // Mock window.confirm to return false
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => false)
-    );
 
     const store = getStore();
     renderWithProviders(<Dashboard />, { store });
@@ -313,10 +303,12 @@ describe('Dashboard Page', () => {
     const deleteButtons = screen.getAllByTitle(/delete workspace/i);
     fireEvent.click(deleteButtons[0]);
 
+    // Cancel in the modal
+    const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelBtn);
+
     // Should not call delete
     expect(apiModule.workspaceAPI.delete).not.toHaveBeenCalled();
-
-    vi.unstubAllGlobals();
   });
 
   it('shows error when deleting workspace fails', async () => {
@@ -325,10 +317,6 @@ describe('Dashboard Page', () => {
     });
     vi.spyOn(apiModule.workspaceAPI, 'delete').mockRejectedValue(
       new Error('Failed to delete')
-    );
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
     );
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
@@ -342,6 +330,10 @@ describe('Dashboard Page', () => {
     const deleteButtons = screen.getAllByTitle(/delete workspace/i);
     fireEvent.click(deleteButtons[0]);
 
+    // Confirm in the modal
+    const confirmBtn = await screen.findByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(
         screen.getByText(
@@ -350,7 +342,6 @@ describe('Dashboard Page', () => {
       ).toBeInTheDocument();
     });
 
-    vi.unstubAllGlobals();
     consoleErrorSpy.mockRestore();
   });
 
