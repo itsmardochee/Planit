@@ -241,7 +241,10 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder={t('cards:titlePlaceholder', 'Enter card title...')}
+                  placeholder={t(
+                    'cards:titlePlaceholder',
+                    'Enter card title...'
+                  )}
                 />
               </div>
 
