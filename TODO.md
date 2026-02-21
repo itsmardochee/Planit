@@ -255,6 +255,28 @@
 
 **Feature Status:** ✅ **COMPLETE** - Activity Log fonctionnel (backend + frontend) - PR #147
 
+#### Future Enhancements (Bonnes idées pour v2)
+
+- [ ] **Activity drawer dans WorkspacePage**
+  - [ ] Ajouter bouton "📊 Activity" dans le header du workspace
+  - [ ] Implémenter drawer similaire à BoardPage
+  - [ ] Utiliser `activityAPI.getByWorkspace(workspaceId)`
+  - [ ] Afficher création/suppression de boards, ajout/retrait de membres
+  - [ ] Tests pour le nouveau drawer
+
+- [ ] **Historique de carte dans CardModal**
+  - [ ] Ajouter section "Activity" en bas du modal (après Comments)
+  - [ ] Utiliser `activityAPI.getByCard(cardId)`
+  - [ ] Timeline verticale compacte montrant :
+    - [ ] Création de la carte
+    - [ ] Modifications (titre, description, date d'échéance)
+    - [ ] Déplacements entre listes
+    - [ ] Assignations/désassignations de membres
+    - [ ] Ajout/retrait de labels
+    - [ ] Changements de statut
+  - [ ] Format condensé (sans détails excessifs)
+  - [ ] Tests pour la section Activity dans CardModal
+
 ---
 
 ### 8. Collaboration en Temps Réel
