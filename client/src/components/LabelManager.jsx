@@ -264,7 +264,10 @@ const LabelManager = ({ boardId, open, onClose }) => {
                   <div className="space-y-4">
                     {/* Label Name */}
                     <div>
-                      <label htmlFor="label-name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <label
+                        htmlFor="label-name"
+                        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                      >
                         Label Name
                       </label>
                       <input
@@ -285,7 +288,10 @@ const LabelManager = ({ boardId, open, onClose }) => {
 
                     {/* Color Picker */}
                     <div>
-                      <label htmlFor="label-color-hex" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <label
+                        htmlFor="label-color-hex"
+                        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                      >
                         Color
                       </label>
                       <div className="flex items-center gap-3">

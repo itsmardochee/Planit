@@ -196,7 +196,9 @@ describe('LabelManager', () => {
 
       // Verify that the color input is of type "color" which prevents invalid input
       const colorTextInput = screen.getByLabelText(/color/i);
-      const colorInput = colorTextInput.closest('div').querySelector('input[type="color"]');
+      const colorInput = colorTextInput
+        .closest('div')
+        .querySelector('input[type="color"]');
       expect(colorInput).toHaveAttribute('type', 'color');
 
       // HTML color inputs only accept valid hex colors, so we verify it has a default valid color

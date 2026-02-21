@@ -266,7 +266,10 @@ const CardModal = ({ card, boardId, members, onClose, onCardUpdate }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Due Date */}
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border border-blue-200 dark:border-gray-600">
-                  <label htmlFor="card-due-date" className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    htmlFor="card-due-date"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                  >
                     <svg
                       className="w-4 h-4 text-blue-600 dark:text-blue-400"
                       fill="none"
