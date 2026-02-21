@@ -1,9 +1,28 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chip } from '@mui/material';
 import { memberAPI } from '../utils/api';
 import usePermissions, { ROLE_INFO } from '../hooks/usePermissions';
 import RoleSelector from './RoleSelector';
+import RoleChangeModal from './RoleChangeModal';
+
+// Classes Tailwind pour les badges de rôle (lecture seule)
+const ROLE_BADGE_CLASSES = {
+  owner:
+    'bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
+  admin:
+    'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+  member:
+    'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  viewer:
+    'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600',
+};
+
+const ROLE_DOT_CLASSES = {
+  owner: 'bg-purple-500',
+  admin: 'bg-blue-500',
+  member: 'bg-green-500',
+  viewer: 'bg-gray-400',
+};
 
 const MemberList = ({
   members,
@@ -18,6 +37,7 @@ const MemberList = ({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [roleUpdateLoading, setRoleUpdateLoading] = useState(null); // memberId being updated
+  const [roleModal, setRoleModal] = useState(null); // member being role-edited
 
   // Get permission checking functions
   const { can, canModifyUserRole: canModifyUserRolePermission } =
@@ -30,21 +50,6 @@ const MemberList = ({
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return username[0].toUpperCase();
-  };
-
-  const getRoleColor = role => {
-    const roleInfo = ROLE_INFO[role];
-    if (!roleInfo) return 'default';
-
-    // Map ROLE_INFO colors to MUI color names
-    const colorMap = {
-      purple: 'secondary',
-      blue: 'info',
-      green: 'success',
-      grey: 'default',
-    };
-
-    return colorMap[roleInfo.color] || 'default';
   };
 
   const getAvatarClasses = role => {
@@ -137,7 +142,7 @@ const MemberList = ({
 
   const canChangeRole = member => {
     if (isCurrentUser(member)) return false;
-    if (!can || !can('member:manage')) return false;
+    if (!can || !can('member:update_role')) return false;
     if (member.role === 'owner') return false;
     return true;
   };
@@ -166,31 +171,21 @@ const MemberList = ({
     );
   }
 
-  const handleRoleChange = async (member, newRole) => {
-    if (!canModifyUserRolePermission) return;
-
-    // Verify this role change is allowed
-    if (!canModifyUserRolePermission(member.role, newRole)) {
-      setError('You do not have permission to assign this role');
-      return;
-    }
-
-    setRoleUpdateLoading(member._id);
+  const handleRoleSave = async newRole => {
+    if (!roleModal) return;
+    setRoleUpdateLoading(roleModal._id);
     setError('');
-
     try {
-      await memberAPI.updateRole(workspaceId, member.userId._id, newRole);
-
-      // Notify parent to refresh member list
-      if (onRoleUpdated) {
-        onRoleUpdated();
-      }
+      await memberAPI.updateRole(workspaceId, roleModal.userId._id, newRole);
+      setRoleModal(null);
+      if (onRoleUpdated) onRoleUpdated();
     } catch (err) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
         t('common:messages.error', { defaultValue: 'Failed to update role' });
       setError(message);
+      setRoleModal(null);
     } finally {
       setRoleUpdateLoading(null);
     }
@@ -224,18 +219,22 @@ const MemberList = ({
                 {canChangeRole(member) ? (
                   <RoleSelector
                     currentRole={member.role}
-                    canModifyUserRole={
-                      canModifyUserRolePermission || (() => false)
-                    }
-                    onRoleChange={newRole => handleRoleChange(member, newRole)}
+                    onClick={() => setRoleModal(member)}
                     loading={roleUpdateLoading === member._id}
                   />
                 ) : (
-                  <Chip
-                    label={getRoleLabel(member.role)}
-                    size="small"
-                    color={getRoleColor(member.role)}
-                  />
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      ROLE_BADGE_CLASSES[member.role] || ROLE_BADGE_CLASSES.viewer
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        ROLE_DOT_CLASSES[member.role] || 'bg-gray-400'
+                      }`}
+                    />
+                    {getRoleLabel(member.role)}
+                  </span>
                 )}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
@@ -353,6 +352,18 @@ const MemberList = ({
           </div>
         </div>
       )}
+
+      {/* Role Change Modal */}
+      <RoleChangeModal
+        open={!!roleModal}
+        onClose={() => {
+          if (!roleUpdateLoading) setRoleModal(null);
+        }}
+        onSave={handleRoleSave}
+        member={roleModal}
+        loading={!!roleUpdateLoading}
+        canModifyUserRole={canModifyUserRolePermission || (() => false)}
+      />
     </>
   );
 };

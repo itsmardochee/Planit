@@ -1,210 +1,99 @@
-import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import {
-  FormControl,
-  Select,
-  MenuItem,
-  Chip,
-  FormHelperText,
-  Box,
-  Tooltip,
-} from '@mui/material';
-import { ROLES } from '../utils/permissions';
 import { ROLE_INFO } from '../hooks/usePermissions';
 
+const ROLE_COLORS = {
+  owner:
+    'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
+  admin:
+    'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+  member:
+    'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  viewer:
+    'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600',
+};
+
+const ROLE_DOT_COLORS = {
+  owner: 'bg-purple-500',
+  admin: 'bg-blue-500',
+  member: 'bg-green-500',
+  viewer: 'bg-gray-400',
+};
+
 /**
- * RoleSelector Component
- *
- * Displays the current user role and allows admins/owners to change it.
- * Implements permission-based filtering to prevent unauthorized role changes.
- *
- * @param {Object} props
- * @param {string} props.currentRole - Current role of the user (owner, admin, member, viewer)
- * @param {Function} props.canModifyUserRole - Function to check if role change is allowed: (currentRole, newRole) => boolean
- * @param {Function} props.onRoleChange - Callback when role is changed: (newRole) => void
- * @param {boolean} [props.disabled=false] - Disable role selection (e.g., for owner protection)
- * @param {boolean} [props.loading=false] - Show loading state during role update
+ * RoleSelector — Editable role badge that triggers a modal on click.
+ * Displays the current role with an edit icon. The actual role selection
+ * happens in RoleChangeModal, opened by the parent.
  */
-const RoleSelector = ({
-  currentRole,
-  canModifyUserRole,
-  onRoleChange,
-  disabled = false,
-  loading = false,
-}) => {
-  const [isChanging, setIsChanging] = useState(false);
-
-  // Owner role cannot be changed - this is a business rule
-  const isOwner = currentRole === ROLES.OWNER;
-  const isDisabled = disabled || loading || isChanging;
-
-  // Get role information for display
-  const currentRoleInfo = ROLE_INFO[currentRole] || {
-    label: currentRole,
-    color: 'default',
-    description: '',
+const RoleSelector = ({ currentRole, onClick, loading = false }) => {
+  const roleInfo = ROLE_INFO[currentRole] || {
+    label: currentRole.charAt(0).toUpperCase() + currentRole.slice(1),
   };
+  const colorClass = ROLE_COLORS[currentRole] || ROLE_COLORS.viewer;
+  const dotColor = ROLE_DOT_COLORS[currentRole] || 'bg-gray-400';
 
-  // Get all available roles
-  const allRoles = [ROLES.OWNER, ROLES.ADMIN, ROLES.MEMBER, ROLES.VIEWER];
-
-  // Handle role change
-  const handleRoleChange = async event => {
-    const newRole = event.target.value;
-
-    // Don't trigger callback if same role selected
-    if (newRole === currentRole) {
-      return;
-    }
-
-    // Check if this role change is allowed
-    if (!canModifyUserRole(currentRole, newRole)) {
-      return;
-    }
-
-    setIsChanging(true);
-    try {
-      await onRoleChange(newRole);
-    } finally {
-      setIsChanging(false);
-    }
-  };
-
-  // Render read-only badge for owner
-  if (isOwner) {
-    return (
-      <Tooltip title="Owner role cannot be changed to prevent ownership transfer. To change ownership, transfer the workspace to another user first.">
-        <Box sx={{ display: 'inline-block' }}>
-          <FormControl disabled size="small" fullWidth>
-            <Select
-              value={currentRole}
-              disabled
-              renderValue={value => {
-                const roleInfo = ROLE_INFO[value];
-                return (
-                  <Chip
-                    label={roleInfo.label}
-                    size="small"
-                    sx={{
-                      backgroundColor: `${roleInfo.color}.main`,
-                      color: theme =>
-                        theme.palette.getContrastText(
-                          theme.palette[roleInfo.color]?.main || '#000'
-                        ),
-                      fontWeight: 600,
-                    }}
-                  />
-                );
-              }}
-            >
-              <MenuItem value={currentRole}>{currentRoleInfo.label}</MenuItem>
-            </Select>
-            <FormHelperText>Owner role cannot be changed</FormHelperText>
-          </FormControl>
-        </Box>
-      </Tooltip>
-    );
-  }
-
-  // Render interactive selector for non-owner roles
   return (
-    <FormControl size="small" fullWidth disabled={isDisabled}>
-      <Select
-        value={currentRole}
-        onChange={handleRoleChange}
-        disabled={isDisabled}
-        renderValue={value => {
-          const roleInfo = ROLE_INFO[value];
-          const label =
-            roleInfo?.label ||
-            (value ? value.charAt(0).toUpperCase() + value.slice(1) : value);
-          const color = roleInfo?.color || 'default';
-          return (
-            <Chip
-              label={label}
-              size="small"
-              sx={
-                roleInfo
-                  ? {
-                      backgroundColor: `${color}.main`,
-                      color: theme =>
-                        theme.palette.getContrastText(
-                          theme.palette[color]?.main || '#000'
-                        ),
-                      fontWeight: 600,
-                    }
-                  : { fontWeight: 600 }
-              }
-            />
-          );
-        }}
-      >
-        {allRoles.map(role => {
-          const roleInfo = ROLE_INFO[role];
-          const canSelect = canModifyUserRole(currentRole, role);
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      aria-label={`Change role: ${roleInfo.label}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all ${colorClass} ${
+        loading
+          ? 'opacity-60 cursor-wait'
+          : 'hover:opacity-80 cursor-pointer hover:shadow-sm'
+      }`}
+    >
+      {loading ? (
+        <svg
+          className="w-3 h-3 animate-spin flex-shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8z"
+          />
+        </svg>
+      ) : (
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+      )}
 
-          return (
-            <MenuItem
-              key={role}
-              value={role}
-              disabled={!canSelect && role !== currentRole}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  width: '100%',
-                }}
-              >
-                <Chip
-                  label={roleInfo.label}
-                  size="small"
-                  sx={{
-                    backgroundColor: `${roleInfo.color}.main`,
-                    color: theme =>
-                      theme.palette.getContrastText(
-                        theme.palette[roleInfo.color]?.main || '#000'
-                      ),
-                    fontWeight: 600,
-                  }}
-                />
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: '0.875rem',
-                    color: 'text.secondary',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {roleInfo.description}
-                </Box>
-              </Box>
-            </MenuItem>
-          );
-        })}
-      </Select>
-      {loading && <FormHelperText>Updating role...</FormHelperText>}
-    </FormControl>
+      {roleInfo.label}
+
+      {!loading && (
+        <svg
+          className="w-3 h-3 opacity-50 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+          />
+        </svg>
+      )}
+    </button>
   );
 };
 
 RoleSelector.propTypes = {
-  currentRole: PropTypes.oneOf([
-    ROLES.OWNER,
-    ROLES.ADMIN,
-    ROLES.MEMBER,
-    ROLES.VIEWER,
-  ]).isRequired,
-  canModifyUserRole: PropTypes.func.isRequired,
-  onRoleChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool,
+  currentRole: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired,
   loading: PropTypes.bool,
-};
-
-RoleSelector.defaultProps = {
-  disabled: false,
-  loading: false,
 };
 
 export default RoleSelector;

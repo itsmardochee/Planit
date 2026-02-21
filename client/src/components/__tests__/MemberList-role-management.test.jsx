@@ -123,7 +123,7 @@ describe('MemberList Component - Role Display & Management', () => {
     });
 
     it('should use colored badges based on role', () => {
-      const { container } = render(
+      render(
         <I18nextProvider i18n={i18n}>
           <MemberList
             members={mockMembers}
@@ -134,9 +134,9 @@ describe('MemberList Component - Role Display & Management', () => {
         </I18nextProvider>
       );
 
-      // Check that role badges are rendered (visual test placeholder)
-      const ownerBadge = screen.getByText('Owner').closest('.MuiChip-root');
-      expect(ownerBadge).toBeInTheDocument();
+      // Check that role badges are rendered (Tailwind spans / RoleSelector buttons)
+      expect(screen.getByText('Owner')).toBeInTheDocument();
+      expect(screen.getByText('Admin')).toBeInTheDocument();
     });
 
     it('should display all 4 role types correctly', () => {

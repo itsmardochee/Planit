@@ -246,6 +246,7 @@ const WorkspacePage = () => {
               workspaceId={workspaceId}
               currentUserId={currentUser?._id}
               onMemberRemoved={handleMemberRemoved}
+              onRoleUpdated={handleMemberRemoved}
             />
           </div>
         </div>

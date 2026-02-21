@@ -428,7 +428,7 @@ describe('MemberList Component', () => {
   it('handles role colors correctly for owner', () => {
     const ownerMember = mockMembers.filter(m => m.role === 'owner');
 
-    const { container } = render(
+    render(
       <I18nextProvider i18n={i18n}>
         <MemberList
           members={ownerMember}
@@ -439,14 +439,14 @@ describe('MemberList Component', () => {
       </I18nextProvider>
     );
 
-    // Owner role chip should be rendered
-    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+    // Owner role badge should be rendered
+    expect(screen.getByText('Owner')).toBeInTheDocument();
   });
 
   it('handles role colors correctly for admin', () => {
     const adminMember = mockMembers.filter(m => m.role === 'admin');
 
-    const { container } = render(
+    render(
       <I18nextProvider i18n={i18n}>
         <MemberList
           members={adminMember}
@@ -457,8 +457,8 @@ describe('MemberList Component', () => {
       </I18nextProvider>
     );
 
-    // Admin role chip should be rendered
-    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+    // Admin role badge should be rendered
+    expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
   it('handles unknown role color default', () => {
