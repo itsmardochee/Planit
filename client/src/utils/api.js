@@ -107,6 +107,8 @@ export const memberAPI = {
     api.post(`/workspaces/${workspaceId}/invite`, data),
   remove: (workspaceId, userId) =>
     api.delete(`/workspaces/${workspaceId}/members/${userId}`),
+  updateRole: (workspaceId, userId, role) =>
+    api.patch(`/workspaces/${workspaceId}/members/${userId}/role`, { role }),
 };
 
 // Comment API calls

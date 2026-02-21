@@ -2,17 +2,26 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chip } from '@mui/material';
 import { memberAPI } from '../utils/api';
+import usePermissions, { ROLE_INFO } from '../hooks/usePermissions';
+import RoleSelector from './RoleSelector';
 
 const MemberList = ({
   members,
   workspaceId,
   currentUserId,
+  currentUserRole,
   onMemberRemoved,
+  onRoleUpdated,
 }) => {
   const { t } = useTranslation(['workspace', 'common']);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [roleUpdateLoading, setRoleUpdateLoading] = useState(null); // memberId being updated
+
+  // Get permission checking functions
+  const { can, canModifyUserRole: canModifyUserRolePermission } =
+    usePermissions(workspaceId);
 
   const getInitials = username => {
     if (!username) return '?';
@@ -24,16 +33,18 @@ const MemberList = ({
   };
 
   const getRoleColor = role => {
-    switch (role) {
-      case 'owner':
-        return 'error';
-      case 'admin':
-        return 'warning';
-      case 'member':
-        return 'primary';
-      default:
-        return 'default';
-    }
+    const roleInfo = ROLE_INFO[role];
+    if (!roleInfo) return 'default';
+
+    // Map ROLE_INFO colors to MUI color names
+    const colorMap = {
+      purple: 'secondary',
+      blue: 'info',
+      green: 'success',
+      grey: 'default',
+    };
+
+    return colorMap[roleInfo.color] || 'default';
   };
 
   const getAvatarClasses = role => {
@@ -50,6 +61,11 @@ const MemberList = ({
   };
 
   const getRoleLabel = role => {
+    const roleInfo = ROLE_INFO[role];
+    if (roleInfo) {
+      return roleInfo.label;
+    }
+
     return (
       t(`workspace:members.roles.${role}`, {
         defaultValue: role.charAt(0).toUpperCase() + role.slice(1),
@@ -117,6 +133,22 @@ const MemberList = ({
     setError('');
   };
 
+  const isCurrentUser = member => {
+    return member.userId?._id === currentUserId;
+  };
+
+  const canRemoveMember = member => {
+    if (isCurrentUser(member)) return false;
+    return can && can('member:remove');
+  };
+
+  const canChangeRole = member => {
+    if (isCurrentUser(member)) return false;
+    if (!can || !can('member:manage')) return false;
+    if (member.role === 'owner') return false;
+    return true;
+  };
+
   if (!members || members.length === 0) {
     return (
       <div className="text-center py-10">
@@ -140,6 +172,36 @@ const MemberList = ({
       </div>
     );
   }
+
+  const handleRoleChange = async (member, newRole) => {
+    if (!canModifyUserRolePermission) return;
+
+    // Verify this role change is allowed
+    if (!canModifyUserRolePermission(member.role, newRole)) {
+      setError('You do not have permission to assign this role');
+      return;
+    }
+
+    setRoleUpdateLoading(member._id);
+    setError('');
+
+    try {
+      await memberAPI.updateRole(workspaceId, member.userId._id, newRole);
+
+      // Notify parent to refresh member list
+      if (onRoleUpdated) {
+        onRoleUpdated();
+      }
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        t('common:messages.error', { defaultValue: 'Failed to update role' });
+      setError(message);
+    } finally {
+      setRoleUpdateLoading(null);
+    }
+  };
 
   return (
     <>
@@ -166,11 +228,20 @@ const MemberList = ({
                 <span className="font-semibold text-gray-800 dark:text-white text-sm truncate">
                   {member.userId?.username || 'Unknown User'}
                 </span>
-                <Chip
-                  label={getRoleLabel(member.role)}
-                  size="small"
-                  color={getRoleColor(member.role)}
-                />
+                {canChangeRole(member) ? (
+                  <RoleSelector
+                    currentRole={member.role}
+                    canModifyUserRole={canModifyUserRolePermission || (() => false)}
+                    onRoleChange={newRole => handleRoleChange(member, newRole)}
+                    loading={roleUpdateLoading === member._id}
+                  />
+                ) : (
+                  <Chip
+                    label={getRoleLabel(member.role)}
+                    size="small"
+                    color={getRoleColor(member.role)}
+                  />
+                )}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {member.userId?.email || 'No email'}
