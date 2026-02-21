@@ -33,6 +33,7 @@ const RoleChangeModal = ({
   member,
   loading = false,
   canModifyUserRole,
+  saveError = '',
 }) => {
   const { t } = useTranslation(['common', 'workspace']);
   const [selectedRole, setSelectedRole] = useState(member?.role || 'member');
@@ -84,8 +85,18 @@ const RoleChangeModal = ({
             aria-label="Close"
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-40 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -124,10 +135,9 @@ const RoleChangeModal = ({
                 `}
                 aria-pressed={isSelected}
               >
-                {/* Dot */}
-                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor}`} />
-
-                {/* Label + description */}
+                <span
+                  className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor}`}
+                />
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-semibold text-gray-800 dark:text-white">
                     {info.label}
@@ -138,8 +148,6 @@ const RoleChangeModal = ({
                     </span>
                   )}
                 </span>
-
-                {/* Checkmark for selected */}
                 <span
                   className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all
                     ${
@@ -150,14 +158,46 @@ const RoleChangeModal = ({
                   `}
                 >
                   {isSelected && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                 </span>
               </button>
             );
           })}
+
+          {/* Error message */}
+          {saveError && (
+            <div className="flex items-start gap-2 mt-1 px-3 py-2.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+              <svg
+                className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                {saveError}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -175,9 +215,24 @@ const RoleChangeModal = ({
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading && (
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              <svg
+                className="w-4 h-4 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
               </svg>
             )}
             {loading
@@ -204,6 +259,7 @@ RoleChangeModal.propTypes = {
   }),
   loading: PropTypes.bool,
   canModifyUserRole: PropTypes.func.isRequired,
+  saveError: PropTypes.string,
 };
 
 export default RoleChangeModal;

@@ -5,6 +5,18 @@ import { cardAPI, labelAPI, commentAPI } from '../../utils/api';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 
+// Mock usePermissions to grant all card permissions by default
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    can: () => true,
+    role: 'owner',
+    loading: false,
+    error: null,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+  }),
+}));
+
 // Mock API
 vi.mock('../../utils/api', () => ({
   cardAPI: {

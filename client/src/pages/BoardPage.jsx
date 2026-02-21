@@ -54,6 +54,9 @@ const BoardPage = () => {
   // Get permissions
   const { can } = usePermissions(board?.workspaceId);
 
+  // Disable drag & drop for users without card:move permission (e.g. viewers)
+  const effectiveSensors = can && can('card:move') ? sensors : [];
+
   // Simple UI handlers
   const handleCreateList = async e => {
     e.preventDefault();
@@ -111,7 +114,7 @@ const BoardPage = () => {
 
   return (
     <DndContext
-      sensors={sensors}
+      sensors={effectiveSensors}
       collisionDetection={collisionDetection}
       {...dragHandlers}
     >

@@ -11,7 +11,7 @@
 - ✅ Feature 4: Comments (Backend + Frontend) - PR #145
 - ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
 - ✅ Feature 6: RBAC Backend - PR #148
-- ✅ Feature 6: RBAC Frontend (partiel) - PR #148 (en cours)
+- ✅ Feature 6: RBAC Frontend (90%) - PR #148
 - ✅ Feature 7: Activity Log (Backend + Frontend) - PR #147
 
 ---
@@ -225,19 +225,19 @@
   - [x] Workspace: `board:delete` (bouton Delete masqué selon le rôle)
   - [ ] Workspace: `workspace:update` (edit workspace name/description — non implémenté)
   - [ ] Workspace: `workspace:delete` (supprimer workspace — non implémenté)
-  - [ ] Workspace: `member:invite` (bouton Invite non conditionnel au rôle)
+  - [x] Workspace: `member:invite` (bouton Invite conditionnel au rôle)
   - [x] Board: `list:create` (bouton "Add List" avec Tooltip pour non-autorisés)
   - [x] Board: `card:create` (bouton "Add Card" dans KanbanList masqué selon le rôle)
-  - [ ] Board: drag & drop désactivé pour viewers (non implémenté)
-  - [ ] Cards: boutons edit/delete dans CardModal non conditionnels (hook importé mais non utilisé)
-  - [ ] Cards: assignation désactivée pour viewers dans CardModal (non implémenté)
+  - [x] Board: drag & drop désactivé pour viewers (sensors vides si !can('card:move'))
+  - [x] Cards: boutons edit/delete dans CardModal conditionnels (can('card:update'), can('card:delete'))
+  - [x] Cards: assignation désactivée pour viewers dans CardModal (can('card:assign'))
 - [x] `CommentSection`: champ de commentaire désactivé si `!can('comment:create')`
 - [x] Afficher tooltips pour actions non autorisées (`board:create`, `list:create`)
 - [x] Créer page `WorkspaceSettings` avec tableau des permissions par rôle (lecture seule)
 - [x] Route `/workspace/:workspaceId/settings` et bouton ⚙️ Permissions dans WorkspacePage
 - [x] Tests pour composants RBAC (RoleSelector, usePermissions, permissions, MemberList-role-management)
 
-**Status:** 🚧 Frontend 65% complet — permissions sur boards/listes/cartes (create) ✅ ; edit/delete cartes, invite membres, workspace edit/delete restants
+**Status:** ✅ Frontend 90% complet — permissions sur boards/listes/cartes (create/edit/delete) ✅ ; invite membres ✅ ; drag & drop viewers ✅ ; workspace edit/delete restants
 
 **Feature Status:** 🚧 **EN COURS** - Backend 100% + Frontend partiel - PR #148
 

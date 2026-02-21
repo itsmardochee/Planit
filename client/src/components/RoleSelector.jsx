@@ -65,7 +65,9 @@ const RoleSelector = ({ currentRole, onClick, loading = false }) => {
           />
         </svg>
       ) : (
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+        <span
+          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`}
+        />
       )}
 
       {roleInfo.label}

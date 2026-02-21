@@ -653,13 +653,12 @@ export const updateMemberRole = async (req, res) => {
       });
     }
 
-    // Find current user's membership and role
-    const currentUserMember = await WorkspaceMember.findOne({
-      workspaceId,
-      userId: req.user.id,
-    });
+    // Use the role resolved by attachUserRole middleware.
+    // This handles the backward-compatible case where the workspace creator
+    // is not in WorkspaceMember but is still the owner via workspace.userId.
+    const actorRole = req.userRole;
 
-    if (!currentUserMember) {
+    if (!actorRole) {
       return res.status(403).json({
         success: false,
         message: 'You are not a member of this workspace',
@@ -667,11 +666,7 @@ export const updateMemberRole = async (req, res) => {
     }
 
     // Check if current user has permission to modify this role
-    const hasPermission = canModifyRole(
-      currentUserMember.role,
-      targetMember.role,
-      newRole
-    );
+    const hasPermission = canModifyRole(actorRole, targetMember.role, newRole);
 
     if (!hasPermission) {
       return res.status(403).json({

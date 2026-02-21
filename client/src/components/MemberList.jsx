@@ -38,6 +38,7 @@ const MemberList = ({
   const [loading, setLoading] = useState(false);
   const [roleUpdateLoading, setRoleUpdateLoading] = useState(null); // memberId being updated
   const [roleModal, setRoleModal] = useState(null); // member being role-edited
+  const [roleSaveError, setRoleSaveError] = useState(''); // error from role update
 
   // Get permission checking functions
   const { can, canModifyUserRole: canModifyUserRolePermission } =
@@ -174,18 +175,19 @@ const MemberList = ({
   const handleRoleSave = async newRole => {
     if (!roleModal) return;
     setRoleUpdateLoading(roleModal._id);
-    setError('');
+    setRoleSaveError('');
     try {
       await memberAPI.updateRole(workspaceId, roleModal.userId._id, newRole);
       setRoleModal(null);
+      setRoleSaveError('');
       if (onRoleUpdated) onRoleUpdated();
     } catch (err) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
         t('common:messages.error', { defaultValue: 'Failed to update role' });
-      setError(message);
-      setRoleModal(null);
+      setRoleSaveError(message);
+      // Keep modal open so user sees the error
     } finally {
       setRoleUpdateLoading(null);
     }
@@ -225,7 +227,8 @@ const MemberList = ({
                 ) : (
                   <span
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      ROLE_BADGE_CLASSES[member.role] || ROLE_BADGE_CLASSES.viewer
+                      ROLE_BADGE_CLASSES[member.role] ||
+                      ROLE_BADGE_CLASSES.viewer
                     }`}
                   >
                     <span
@@ -357,12 +360,16 @@ const MemberList = ({
       <RoleChangeModal
         open={!!roleModal}
         onClose={() => {
-          if (!roleUpdateLoading) setRoleModal(null);
+          if (!roleUpdateLoading) {
+            setRoleModal(null);
+            setRoleSaveError('');
+          }
         }}
         onSave={handleRoleSave}
         member={roleModal}
         loading={!!roleUpdateLoading}
         canModifyUserRole={canModifyUserRolePermission || (() => false)}
+        saveError={roleSaveError}
       />
     </>
   );
