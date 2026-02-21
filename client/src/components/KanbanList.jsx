@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/sortable';
 import { cardAPI, listAPI } from '../utils/api';
 import KanbanCard from './KanbanCard';
+import ConfirmModal from './ConfirmModal';
 
 const KanbanList = ({
   list,
@@ -20,6 +21,7 @@ const KanbanList = ({
   const { t } = useTranslation(['lists', 'common']);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Make the list itself draggable
   const {
@@ -85,22 +87,18 @@ const KanbanList = ({
     onListUpdate();
   };
 
-  const handleDeleteList = async () => {
-    if (
-      !window.confirm(
-        t('common:messages.confirmDeleteList', { name: list.name })
-      )
-    ) {
-      return;
-    }
+  const handleDeleteList = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const handleConfirmDeleteList = async () => {
     try {
       await listAPI.delete(list._id);
-      // Notify parent to refresh
       onListUpdate();
     } catch (err) {
       console.error('Error deleting list', err);
-      alert('Error deleting list');
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -266,6 +264,20 @@ const KanbanList = ({
           {t('lists:addAnotherCard')}
         </button>
       )}
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title={t('common:messages.confirmDeleteList', {
+          name: list.name,
+          defaultValue: `Delete list "${list.name}"?`,
+        })}
+        message={t('lists:confirmDeleteMessage', {
+          name: list.name,
+          defaultValue: `Are you sure you want to delete "${list.name}" and all its cards?`,
+        })}
+        onConfirm={handleConfirmDeleteList}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };

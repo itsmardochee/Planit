@@ -258,11 +258,16 @@ describe('KanbanList', () => {
 
   describe('Delete List', () => {
     it('deletes list and notifies parent when confirmed', async () => {
-      window.confirm = vi.fn(() => true);
       listAPI.delete.mockResolvedValue({ data: { success: true } });
 
       renderKanbanList();
       fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Confirm in the modal
+      const confirmBtn = await screen.findByRole('button', {
+        name: /confirm/i,
+      });
+      fireEvent.click(confirmBtn);
 
       await waitFor(() => {
         expect(listAPI.delete).toHaveBeenCalledWith('list-1');
@@ -271,9 +276,12 @@ describe('KanbanList', () => {
     });
 
     it('does not delete list when confirmation is cancelled', async () => {
-      window.confirm = vi.fn(() => false);
       renderKanbanList();
       fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Cancel in the modal
+      const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+      fireEvent.click(cancelBtn);
 
       await waitFor(() => {
         expect(listAPI.delete).not.toHaveBeenCalled();
@@ -281,8 +289,6 @@ describe('KanbanList', () => {
     });
 
     it('handles delete error gracefully', async () => {
-      window.confirm = vi.fn(() => true);
-      window.alert = vi.fn();
       const consoleSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
@@ -290,6 +296,12 @@ describe('KanbanList', () => {
 
       renderKanbanList();
       fireEvent.click(screen.getByTitle('lists:delete'));
+
+      // Confirm in the modal
+      const confirmBtn = await screen.findByRole('button', {
+        name: /confirm/i,
+      });
+      fireEvent.click(confirmBtn);
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
