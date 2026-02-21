@@ -120,7 +120,7 @@ const KanbanCard = ({ card, onClick, onDelete }) => {
         </div>
         <button
           onClick={handleDelete}
-          className="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all duration-200"
+          className="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors duration-150 ml-1"
           title="Delete"
         >
           <svg
