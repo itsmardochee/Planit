@@ -91,8 +91,7 @@ describe('StatusSelector', () => {
       expect(onChange).toHaveBeenCalledWith(null);
     });
 
-    it('should not call onChange when disabled', async () => {
-      const user = userEvent.setup();
+    it('should not call onChange when disabled', () => {
       render(<StatusSelector value="todo" onChange={onChange} disabled />);
 
       const select = screen.getByRole('combobox');

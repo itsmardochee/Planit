@@ -427,6 +427,22 @@ const BoardPage = () => {
                   boardId={boardId}
                   workspaceId={board?.workspaceId}
                   onCardClick={card => handleOpenCardModal(card, list)}
+                  onCardCreated={newCard =>
+                    setLists(prev =>
+                      prev.map(l =>
+                        l._id === newCard.listId
+                          ? {
+                              ...l,
+                              cards: (l.cards || []).some(
+                                c => c._id === newCard._id
+                              )
+                                ? l.cards
+                                : [...(l.cards || []), newCard],
+                            }
+                          : l
+                      )
+                    )
+                  }
                   onListUpdate={refetch}
                   onEditList={handleEditList}
                 />

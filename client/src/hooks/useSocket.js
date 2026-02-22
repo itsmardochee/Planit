@@ -69,7 +69,7 @@ const useSocket = (boardId, handlers = {}) => {
       setOnlineUsers(prev => prev.filter(u => u.userId !== data.userId));
     });
 
-    // Register all domain event handlers via the ref to prevent stale closures
+    // Register all domain event handlers via the ref to prevent stale closures.
     Object.entries(EVENT_HANDLER_MAP).forEach(([event, handlerName]) => {
       socket.on(event, data => {
         handlersRef.current[handlerName]?.(data);

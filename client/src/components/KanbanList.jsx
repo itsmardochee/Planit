@@ -18,6 +18,7 @@ const KanbanList = ({
   boardId,
   workspaceId,
   onCardClick,
+  onCardCreated,
   onListUpdate,
   onEditList,
 }) => {
@@ -72,7 +73,7 @@ const KanbanList = ({
     if (!newCardTitle.trim()) return;
 
     try {
-      await cardAPI.create(list._id, {
+      const response = await cardAPI.create(list._id, {
         title: newCardTitle,
         description: '',
         position: cards.length,
@@ -81,8 +82,10 @@ const KanbanList = ({
       });
       setNewCardTitle('');
       setShowNewCardForm(false);
-      // ask parent to refresh lists/cards
-      onListUpdate();
+      // Optimistic local update — no need for a full refetch
+      if (response.data?.success && onCardCreated) {
+        onCardCreated(response.data.data);
+      }
     } catch (err) {
       console.error('Error creating card', err);
     }

@@ -103,6 +103,7 @@ describe('KanbanList', () => {
 
   const mockOnCardClick = vi.fn();
   const mockOnListUpdate = vi.fn();
+  const mockOnCardCreated = vi.fn();
   const mockOnEditList = vi.fn();
 
   function renderKanbanList(listProp = mockList, extraProps = {}) {
@@ -213,8 +214,15 @@ describe('KanbanList', () => {
     });
 
     it('creates card and notifies parent on successful submit', async () => {
-      cardAPI.create.mockResolvedValue({ data: { success: true } });
-      renderKanbanList();
+      const newCard = {
+        _id: 'new-card-1',
+        title: 'New Card',
+        listId: 'list-1',
+      };
+      cardAPI.create.mockResolvedValue({
+        data: { success: true, data: newCard },
+      });
+      renderKanbanList(mockList, { onCardCreated: mockOnCardCreated });
       fireEvent.click(screen.getByText(/lists:addAnotherCard/));
       const textarea = screen.getByPlaceholderText(
         'lists:cardTitlePlaceholder'
@@ -230,7 +238,10 @@ describe('KanbanList', () => {
           boardId: 'board-1',
           listId: 'list-1',
         });
-        expect(mockOnListUpdate).toHaveBeenCalled();
+        // onCardCreated is called with the new card (no full refetch)
+        expect(mockOnCardCreated).toHaveBeenCalledWith(newCard);
+        // onListUpdate must NOT be called for card creation
+        expect(mockOnListUpdate).not.toHaveBeenCalled();
       });
 
       // Form should be hidden after success
