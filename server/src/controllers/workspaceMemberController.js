@@ -669,10 +669,12 @@ export const updateMemberRole = async (req, res) => {
     const hasPermission = canModifyRole(actorRole, targetMember.role, newRole);
 
     if (!hasPermission) {
-      return res.status(403).json({
-        success: false,
-        message: `You do not have permission to change this member's role`,
-      });
+      let message = `You do not have permission to change this member's role`;
+      if (actorRole === ROLES.ADMIN) {
+        message =
+          'Admins can only assign roles below their own level (member or viewer)';
+      }
+      return res.status(403).json({ success: false, message });
     }
 
     // Prevent demoting the last owner

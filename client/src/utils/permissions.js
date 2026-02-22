@@ -250,18 +250,17 @@ export const canModifyRole = (modifierRole, currentRole, newRole) => {
     return false;
   }
 
-  // Admin cannot promote to owner
-  if (modifierRole === ROLES.ADMIN && newRole === ROLES.OWNER) {
-    return false;
-  }
-
   // Owner can do anything (except modify owner, checked above)
   if (modifierRole === ROLES.OWNER) {
     return true;
   }
 
-  // Admin can modify member/viewer roles
-  return true;
+  // Admin can only assign roles strictly below their own level (member or viewer)
+  if (modifierRole === ROLES.ADMIN) {
+    return [ROLES.MEMBER, ROLES.VIEWER].includes(newRole);
+  }
+
+  return false;
 };
 
 // Export all permission strings for easy access

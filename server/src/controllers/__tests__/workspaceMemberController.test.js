@@ -991,7 +991,7 @@ describe('PATCH /api/workspaces/:id/members/:userId/role', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('do not have permission');
+      expect(response.body.message).toContain('Admins can only assign roles below');
     });
 
     it('should not allow admin to change another admin role', async () => {
@@ -1030,7 +1030,7 @@ describe('PATCH /api/workspaces/:id/members/:userId/role', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('do not have permission');
+      expect(response.body.message).toContain('Admins can only assign roles below');
     });
 
     it('should not allow admin to promote member to owner', async () => {
