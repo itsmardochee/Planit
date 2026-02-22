@@ -407,7 +407,7 @@ const CardModal = ({
             {/* Tab Panel: Comments */}
             {activeTab === 'comments' && (
               <div className="animate-fadeIn">
-                <CommentSection cardId={card._id} />
+                <CommentSection cardId={card._id} workspaceId={workspaceId} />
               </div>
             )}
 
