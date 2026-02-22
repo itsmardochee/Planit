@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%        # couverture globale minimale attendue
+        threshold: 2%      # tolérance de -2% avant d'échouer
+    patch:
+      default:
+        target: 70%        # couverture du nouveau code dans la PR
+        threshold: 5%      # tolérance de -5% sur le patch
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default        # met à jour le commentaire existant plutôt d'en créer un nouveau
+  require_changes: true    # ne commente que si la couverture change
