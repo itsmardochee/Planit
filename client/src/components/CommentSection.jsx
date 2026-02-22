@@ -68,7 +68,12 @@ const CommentSection = ({ cardId, workspaceId, commentEvent }) => {
   const handleAddComment = async content => {
     const response = await commentAPI.create(cardId, { content });
     const newComment = response.data.data;
-    setComments(prev => [...prev, newComment]);
+    setComments(prev => {
+      // Deduplicate: socket (commentEvent) may have already added this comment
+      // if comment:created arrived before the HTTP response
+      if (prev.some(c => c._id === newComment._id)) return prev;
+      return [...prev, newComment];
+    });
   };
 
   const handleEditComment = async (commentId, content) => {
