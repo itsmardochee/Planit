@@ -19,7 +19,8 @@ const KanbanList = ({
   workspaceId,
   onCardClick,
   onCardCreated,
-  onListUpdate,
+  onCardDeleted,
+  onListDeleted,
   onEditList,
 }) => {
   const { t } = useTranslation(['lists', 'common']);
@@ -91,9 +92,11 @@ const KanbanList = ({
     }
   };
 
-  const handleDeleteCard = _cardId => {
-    // Notify parent to refresh after deletion
-    onListUpdate();
+  const handleDeleteCard = cardId => {
+    // Optimistic local update — remove the card without refetching the board
+    if (onCardDeleted) {
+      onCardDeleted(cardId, list._id);
+    }
   };
 
   const handleDeleteList = () => {
@@ -103,7 +106,10 @@ const KanbanList = ({
   const handleConfirmDeleteList = async () => {
     try {
       await listAPI.delete(list._id);
-      onListUpdate();
+      // Optimistic local update — remove the list without refetching the board
+      if (onListDeleted) {
+        onListDeleted(list._id);
+      }
     } catch (err) {
       console.error('Error deleting list', err);
     } finally {

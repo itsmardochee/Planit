@@ -443,7 +443,23 @@ const BoardPage = () => {
                       )
                     )
                   }
-                  onListUpdate={refetch}
+                  onCardDeleted={(cardId, listId) =>
+                    setLists(prev =>
+                      prev.map(l =>
+                        l._id === listId
+                          ? {
+                              ...l,
+                              cards: (l.cards || []).filter(
+                                c => c._id !== cardId
+                              ),
+                            }
+                          : l
+                      )
+                    )
+                  }
+                  onListDeleted={listId =>
+                    setLists(prev => prev.filter(l => l._id !== listId))
+                  }
                   onEditList={handleEditList}
                 />
               ))}
