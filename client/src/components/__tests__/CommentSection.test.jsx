@@ -283,6 +283,141 @@ describe('CommentSection', () => {
     });
   });
 
+  describe('Real-time commentEvent socket branches', () => {
+    it('ignores commentEvent when type does not match cardId', async () => {
+      commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
+      const { rerender } = render(
+        <CommentSection cardId="card-1" commentEvent={null} />
+      );
+      await waitFor(() =>
+        expect(screen.getByText('First comment')).toBeInTheDocument()
+      );
+
+      // Event for a different card → no change
+      rerender(
+        <CommentSection
+          cardId="card-1"
+          commentEvent={{
+            type: 'created',
+            data: { cardId: 'card-99', comment: { _id: 'x', content: 'X' } },
+          }}
+        />
+      );
+      expect(screen.queryByText('X')).not.toBeInTheDocument();
+    });
+
+    it('adds comment via commentEvent type=created', async () => {
+      commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
+      const newComment = {
+        _id: 'comment-99',
+        content: 'Socket comment',
+        userId: { _id: 'user-3', username: 'u3', email: 'u3@test.com' },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const { rerender } = render(
+        <CommentSection cardId="card-1" commentEvent={null} />
+      );
+      await waitFor(() =>
+        expect(screen.getByText('First comment')).toBeInTheDocument()
+      );
+
+      rerender(
+        <CommentSection
+          cardId="card-1"
+          commentEvent={{
+            type: 'created',
+            data: { cardId: 'card-1', comment: newComment },
+          }}
+        />
+      );
+
+      await waitFor(() =>
+        expect(screen.getByText('Socket comment')).toBeInTheDocument()
+      );
+    });
+
+    it('deduplicates comment via commentEvent type=created', async () => {
+      // If the comment already exists, it should not be added again
+      commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
+      const { rerender } = render(
+        <CommentSection cardId="card-1" commentEvent={null} />
+      );
+      await waitFor(() =>
+        expect(screen.getByText('First comment')).toBeInTheDocument()
+      );
+
+      rerender(
+        <CommentSection
+          cardId="card-1"
+          commentEvent={{
+            type: 'created',
+            data: { cardId: 'card-1', comment: mockComments[0] },
+          }}
+        />
+      );
+
+      // Should still only appear once
+      await waitFor(() => {
+        expect(screen.getAllByText('First comment')).toHaveLength(1);
+      });
+    });
+
+    it('updates comment via commentEvent type=updated', async () => {
+      commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
+      const updatedComment = { ...mockComments[0], content: 'Updated content' };
+
+      const { rerender } = render(
+        <CommentSection cardId="card-1" commentEvent={null} />
+      );
+      await waitFor(() =>
+        expect(screen.getByText('First comment')).toBeInTheDocument()
+      );
+
+      rerender(
+        <CommentSection
+          cardId="card-1"
+          commentEvent={{
+            type: 'updated',
+            data: { cardId: 'card-1', comment: updatedComment },
+          }}
+        />
+      );
+
+      await waitFor(() =>
+        expect(screen.getByText('Updated content')).toBeInTheDocument()
+      );
+      expect(screen.queryByText('First comment')).not.toBeInTheDocument();
+    });
+
+    it('removes comment via commentEvent type=deleted', async () => {
+      commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
+
+      const { rerender } = render(
+        <CommentSection cardId="card-1" commentEvent={null} />
+      );
+      await waitFor(() =>
+        expect(screen.getByText('First comment')).toBeInTheDocument()
+      );
+
+      rerender(
+        <CommentSection
+          cardId="card-1"
+          commentEvent={{
+            type: 'deleted',
+            data: { cardId: 'card-1', commentId: 'comment-1' },
+          }}
+        />
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByText('First comment')).not.toBeInTheDocument()
+      );
+      expect(screen.getByText('Second comment')).toBeInTheDocument();
+    });
+  });
+
   describe('Comment count', () => {
     it('should display comment count in header', async () => {
       commentAPI.getByCard.mockResolvedValue({ data: { data: mockComments } });
