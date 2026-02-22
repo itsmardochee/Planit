@@ -138,6 +138,7 @@ const MemberList = ({
 
   const canRemoveMember = member => {
     if (isCurrentUser(member)) return false;
+    if (member.role === 'owner') return false;
     return can && can('member:remove');
   };
 
