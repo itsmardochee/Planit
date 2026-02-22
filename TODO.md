@@ -1,6 +1,6 @@
 # Planit - TODO List
 
-**Last Updated:** February 21, 2026
+**Last Updated:** February 22, 2026
 **Status:** Feature Roadmap for Future Releases
 
 **Recent Completions:**
@@ -379,7 +379,7 @@
 ✅ **COMPLÉTÉES:**
 
 1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration → PR #133 merged
-2. **Gestion des droits (Feature 6)** - Backend RBAC complet + Frontend partiel → PR #148
+2. **Gestion des droits (Feature 6)** - Backend RBAC complet + Frontend complet (100%) → PR #148
 3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs → PR #143 merged
 4. **Labels et statuts (Feature 3)** - Backend complet → PR #144 merged
 5. **Commentaires (Feature 4)** - Backend + Frontend complets → PR #145
