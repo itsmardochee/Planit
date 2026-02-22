@@ -107,11 +107,10 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.MEMBER.UPDATE_ROLE,
   ],
 
-  // ADMIN: 32 permissions (all except workspace:delete)
+  // ADMIN: 31 permissions (all except workspace:delete and workspace:create)
   [ROLES.ADMIN]: [
-    // Workspace permissions (no delete)
+    // Workspace permissions (no delete, no create)
     PERMISSIONS.WORKSPACE.VIEW,
-    PERMISSIONS.WORKSPACE.CREATE,
     PERMISSIONS.WORKSPACE.UPDATE,
 
     // Board permissions
@@ -184,12 +183,10 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.MEMBER.VIEW,
   ],
 
-  // VIEWER: 7 permissions (read-only)
+  // VIEWER: 5 permissions (read-only)
   [ROLES.VIEWER]: [
     PERMISSIONS.WORKSPACE.VIEW,
     PERMISSIONS.BOARD.VIEW,
-    PERMISSIONS.COMMENT.CREATE, // Can comment (basic interaction)
-    PERMISSIONS.LABEL.ASSIGN, // Can assign labels (basic interaction)
     PERMISSIONS.MEMBER.VIEW,
   ],
 };

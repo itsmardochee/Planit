@@ -90,8 +90,9 @@ describe('permissions utility', () => {
       const adminPerms = ROLE_PERMISSIONS.admin;
       expect(adminPerms).toBeInstanceOf(Array);
       expect(adminPerms).not.toContain('workspace:delete');
+      expect(adminPerms).not.toContain('workspace:create');
       expect(adminPerms).toContain('board:create');
-      expect(adminPerms.length).toBe(27); // All permissions except workspace:delete
+      expect(adminPerms.length).toBe(26); // All permissions except workspace:delete and workspace:create
     });
 
     it('should define permissions for member role', () => {
