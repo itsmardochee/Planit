@@ -112,14 +112,17 @@ const BoardPage = () => {
   );
 
   const handleListCreated = useCallback(
-    ({ list }) => {
+    ({ list, senderId }) => {
+      // Skip for the creator — their local state was already updated
+      // optimistically in handleCreateList (avoids duplicate)
+      if (senderId && String(senderId) === String(currentUserId)) return;
       setLists(prev => {
-        // Deduplicate: list may already be present if refetch() ran first
+        // Deduplicate: list may already be present for other reasons
         if (prev.some(l => l._id === list._id)) return prev;
         return [...prev, { ...list, cards: [] }];
       });
     },
-    [setLists]
+    [setLists, currentUserId]
   );
 
   const handleListReordered = useCallback(
