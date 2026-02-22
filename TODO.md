@@ -11,7 +11,7 @@
 - ✅ Feature 4: Comments (Backend + Frontend) - PR #145
 - ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
 - ✅ Feature 6: RBAC Backend - PR #148
-- ✅ Feature 6: RBAC Frontend (95%) - PR #148
+- ✅ Feature 6: RBAC Frontend (100%) - PR #148
 - ✅ Feature 7: Activity Log (Backend + Frontend) - PR #147
 
 ---
@@ -223,8 +223,8 @@
   - [x] Workspace: `board:create` (avec Tooltip d'info pour les non-autorisés)
   - [x] Workspace: `board:update` (bouton Edit masqué selon le rôle)
   - [x] Workspace: `board:delete` (bouton Delete masqué selon le rôle)
-  - [ ] Workspace: `workspace:update` (edit workspace name/description — non implémenté)
-  - [ ] Workspace: `workspace:delete` (supprimer workspace — non implémenté)
+  - [x] Workspace: `workspace:update` (bouton ✏️ visible uniquement pour owner/admin)
+  - [x] Workspace: `workspace:delete` (bouton 🗑️ visible uniquement pour owner)
   - [x] Workspace: `member:invite` (bouton Invite conditionnel au rôle)
   - [x] Board: `list:create` (bouton "Add List" avec Tooltip pour non-autorisés)
   - [x] Board: `card:create` (bouton "Add Card" dans KanbanList masqué selon le rôle)
@@ -245,9 +245,9 @@
   - [x] VIEWER: retrait `comment:create` et `label:assign` (serveur ne les accorde pas)
   - [x] ADMIN: retrait `workspace:create` (hors contexte workspace)
 
-**Status:** ✅ Frontend 95% complet — toutes les permissions UI implémentées sauf `workspace:update` / `workspace:delete` (hors scope MVP)
+**Status:** ✅ Frontend 100% complet — toutes les permissions UI implémentées
 
-**Feature Status:** 🚧 **EN COURS** - Backend 100% + Frontend partiel - PR #148
+**Feature Status:** ✅ **COMPLETE** - Backend 100% + Frontend 100% - PR #148
 
 ---
 
@@ -390,8 +390,7 @@
 
 1. **Frontend Feature 3**: Filtres par label et statut dans la vue board (seul item manquant)
 2. **Frontend Feature 5**: NotificationBell dans navbar + intégration NotificationList API
-3. **Frontend Feature 6 (reste)**: `workspace:update` / `workspace:delete` conditionnels (faible impact, owner only)
-4. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
+3. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
 
 ---
 

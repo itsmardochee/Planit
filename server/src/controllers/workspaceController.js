@@ -161,6 +161,9 @@ export const getWorkspaces = async (req, res) => {
 
     // Get workspaces where user is a member
     const memberships = await WorkspaceMember.find({ userId: req.user._id });
+    const membershipMap = new Map(
+      memberships.map(m => [m.workspaceId.toString(), m.role])
+    );
     const memberWorkspaceIds = memberships.map(m => m.workspaceId);
 
     // Get workspace details for member workspaces
@@ -168,19 +171,25 @@ export const getWorkspaces = async (req, res) => {
       _id: { $in: memberWorkspaceIds },
     });
 
-    // Combine and deduplicate workspaces
+    // Combine and deduplicate workspaces, enriching with userRole
     const workspaceMap = new Map();
 
-    // Add owned workspaces first
+    // Add owned workspaces first (userRole = 'owner')
     ownedWorkspaces.forEach(ws => {
-      workspaceMap.set(ws._id.toString(), ws);
+      workspaceMap.set(ws._id.toString(), {
+        ...ws.toObject(),
+        userRole: 'owner',
+      });
     });
 
-    // Add member workspaces (won't overwrite if already exists)
+    // Add member workspaces (won't overwrite if already owner)
     memberWorkspaces.forEach(ws => {
       const id = ws._id.toString();
       if (!workspaceMap.has(id)) {
-        workspaceMap.set(id, ws);
+        workspaceMap.set(id, {
+          ...ws.toObject(),
+          userRole: membershipMap.get(id) || 'member',
+        });
       }
     });
 
@@ -336,13 +345,7 @@ export const getWorkspaceById = async (req, res) => {
 export const updateWorkspace = async (req, res) => {
   try {
     // req.workspace is already validated by checkWorkspaceAccess middleware
-    // Only workspace owner can update
-    if (!req.isWorkspaceOwner) {
-      return res.status(403).json({
-        success: false,
-        message: 'Only workspace owner can update workspace',
-      });
-    }
+    // Permission check (workspace:update) is enforced by checkPermission middleware in route
 
     const { name, description } = req.body;
 

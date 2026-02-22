@@ -219,22 +219,31 @@ const Dashboard = () => {
                   className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 relative"
                 >
                   <div className="absolute top-4 right-4 flex gap-1">
-                    <button
-                      onClick={e => handleEditWorkspace(e, workspace)}
-                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
-                      title="Edit workspace"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={e =>
-                        handleDeleteWorkspace(e, workspace._id, workspace.name)
-                      }
-                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
-                      title="Delete workspace"
-                    >
-                      🗑️
-                    </button>
+                    {(workspace.userRole === 'owner' ||
+                      workspace.userRole === 'admin') && (
+                      <button
+                        onClick={e => handleEditWorkspace(e, workspace)}
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
+                        title="Edit workspace"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    {workspace.userRole === 'owner' && (
+                      <button
+                        onClick={e =>
+                          handleDeleteWorkspace(
+                            e,
+                            workspace._id,
+                            workspace.name
+                          )
+                        }
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
+                        title="Delete workspace"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 pr-8">
                     {workspace.name}
