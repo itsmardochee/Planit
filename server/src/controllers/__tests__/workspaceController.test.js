@@ -391,6 +391,42 @@ describe('GET /api/workspaces', () => {
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0].name).toBe('My Workspace');
     });
+
+    it('should include userRole=owner for owned workspaces', async () => {
+      await Workspace.create({
+        name: 'My Workspace',
+        userId: testUser._id,
+      });
+
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data[0].userRole).toBe('owner');
+    });
+
+    it('should include correct userRole for member workspaces', async () => {
+      const sharedWorkspace = await Workspace.create({
+        name: 'Shared Workspace',
+        userId: otherUser._id,
+      });
+
+      await WorkspaceMember.create({
+        workspaceId: sharedWorkspace._id,
+        userId: testUser._id,
+        role: 'admin',
+        invitedBy: otherUser._id,
+      });
+
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].userRole).toBe('admin');
+    });
   });
 });
 
@@ -564,6 +600,7 @@ describe('PUT /api/workspaces/:id', () => {
   });
 
   afterEach(async () => {
+    await WorkspaceMember.deleteMany({});
     await Workspace.deleteMany({});
     await User.deleteMany({});
   });
@@ -710,6 +747,50 @@ describe('PUT /api/workspaces/:id', () => {
       expect(new Date(response.body.data.updatedAt).getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       );
+    });
+
+    it('should allow admin to update workspace', async () => {
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: otherUser._id,
+        role: 'admin',
+        invitedBy: testUser._id,
+      });
+      const adminToken = jwt.sign(
+        { id: otherUser._id.toString() },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const response = await request(app)
+        .put(`/api/workspaces/${testWorkspace._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Admin Updated Name' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.name).toBe('Admin Updated Name');
+    });
+
+    it('should not allow member to update workspace', async () => {
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: otherUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+      const memberToken = jwt.sign(
+        { id: otherUser._id.toString() },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const response = await request(app)
+        .put(`/api/workspaces/${testWorkspace._id}`)
+        .set('Authorization', `Bearer ${memberToken}`)
+        .send({ name: 'Should Fail' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
     });
   });
 });

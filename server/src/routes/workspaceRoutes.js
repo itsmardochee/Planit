@@ -10,8 +10,14 @@ import {
   inviteMember,
   getWorkspaceMembers,
   removeMember,
+  updateMemberRole,
 } from '../controllers/workspaceMemberController.js';
 import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
+import {
+  checkPermission,
+  attachUserRole,
+} from '../middlewares/checkPermission.js';
+import { PERMISSIONS } from '../utils/permissions.js';
 
 const router = express.Router();
 
@@ -33,19 +39,29 @@ router.get('/:id', checkWorkspaceAccess, getWorkspaceById);
 
 // @route   PUT /api/workspaces/:id
 // @desc    Update workspace
-// @access  Private (owner only)
-router.put('/:id', checkWorkspaceAccess, updateWorkspace);
+// @access  Private (owner/admin)
+router.put(
+  '/:id',
+  checkWorkspaceAccess,
+  checkPermission(PERMISSIONS.WORKSPACE_UPDATE),
+  updateWorkspace
+);
 
 // @route   DELETE /api/workspaces/:id
 // @desc    Delete workspace
 // @access  Private (owner only)
-router.delete('/:id', checkWorkspaceAccess, deleteWorkspace);
+router.delete(
+  '/:id',
+  checkWorkspaceAccess,
+  checkPermission(PERMISSIONS.WORKSPACE_DELETE),
+  deleteWorkspace
+);
 
 // Workspace membership operations
 // @route   POST /api/workspaces/:id/invite
 // @desc    Invite a user to workspace
-// @access  Private (workspace owner only)
-router.post('/:id/invite', inviteMember);
+// @access  Private (owner/admin can invite - checked in controller)
+router.post('/:id/invite', checkWorkspaceAccess, inviteMember);
 
 // @route   GET /api/workspaces/:id/members
 // @desc    Get all members of a workspace
@@ -54,7 +70,22 @@ router.get('/:id/members', getWorkspaceMembers);
 
 // @route   DELETE /api/workspaces/:id/members/:userId
 // @desc    Remove a member from workspace
-// @access  Private (workspace owner or the member themselves)
-router.delete('/:id/members/:userId', removeMember);
+// @access  Private (owner/admin can remove, or member removes themselves)
+router.delete(
+  '/:id/members/:userId',
+  checkWorkspaceAccess,
+  attachUserRole,
+  removeMember
+);
+
+// @route   PATCH /api/workspaces/:id/members/:userId/role
+// @desc    Update member role
+// @access  Private (owner can change any role, admin can change member/viewer)
+router.patch(
+  '/:id/members/:userId/role',
+  checkWorkspaceAccess,
+  attachUserRole,
+  updateMemberRole
+);
 
 export default router;

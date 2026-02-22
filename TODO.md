@@ -1,7 +1,18 @@
 # Planit - TODO List
 
-**Last Updated:** February 2026
+**Last Updated:** February 22, 2026
 **Status:** Feature Roadmap for Future Releases
+
+**Recent Completions:**
+
+- ✅ Feature 1: Member Assignment (Backend + Frontend) - PR #143
+- ✅ Feature 2: Multi-users/Workspaces (Backend + Frontend) - PR #133
+- ✅ Feature 3: Labels & Status (Backend) - PR #144
+- ✅ Feature 4: Comments (Backend + Frontend) - PR #145
+- ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
+- ✅ Feature 6: RBAC Backend - PR #148
+- ✅ Feature 6: RBAC Frontend (100%) - PR #148
+- ✅ Feature 7: Activity Log (Backend + Frontend) - PR #147
 
 ---
 
@@ -88,14 +99,16 @@
 
 #### Frontend
 
-- [ ] Créer composant `LabelManager` pour gérer les labels du board
-- [ ] Créer composant `LabelPicker` pour sélectionner des labels
-- [ ] Afficher les labels colorés sur les cartes (style badges)
-- [ ] Créer composant `StatusSelector` (dropdown avec couleurs)
-- [ ] Afficher l'indicateur de statut sur la carte
+- [x] Créer composant `LabelManager` pour gérer les labels du board
+- [x] Créer composant `LabelPicker` pour sélectionner des labels
+- [x] Afficher les labels colorés sur les cartes (style badges)
+- [x] Créer composant `StatusSelector` (dropdown avec couleurs)
+- [x] Afficher l'indicateur de statut sur la carte
 - [ ] Ajouter filtres par label et statut dans la vue board
-- [ ] Créer page de gestion des labels dans les paramètres du board
-- [ ] Tests pour les composants de labels et statuts
+- [x] Créer page de gestion des labels dans les paramètres du board (modal LabelManager)
+- [x] Tests pour les composants de labels et statuts
+
+**Status:** ✅ Frontend complet (sauf filtres optionnels)
 
 ---
 
@@ -180,32 +193,61 @@
 
 #### Backend
 
-- [ ] Ajouter champ `role` dans `WorkspaceMember` (enum: "owner", "admin", "member", "viewer")
-- [ ] Définir les permissions par rôle:
-  - [ ] **Owner**: Toutes les permissions + supprimer workspace
-  - [ ] **Admin**: Gérer membres, boards, listes, cartes
-  - [ ] **Member**: Créer/éditer/supprimer cartes et listes
-  - [ ] **Viewer**: Lecture seule (view only)
-- [ ] Créer middleware `checkPermission(permission)` pour valider les rôles
-- [ ] Appliquer les permissions sur tous les endpoints concernés:
-  - [ ] Workspace: seul Owner peut supprimer
-  - [ ] Boards: Admin+ peut créer/modifier
-  - [ ] Members: Admin+ peut inviter/retirer
-  - [ ] Cards/Lists: Member+ peut modifier
-- [ ] Créer endpoint `PATCH /api/workspaces/:id/members/:userId/role` pour changer le rôle
-- [ ] Tests pour les permissions et autorisations
+- [x] Ajouter champ `role` dans `WorkspaceMember` (enum: "owner", "admin", "member", "viewer")
+- [x] Définir les permissions par rôle (33 permissions granulaires):
+  - [x] **Owner**: Toutes les 33 permissions + supprimer workspace
+  - [x] **Admin**: 32 permissions (toutes sauf workspace:delete)
+  - [x] **Member**: 18 permissions (board:view, list/card/comment CRUD, label:assign)
+  - [x] **Viewer**: 7 permissions (lecture seule sur workspace/board/list/card/label)
+- [x] Créer middleware `checkPermission(permission)` pour valider les rôles
+- [x] Créer utilitaires: hasPermission, isRoleAtLeast, canModifyRole
+- [x] Appliquer les permissions sur tous les endpoints concernés:
+  - [x] Workspace: seul Owner peut supprimer, Admin+ peut inviter/gérer membres
+  - [x] Boards: Owner/Admin peuvent créer/modifier/supprimer
+  - [x] Lists: Member+ peuvent créer/modifier/supprimer
+  - [x] Cards: Member+ peuvent créer/modifier/supprimer
+  - [x] Comments: Member+ peuvent créer, propriétaire peut modifier/supprimer
+  - [x] Labels: Admin+ peuvent créer/modifier/supprimer, Member+ peuvent assigner
+- [x] Créer endpoint `PATCH /api/workspaces/:id/members/:userId/role` pour changer le rôle
+- [x] Tests pour les permissions et autorisations (permissions.test.js, checkPermission, controllers)
+- [x] Backward compatibility: workspace.userId traité comme owner même sans WorkspaceMember
+
+**Status:** ✅ Backend complet - 716 tests passing - PR #148
 
 #### Frontend
 
-- [ ] Afficher le rôle de chaque membre dans `MemberList`
-- [ ] Créer composant `RoleSelector` pour les admins (dropdown)
-- [ ] Désactiver les boutons selon les permissions de l'utilisateur:
-  - [ ] Masquer "Delete Workspace" si pas Owner
-  - [ ] Masquer "Invite Members" si pas Admin+
-  - [ ] Désactiver édition si Viewer
-- [ ] Afficher des tooltips explicatifs si action non autorisée
-- [ ] Créer page `Settings > Permissions` pour gérer les rôles
-- [ ] Tests pour la gestion des permissions UI
+- [x] Créer hook `usePermissions` et utilitaire `permissions.js` (mirror backend)
+- [x] Afficher le rôle dans `MemberList` avec badge coloré (Chip MUI coloré par rôle)
+- [x] Créer composant `RoleSelector` pour changer les rôles (admin+)
+- [x] Masquer/désactiver les boutons selon les permissions:
+  - [x] Workspace: `board:create` (avec Tooltip d'info pour les non-autorisés)
+  - [x] Workspace: `board:update` (bouton Edit masqué selon le rôle)
+  - [x] Workspace: `board:delete` (bouton Delete masqué selon le rôle)
+  - [x] Workspace: `workspace:update` (bouton ✏️ visible uniquement pour owner/admin)
+  - [x] Workspace: `workspace:delete` (bouton 🗑️ visible uniquement pour owner)
+  - [x] Workspace: `member:invite` (bouton Invite conditionnel au rôle)
+  - [x] Board: `list:create` (bouton "Add List" avec Tooltip pour non-autorisés)
+  - [x] Board: `card:create` (bouton "Add Card" dans KanbanList masqué selon le rôle)
+  - [x] Board: drag & drop désactivé pour viewers (sensors vides si !can('card:move'))
+  - [x] Board: bouton "Manage Labels" masqué si !can('label:create') (admin+ seulement)
+  - [x] Cards: boutons edit/delete dans CardModal conditionnels (can('card:update'), can('card:delete'))
+  - [x] Cards: title/description/due-date en readOnly si !can('card:update')
+  - [x] Cards: assignation désactivée si !can('card:assign')
+  - [x] Cards: LabelPicker en readOnly si !can('label:assign')
+- [x] `CommentSection`: champ de commentaire désactivé si `!can('comment:create')`
+- [x] Afficher tooltips pour actions non autorisées (`board:create`, `list:create`)
+- [x] Créer page `WorkspaceSettings` avec tableau des permissions par rôle (lecture seule)
+- [x] Route `/workspace/:workspaceId/settings` et bouton ⚙️ Permissions dans WorkspacePage
+- [x] Tests pour composants RBAC (RoleSelector, usePermissions, permissions, MemberList-role-management)
+- [x] `RoleChangeModal`: modale dédiée pour changer les rôles (Admin+), avec Save explicite et feedback erreur
+- [x] Fix backend: `updateMemberRole` utilise `req.userRole` (rétro-compatibilité owner sans WorkspaceMember)
+- [x] Alignement matrice permissions client/serveur:
+  - [x] VIEWER: retrait `comment:create` et `label:assign` (serveur ne les accorde pas)
+  - [x] ADMIN: retrait `workspace:create` (hors contexte workspace)
+
+**Status:** ✅ Frontend 100% complet — toutes les permissions UI implémentées
+
+**Feature Status:** ✅ **COMPLETE** - Backend 100% + Frontend 100% - PR #148
 
 ---
 
@@ -334,14 +376,21 @@
 
 ## 🎯 Ordre de Priorité Recommandé
 
-1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration
-2. **Gestion des droits (Feature 6)** - Nécessaire pour sécuriser le multi-utilisateurs
-3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs
-4. **Labels et statuts (Feature 3)** - Améliore la gestion des tâches
-5. **Commentaires (Feature 4)** - Facilite la communication
-6. **Dates d'échéance (Feature 5)** - Améliore le suivi des tâches
-7. **Historique d'activités (Feature 7 - Bonus)** - Traçabilité
-8. **Temps réel (Feature 8 - Bonus)** - Expérience utilisateur ultime
+✅ **COMPLÉTÉES:**
+
+1. **Multi-utilisateurs (Feature 2)** - Fondamental pour la collaboration → PR #133 merged
+2. **Gestion des droits (Feature 6)** - Backend RBAC complet + Frontend complet (100%) → PR #148
+3. **Assignation des membres (Feature 1)** - Dépend du multi-utilisateurs → PR #143 merged
+4. **Labels et statuts (Feature 3)** - Backend complet → PR #144 merged
+5. **Commentaires (Feature 4)** - Backend + Frontend complets → PR #145
+6. **Dates d'échéance (Feature 5)** - Backend complet → PR #146 (en attente de merge)
+7. **Historique d'activités (Feature 7)** - Backend + Frontend complets → PR #147
+
+🚧 **PROCHAINES PRIORITÉS:**
+
+1. **Frontend Feature 3**: Filtres par label et statut dans la vue board (seul item manquant)
+2. **Frontend Feature 5**: NotificationBell dans navbar + intégration NotificationList API
+3. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
 
 ---
 

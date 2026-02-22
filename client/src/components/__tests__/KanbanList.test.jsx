@@ -5,6 +5,26 @@ import { cardAPI, listAPI } from '../../utils/api';
 import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 
+// Mock usePermissions hook
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+  usePermissions: () => ({
+    role: 'owner',
+    can: () => true,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+    loading: false,
+    error: null,
+  }),
+}));
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

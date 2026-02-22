@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { setBoards } from '../store/index';
+import usePermissions from '../hooks/usePermissions';
+import { Tooltip } from '@mui/material';
 import { workspaceAPI, boardAPI, memberAPI } from '../utils/api';
 import BoardEditModal from '../components/BoardEditModal';
 import MemberList from '../components/MemberList';
@@ -25,6 +27,9 @@ const WorkspacePage = () => {
   const [editingBoard, setEditingBoard] = useState(null);
   const [confirmDeleteBoard, setConfirmDeleteBoard] = useState(null);
   const [pageError, setPageError] = useState('');
+
+  // Get permissions for current user
+  const { can, role } = usePermissions(workspaceId);
 
   useEffect(() => {
     const fetchWorkspaceAndBoards = async () => {
@@ -163,14 +168,25 @@ const WorkspacePage = () => {
           >
             ← {t('workspace:backToWorkspaces')}
           </button>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-            {workspace?.name}
-          </h1>
-          {workspace?.description && (
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              {workspace.description}
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+                {workspace?.name}
+              </h1>
+              {workspace?.description && (
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
+                  {workspace.description}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => navigate(`/workspace/${workspaceId}/settings`)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+            >
+              <span>⚙️</span>
+              {t('workspace:permissionsLabel', 'Permissions')}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -203,26 +219,28 @@ const WorkspacePage = () => {
                 </span>
               )}
             </div>
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-trello-blue hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow transition-all duration-150"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {can && can('member:invite') && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-trello-blue hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow transition-all duration-150"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                />
-              </svg>
-              {t('workspace:inviteMembers', 'Invite Members')}
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+                {t('workspace:inviteMembers', 'Invite Members')}
+              </button>
+            )}
           </div>
           <div className="p-6">
             <MemberList
@@ -230,6 +248,7 @@ const WorkspacePage = () => {
               workspaceId={workspaceId}
               currentUserId={currentUser?._id}
               onMemberRemoved={handleMemberRemoved}
+              onRoleUpdated={handleMemberRemoved}
             />
           </div>
         </div>
@@ -299,14 +318,31 @@ const WorkspacePage = () => {
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">
               {t('workspace:boardsTitle')}
             </h2>
-            {!showNewBoardForm && (
-              <button
-                onClick={() => setShowNewBoardForm(true)}
-                className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg transition"
-              >
-                + {t('workspace:newBoard')}
-              </button>
-            )}
+            {!showNewBoardForm &&
+              (can && can('board:create') ? (
+                <button
+                  onClick={() => setShowNewBoardForm(true)}
+                  className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg transition"
+                >
+                  + {t('workspace:newBoard')}
+                </button>
+              ) : (
+                <Tooltip
+                  title={t(
+                    'workspace:noPermissionToCreateBoard',
+                    'You do not have permission to create boards'
+                  )}
+                >
+                  <span>
+                    <button
+                      disabled
+                      className="px-4 py-2 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed"
+                    >
+                      + {t('workspace:newBoard')}
+                    </button>
+                  </span>
+                </Tooltip>
+              ))}
           </div>
 
           {boards.length === 0 ? (
@@ -324,18 +360,24 @@ const WorkspacePage = () => {
                   className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 text-white relative"
                 >
                   <div className="absolute top-2 right-2 flex gap-2">
-                    <button
-                      onClick={e => handleEditBoard(e, board)}
-                      className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
-                    >
-                      {t('common:buttons.edit')}
-                    </button>
-                    <button
-                      onClick={e => handleDeleteBoard(e, board._id, board.name)}
-                      className="bg-red-500 bg-opacity-60 hover:bg-opacity-80 text-white px-3 py-1 rounded text-sm transition"
-                    >
-                      {t('common:buttons.delete')}
-                    </button>
+                    {can && can('board:update') && (
+                      <button
+                        onClick={e => handleEditBoard(e, board)}
+                        className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded text-sm transition"
+                      >
+                        {t('common:buttons.edit')}
+                      </button>
+                    )}
+                    {can && can('board:delete') && (
+                      <button
+                        onClick={e =>
+                          handleDeleteBoard(e, board._id, board.name)
+                        }
+                        className="bg-red-500 bg-opacity-60 hover:bg-opacity-80 text-white px-3 py-1 rounded text-sm transition"
+                      >
+                        {t('common:buttons.delete')}
+                      </button>
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{board.name}</h3>
                   <p className="text-sm opacity-90">

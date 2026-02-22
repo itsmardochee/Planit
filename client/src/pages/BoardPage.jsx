@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { listAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
+import usePermissions from '../hooks/usePermissions';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
@@ -12,6 +13,7 @@ import useBoardData from '../hooks/useBoardData';
 import useBoardFilters from '../hooks/useBoardFilters';
 import useBoardDrag from '../hooks/useBoardDrag';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { Tooltip } from '@mui/material';
 import {
   SortableContext,
   horizontalListSortingStrategy,
@@ -48,6 +50,12 @@ const BoardPage = () => {
   const [editingList, setEditingList] = useState(null);
   const [showLabelManager, setShowLabelManager] = useState(false);
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+
+  // Get permissions
+  const { can } = usePermissions(board?.workspaceId);
+
+  // Disable drag & drop for users without card:move permission (e.g. viewers)
+  const effectiveSensors = can && can('card:move') ? sensors : [];
 
   // Simple UI handlers
   const handleCreateList = async e => {
@@ -106,7 +114,7 @@ const BoardPage = () => {
 
   return (
     <DndContext
-      sensors={sensors}
+      sensors={effectiveSensors}
       collisionDetection={collisionDetection}
       {...dragHandlers}
     >
@@ -202,26 +210,28 @@ const BoardPage = () => {
                   </div>
                 )}
 
-                {/* Manage Labels Button */}
-                <button
-                  onClick={() => setShowLabelManager(true)}
-                  className="bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {/* Manage Labels Button - admin+ only */}
+                {can && can('label:create') && (
+                  <button
+                    onClick={() => setShowLabelManager(true)}
+                    className="bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                  {t('board:manageLabels', 'Manage Labels')}
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    {t('board:manageLabels', 'Manage Labels')}
+                  </button>
+                )}
 
                 {/* Activity Button */}
                 <button
@@ -304,6 +314,7 @@ const BoardPage = () => {
                   key={list._id}
                   list={list}
                   boardId={boardId}
+                  workspaceId={board?.workspaceId}
                   onCardClick={card => handleOpenCardModal(card, list)}
                   onListUpdate={refetch}
                   onEditList={handleEditList}
@@ -356,7 +367,7 @@ const BoardPage = () => {
                     </div>
                   </form>
                 </div>
-              ) : (
+              ) : can && can('list:create') ? (
                 <button
                   onClick={() => setShowNewListForm(true)}
                   className="w-80 bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 backdrop-blur-sm text-white rounded-lg p-4 font-semibold transition-all border border-white/20 dark:border-gray-700 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
@@ -376,6 +387,22 @@ const BoardPage = () => {
                   </svg>
                   {t('board:addAnotherList')}
                 </button>
+              ) : (
+                <Tooltip
+                  title={t(
+                    'board:noPermission',
+                    'You do not have permission to create lists'
+                  )}
+                >
+                  <span>
+                    <button
+                      disabled
+                      className="w-80 bg-gray-500 dark:bg-gray-700 text-gray-300 dark:text-gray-500 rounded-lg p-4 font-semibold cursor-not-allowed flex items-center gap-2"
+                    >
+                      + {t('board:addAnotherList')}
+                    </button>
+                  </span>
+                </Tooltip>
               )}
             </div>
           </div>
@@ -404,6 +431,7 @@ const BoardPage = () => {
           <CardModal
             card={selectedCard}
             boardId={boardId}
+            workspaceId={board?.workspaceId}
             members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}

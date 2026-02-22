@@ -3,6 +3,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CardModal from '../CardModal';
 import { cardAPI, labelAPI, commentAPI } from '../../utils/api';
 
+// Mock usePermissions to grant all card permissions by default
+vi.mock('../../hooks/usePermissions', () => ({
+  default: () => ({
+    can: () => true,
+    role: 'owner',
+    loading: false,
+    error: null,
+    isAtLeast: () => true,
+    canModifyUserRole: () => true,
+  }),
+}));
+
 // Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

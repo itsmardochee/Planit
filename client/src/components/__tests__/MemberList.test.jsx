@@ -5,6 +5,30 @@ import i18n from '../../i18n';
 import MemberList from '../MemberList';
 import * as apiModule from '../../utils/api';
 
+// Mock usePermissions hook
+vi.mock('../../hooks/usePermissions', () => ({
+  default: vi.fn(() => ({
+    role: 'owner',
+    loading: false,
+    error: null,
+    can: vi.fn(() => true),
+    isAtLeast: vi.fn(() => true),
+    canModifyUserRole: vi.fn(() => true),
+    roleInfo: {
+      owner: { label: 'Owner', color: 'purple' },
+      admin: { label: 'Admin', color: 'blue' },
+      member: { label: 'Member', color: 'green' },
+      viewer: { label: 'Viewer', color: 'grey' },
+    },
+  })),
+  ROLE_INFO: {
+    owner: { label: 'Owner', color: 'purple' },
+    admin: { label: 'Admin', color: 'blue' },
+    member: { label: 'Member', color: 'green' },
+    viewer: { label: 'Viewer', color: 'grey' },
+  },
+}));
+
 // TDD Red Phase: Tests for MemberList component
 
 describe('MemberList Component', () => {
@@ -404,7 +428,7 @@ describe('MemberList Component', () => {
   it('handles role colors correctly for owner', () => {
     const ownerMember = mockMembers.filter(m => m.role === 'owner');
 
-    const { container } = render(
+    render(
       <I18nextProvider i18n={i18n}>
         <MemberList
           members={ownerMember}
@@ -415,14 +439,14 @@ describe('MemberList Component', () => {
       </I18nextProvider>
     );
 
-    // Owner role chip should be rendered
-    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+    // Owner role badge should be rendered
+    expect(screen.getByText('Owner')).toBeInTheDocument();
   });
 
   it('handles role colors correctly for admin', () => {
     const adminMember = mockMembers.filter(m => m.role === 'admin');
 
-    const { container } = render(
+    render(
       <I18nextProvider i18n={i18n}>
         <MemberList
           members={adminMember}
@@ -433,8 +457,8 @@ describe('MemberList Component', () => {
       </I18nextProvider>
     );
 
-    // Admin role chip should be rendered
-    expect(container.querySelector('[class*="MuiChip"]')).toBeInTheDocument();
+    // Admin role badge should be rendered
+    expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
   it('handles unknown role color default', () => {

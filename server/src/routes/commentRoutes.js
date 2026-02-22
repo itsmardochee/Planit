@@ -6,6 +6,11 @@ import {
   deleteComment,
 } from '../controllers/commentController.js';
 import checkWorkspaceAccess from '../middlewares/checkWorkspaceAccess.js';
+import {
+  checkPermission,
+  attachUserRole,
+} from '../middlewares/checkPermission.js';
+import { PERMISSIONS } from '../utils/permissions.js';
 
 // Map cardId to id so checkWorkspaceAccess can resolve the workspace
 const mapCardId = (req, _res, next) => {
@@ -18,14 +23,21 @@ const mapCardId = (req, _res, next) => {
 // Routes scoped to a card: /api/cards/:cardId/comments
 const cardCommentRouter = express.Router({ mergeParams: true });
 
-cardCommentRouter.post('/', mapCardId, checkWorkspaceAccess, createComment);
+cardCommentRouter.post(
+  '/',
+  mapCardId,
+  checkWorkspaceAccess,
+  checkPermission(PERMISSIONS.COMMENT_CREATE),
+  createComment
+);
 cardCommentRouter.get('/', mapCardId, checkWorkspaceAccess, getComments);
 
 // Routes scoped to a comment: /api/comments/:id
-// No checkWorkspaceAccess here — controller enforces author-only access
+// Controller enforces author-only access for updates/deletes
+// attachUserRole provides role context without strict permission check
 const commentRouter = express.Router();
 
-commentRouter.put('/:id', updateComment);
-commentRouter.delete('/:id', deleteComment);
+commentRouter.put('/:id', attachUserRole, updateComment);
+commentRouter.delete('/:id', attachUserRole, deleteComment);
 
 export { cardCommentRouter, commentRouter };

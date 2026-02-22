@@ -23,12 +23,14 @@ const mockWorkspaces = [
     name: 'Workspace 1',
     description: 'Desc',
     createdAt: new Date().toISOString(),
+    userRole: 'owner',
   },
   {
     _id: '2',
     name: 'Workspace 2',
     description: 'Desc',
     createdAt: new Date().toISOString(),
+    userRole: 'owner',
   },
 ];
 
@@ -402,5 +404,68 @@ describe('Dashboard Page', () => {
 
     // Should not call create with empty name
     expect(apiModule.workspaceAPI.create).not.toHaveBeenCalled();
+  });
+
+  it('hides edit and delete buttons for member workspaces', async () => {
+    const memberWorkspace = {
+      _id: '5',
+      name: 'Shared Workspace',
+      description: 'A shared workspace',
+      createdAt: new Date().toISOString(),
+      userRole: 'member',
+    };
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [memberWorkspace] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await screen.findByRole('heading', { name: /shared workspace/i });
+
+    expect(screen.queryByTitle(/edit workspace/i)).not.toBeInTheDocument();
+    expect(screen.queryByTitle(/delete workspace/i)).not.toBeInTheDocument();
+  });
+
+  it('shows edit button but not delete for admin workspaces', async () => {
+    const adminWorkspace = {
+      _id: '6',
+      name: 'Admin Workspace',
+      description: 'An admin workspace',
+      createdAt: new Date().toISOString(),
+      userRole: 'admin',
+    };
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [adminWorkspace] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await screen.findByRole('heading', { name: /admin workspace/i });
+
+    expect(screen.getByTitle(/edit workspace/i)).toBeInTheDocument();
+    expect(screen.queryByTitle(/delete workspace/i)).not.toBeInTheDocument();
+  });
+
+  it('shows edit and delete buttons for owner workspaces', async () => {
+    const ownerWorkspace = {
+      _id: '7',
+      name: 'Owner Workspace',
+      description: 'An owned workspace',
+      createdAt: new Date().toISOString(),
+      userRole: 'owner',
+    };
+    vi.spyOn(apiModule.workspaceAPI, 'getAll').mockResolvedValue({
+      data: { data: [ownerWorkspace] },
+    });
+
+    const store = getStore();
+    renderWithProviders(<Dashboard />, { store });
+
+    await screen.findByRole('heading', { name: /owner workspace/i });
+
+    expect(screen.getByTitle(/edit workspace/i)).toBeInTheDocument();
+    expect(screen.getByTitle(/delete workspace/i)).toBeInTheDocument();
   });
 });

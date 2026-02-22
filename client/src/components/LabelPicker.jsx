@@ -4,7 +4,7 @@ import { Box, Chip, CircularProgress, Typography, Alert } from '@mui/material';
 import { Check as CheckIcon } from '@mui/icons-material';
 import { labelAPI, cardAPI } from '../utils/api';
 
-const LabelPicker = ({ boardId, card, onUpdate }) => {
+const LabelPicker = ({ boardId, card, onUpdate, readOnly = false }) => {
   const [labels, setLabels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,6 +35,7 @@ const LabelPicker = ({ boardId, card, onUpdate }) => {
   };
 
   const handleLabelClick = async label => {
+    if (readOnly) return;
     try {
       setError('');
 
@@ -90,15 +91,15 @@ const LabelPicker = ({ boardId, card, onUpdate }) => {
               key={label._id}
               data-testid={`label-${label._id}`}
               label={label.name}
-              onClick={() => handleLabelClick(label)}
+              onClick={readOnly ? undefined : () => handleLabelClick(label)}
               icon={assigned ? <CheckIcon /> : undefined}
               sx={{
                 backgroundColor: label.color,
                 color: '#fff',
                 fontWeight: 'bold',
-                cursor: 'pointer',
+                cursor: readOnly ? 'default' : 'pointer',
                 '&:hover': {
-                  opacity: 0.8,
+                  opacity: readOnly ? 1 : 0.8,
                 },
                 ...(assigned && {
                   border: '2px solid #fff',
@@ -115,6 +116,7 @@ const LabelPicker = ({ boardId, card, onUpdate }) => {
 
 LabelPicker.propTypes = {
   boardId: PropTypes.string.isRequired,
+  readOnly: PropTypes.bool,
   card: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     labels: PropTypes.arrayOf(

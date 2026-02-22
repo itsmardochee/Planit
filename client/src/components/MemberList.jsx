@@ -1,18 +1,48 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chip } from '@mui/material';
 import { memberAPI } from '../utils/api';
+import usePermissions, { ROLE_INFO } from '../hooks/usePermissions';
+import RoleSelector from './RoleSelector';
+import RoleChangeModal from './RoleChangeModal';
+
+// Classes Tailwind pour les badges de rôle (lecture seule)
+const ROLE_BADGE_CLASSES = {
+  owner:
+    'bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
+  admin:
+    'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+  member:
+    'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  viewer:
+    'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600',
+};
+
+const ROLE_DOT_CLASSES = {
+  owner: 'bg-purple-500',
+  admin: 'bg-blue-500',
+  member: 'bg-green-500',
+  viewer: 'bg-gray-400',
+};
 
 const MemberList = ({
   members,
   workspaceId,
   currentUserId,
+  currentUserRole,
   onMemberRemoved,
+  onRoleUpdated,
 }) => {
   const { t } = useTranslation(['workspace', 'common']);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [roleUpdateLoading, setRoleUpdateLoading] = useState(null); // memberId being updated
+  const [roleModal, setRoleModal] = useState(null); // member being role-edited
+  const [roleSaveError, setRoleSaveError] = useState(''); // error from role update
+
+  // Get permission checking functions
+  const { can, canModifyUserRole: canModifyUserRolePermission } =
+    usePermissions(workspaceId);
 
   const getInitials = username => {
     if (!username) return '?';
@@ -21,19 +51,6 @@ const MemberList = ({
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return username[0].toUpperCase();
-  };
-
-  const getRoleColor = role => {
-    switch (role) {
-      case 'owner':
-        return 'error';
-      case 'admin':
-        return 'warning';
-      case 'member':
-        return 'primary';
-      default:
-        return 'default';
-    }
   };
 
   const getAvatarClasses = role => {
@@ -50,6 +67,11 @@ const MemberList = ({
   };
 
   const getRoleLabel = role => {
+    const roleInfo = ROLE_INFO[role];
+    if (roleInfo) {
+      return roleInfo.label;
+    }
+
     return (
       t(`workspace:members.roles.${role}`, {
         defaultValue: role.charAt(0).toUpperCase() + role.slice(1),
@@ -81,13 +103,6 @@ const MemberList = ({
     }
   };
 
-  const isCurrentUser = member => member.userId?._id === currentUserId;
-
-  const canRemoveMember = member => {
-    if (isCurrentUser(member)) return false;
-    return true;
-  };
-
   const handleRemoveClick = member => {
     setConfirmDialog(member);
     setError('');
@@ -117,6 +132,23 @@ const MemberList = ({
     setError('');
   };
 
+  const isCurrentUser = member => {
+    return member.userId?._id === currentUserId;
+  };
+
+  const canRemoveMember = member => {
+    if (isCurrentUser(member)) return false;
+    if (member.role === 'owner') return false;
+    return can && can('member:remove');
+  };
+
+  const canChangeRole = member => {
+    if (isCurrentUser(member)) return false;
+    if (!can || !can('member:update_role')) return false;
+    if (member.role === 'owner') return false;
+    return true;
+  };
+
   if (!members || members.length === 0) {
     return (
       <div className="text-center py-10">
@@ -140,6 +172,27 @@ const MemberList = ({
       </div>
     );
   }
+
+  const handleRoleSave = async newRole => {
+    if (!roleModal) return;
+    setRoleUpdateLoading(roleModal._id);
+    setRoleSaveError('');
+    try {
+      await memberAPI.updateRole(workspaceId, roleModal.userId._id, newRole);
+      setRoleModal(null);
+      setRoleSaveError('');
+      if (onRoleUpdated) onRoleUpdated();
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        t('common:messages.error', { defaultValue: 'Failed to update role' });
+      setRoleSaveError(message);
+      // Keep modal open so user sees the error
+    } finally {
+      setRoleUpdateLoading(null);
+    }
+  };
 
   return (
     <>
@@ -166,11 +219,27 @@ const MemberList = ({
                 <span className="font-semibold text-gray-800 dark:text-white text-sm truncate">
                   {member.userId?.username || 'Unknown User'}
                 </span>
-                <Chip
-                  label={getRoleLabel(member.role)}
-                  size="small"
-                  color={getRoleColor(member.role)}
-                />
+                {canChangeRole(member) ? (
+                  <RoleSelector
+                    currentRole={member.role}
+                    onClick={() => setRoleModal(member)}
+                    loading={roleUpdateLoading === member._id}
+                  />
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      ROLE_BADGE_CLASSES[member.role] ||
+                      ROLE_BADGE_CLASSES.viewer
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        ROLE_DOT_CLASSES[member.role] || 'bg-gray-400'
+                      }`}
+                    />
+                    {getRoleLabel(member.role)}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {member.userId?.email || 'No email'}
@@ -287,6 +356,22 @@ const MemberList = ({
           </div>
         </div>
       )}
+
+      {/* Role Change Modal */}
+      <RoleChangeModal
+        open={!!roleModal}
+        onClose={() => {
+          if (!roleUpdateLoading) {
+            setRoleModal(null);
+            setRoleSaveError('');
+          }
+        }}
+        onSave={handleRoleSave}
+        member={roleModal}
+        loading={!!roleUpdateLoading}
+        canModifyUserRole={canModifyUserRolePermission || (() => false)}
+        saveError={roleSaveError}
+      />
     </>
   );
 };
