@@ -186,6 +186,12 @@ const renderBoardPage = () =>
     </BrowserRouter>
   );
 
+// Mock react-redux so BoardPage can call useSelector without a Provider
+vi.mock('react-redux', () => ({
+  useSelector: selector =>
+    selector({ auth: { user: { _id: 'current-user-id' } } }),
+}));
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 describe('BoardPage — Real-time (useSocket integration)', () => {
   beforeEach(() => {
