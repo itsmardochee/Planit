@@ -296,5 +296,37 @@ describe('useBoardData', () => {
 
       expect(result.current.members).toEqual([]);
     });
+
+    it('should handle null list data from API', async () => {
+      api.listAPI.getByBoard.mockResolvedValue({
+        data: { success: true, data: null },
+      });
+
+      const { result } = renderHook(() => useBoardData('board123'));
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.lists).toEqual([]);
+    });
+
+    it('should handle null card data from API', async () => {
+      // listAPI returns 1 list, cardAPI returns null data
+      api.listAPI.getByBoard.mockResolvedValue({
+        data: { success: true, data: [{ _id: 'list1', name: 'To Do' }] },
+      });
+      api.cardAPI.getByList.mockResolvedValue({
+        data: { success: true, data: null },
+      });
+
+      const { result } = renderHook(() => useBoardData('board123'));
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.lists[0].cards).toEqual([]);
+    });
   });
 });
