@@ -7,7 +7,6 @@ import {
   Box,
   Typography,
   Alert,
-  Chip,
 } from '@mui/material';
 import {
   Circle as CircleIcon,
@@ -67,12 +66,6 @@ const StatusSelector = ({ card, onUpdate }) => {
       setError(message);
     }
   };
-
-  const currentStatus =
-    STATUS_OPTIONS.find(s => s.value === card.status) ||
-    STATUS_OPTIONS.find(s => s.value === null);
-
-  const StatusIcon = currentStatus.icon;
 
   return (
     <Box>

@@ -3,15 +3,6 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { ROLE_INFO } from '../hooks/usePermissions';
 
-const ROLE_COLORS = {
-  admin:
-    'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
-  member:
-    'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
-  viewer:
-    'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600',
-};
-
 const ROLE_DOT_COLORS = {
   owner: 'bg-purple-500',
   admin: 'bg-blue-500',

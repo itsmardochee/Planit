@@ -13,6 +13,7 @@ const LabelPicker = ({ boardId, card, onUpdate, readOnly = false }) => {
     if (boardId) {
       fetchLabels();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardId]);
 
   const fetchLabels = async () => {

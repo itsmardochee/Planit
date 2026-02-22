@@ -531,7 +531,9 @@ export const reorderList = async (req, res, next) => {
     }
 
     logger.info(`List reordered: ${id} to position ${newPosition}`);
-    getIO()?.to(`board:${list.boardId}`).emit('list:reordered', { list, boardId: list.boardId });
+    getIO()
+      ?.to(`board:${list.boardId}`)
+      .emit('list:reordered', { list, boardId: list.boardId });
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -626,7 +628,9 @@ export const deleteList = async (req, res, next) => {
     });
 
     logger.info(`List deleted: ${id}`);
-    getIO()?.to(`board:${boardId}`).emit('list:deleted', { listId: id, boardId });
+    getIO()
+      ?.to(`board:${boardId}`)
+      .emit('list:deleted', { listId: id, boardId });
     res
       .status(200)
       .json({ success: true, message: 'List deleted successfully' });

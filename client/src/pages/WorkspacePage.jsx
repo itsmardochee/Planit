@@ -29,7 +29,7 @@ const WorkspacePage = () => {
   const [pageError, setPageError] = useState('');
 
   // Get permissions for current user
-  const { can, role } = usePermissions(workspaceId);
+  const { can } = usePermissions(workspaceId);
 
   useEffect(() => {
     const fetchWorkspaceAndBoards = async () => {

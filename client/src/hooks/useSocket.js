@@ -57,20 +57,20 @@ const useSocket = (boardId, handlers = {}) => {
       setIsConnected(false);
     });
 
-    socket.on('user:joined', (data) => {
-      setOnlineUsers((prev) => {
-        if (prev.some((u) => u.userId === data.userId)) return prev;
+    socket.on('user:joined', data => {
+      setOnlineUsers(prev => {
+        if (prev.some(u => u.userId === data.userId)) return prev;
         return [...prev, data];
       });
     });
 
-    socket.on('user:left', (data) => {
-      setOnlineUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+    socket.on('user:left', data => {
+      setOnlineUsers(prev => prev.filter(u => u.userId !== data.userId));
     });
 
     // Register all domain event handlers via the ref to prevent stale closures
     Object.entries(EVENT_HANDLER_MAP).forEach(([event, handlerName]) => {
-      socket.on(event, (data) => {
+      socket.on(event, data => {
         handlersRef.current[handlerName]?.(data);
       });
     });

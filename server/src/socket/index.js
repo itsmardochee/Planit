@@ -9,7 +9,7 @@ let io;
  * Initialize Socket.IO on the given HTTP server.
  * Sets up JWT auth middleware and board room management.
  */
-export const initSocket = (httpServer) => {
+export const initSocket = httpServer => {
   io = new Server(httpServer, {
     cors: {
       origin: '*',
@@ -42,7 +42,7 @@ export const initSocket = (httpServer) => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', socket => {
     const userId = socket.user._id.toString();
     const { username } = socket.user;
 
@@ -56,7 +56,7 @@ export const initSocket = (httpServer) => {
       socket.to(`board:${boardId}`).emit('user:left', { userId, username });
     });
 
-    socket.on('member:typing', (data) => {
+    socket.on('member:typing', data => {
       socket.to(`board:${data.boardId}`).emit('member:typing', data);
     });
 

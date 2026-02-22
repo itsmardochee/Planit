@@ -13,7 +13,7 @@ let testUser;
 let authToken;
 
 // Helper: create a socket.io-client connected to the test server
-const connectSocket = (token) => {
+const connectSocket = token => {
   return ioc(`http://localhost:${port}`, {
     auth: token !== undefined ? { token } : {},
     transports: ['websocket'],
@@ -22,21 +22,8 @@ const connectSocket = (token) => {
   });
 };
 
-// Helper: wait for a socket event with optional timeout
-const waitForEvent = (socket, event, timeout = 3000) =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error(`Timeout waiting for "${event}"`)),
-      timeout
-    );
-    socket.once(event, (data) => {
-      clearTimeout(timer);
-      resolve(data);
-    });
-  });
-
 // Helper: connect socket and wait for 'connect' event
-const connectAndWait = (socket) =>
+const connectAndWait = socket =>
   new Promise((resolve, reject) => {
     socket.once('connect', resolve);
     socket.once('connect_error', reject);
@@ -62,12 +49,12 @@ beforeAll(async () => {
 
   httpServer = createServer();
   initSocket(httpServer);
-  await new Promise((resolve) => httpServer.listen(0, resolve));
+  await new Promise(resolve => httpServer.listen(0, resolve));
   port = httpServer.address().port;
 }, 30000);
 
 afterAll(async () => {
-  await new Promise((resolve) => httpServer.close(resolve));
+  await new Promise(resolve => httpServer.close(resolve));
   await mongoose.disconnect();
   await mongoServer.stop();
   delete process.env.JWT_SECRET;
@@ -77,9 +64,9 @@ afterAll(async () => {
 // Authentication tests
 // ============================================================
 describe('Socket.IO Authentication', () => {
-  it('should reject connection without token', (done) => {
+  it('should reject connection without token', done => {
     const socket = connectSocket(undefined);
-    socket.on('connect_error', (err) => {
+    socket.on('connect_error', err => {
       expect(err.message).toContain('Authentication error');
       socket.disconnect();
       done();
@@ -87,9 +74,9 @@ describe('Socket.IO Authentication', () => {
     socket.connect();
   });
 
-  it('should reject connection with invalid token', (done) => {
+  it('should reject connection with invalid token', done => {
     const socket = connectSocket('invalid-token-xyz');
-    socket.on('connect_error', (err) => {
+    socket.on('connect_error', err => {
       expect(err.message).toContain('Authentication error');
       socket.disconnect();
       done();
@@ -97,7 +84,7 @@ describe('Socket.IO Authentication', () => {
     socket.connect();
   });
 
-  it('should accept connection with valid JWT', (done) => {
+  it('should accept connection with valid JWT', done => {
     const socket = connectSocket(authToken);
     socket.on('connect', () => {
       expect(socket.connected).toBe(true);
@@ -128,13 +115,13 @@ describe('Socket.IO board:join / board:leave', () => {
     socket2.disconnect();
   });
 
-  it('should emit user:joined to other board members when a user joins', (done) => {
+  it('should emit user:joined to other board members when a user joins', done => {
     // socket1 joins the board first
     socket1.emit('board:join', { boardId });
 
     // After a small delay, socket2 joins → socket1 receives user:joined
     setTimeout(() => {
-      socket1.once('user:joined', (data) => {
+      socket1.once('user:joined', data => {
         expect(data.userId).toBe(testUser._id.toString());
         expect(data.username).toBe('socketuser');
         done();
@@ -143,13 +130,13 @@ describe('Socket.IO board:join / board:leave', () => {
     }, 100);
   });
 
-  it('should emit user:left to other board members when a user leaves', (done) => {
+  it('should emit user:left to other board members when a user leaves', done => {
     // Both join the board
     socket1.emit('board:join', { boardId });
     socket2.emit('board:join', { boardId });
 
     setTimeout(() => {
-      socket1.once('user:left', (data) => {
+      socket1.once('user:left', data => {
         expect(data.username).toBe('socketuser');
         done();
       });
@@ -157,12 +144,12 @@ describe('Socket.IO board:join / board:leave', () => {
     }, 100);
   });
 
-  it('should emit user:left to board members on disconnect', (done) => {
+  it('should emit user:left to board members on disconnect', done => {
     socket1.emit('board:join', { boardId });
     socket2.emit('board:join', { boardId });
 
     setTimeout(() => {
-      socket1.once('user:left', (data) => {
+      socket1.once('user:left', data => {
         expect(data.username).toBe('socketuser');
         done();
       });
@@ -187,7 +174,7 @@ describe('Socket.IO member:typing relay', () => {
     socket1.emit('board:join', { boardId });
     socket2.emit('board:join', { boardId });
     // Wait for room joins to propagate
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 100));
   });
 
   afterEach(() => {
@@ -195,7 +182,7 @@ describe('Socket.IO member:typing relay', () => {
     socket2.disconnect();
   });
 
-  it('should relay member:typing to other board members', (done) => {
+  it('should relay member:typing to other board members', done => {
     const typingData = {
       userId: testUser._id.toString(),
       username: 'socketuser',
@@ -204,7 +191,7 @@ describe('Socket.IO member:typing relay', () => {
       boardId,
     };
 
-    socket1.once('member:typing', (data) => {
+    socket1.once('member:typing', data => {
       expect(data.isTyping).toBe(true);
       expect(data.cardId).toBe('card-abc');
       expect(data.username).toBe('socketuser');
@@ -214,7 +201,7 @@ describe('Socket.IO member:typing relay', () => {
     socket2.emit('member:typing', typingData);
   });
 
-  it('should not relay member:typing back to the sender', (done) => {
+  it('should not relay member:typing back to the sender', done => {
     const typingData = {
       userId: testUser._id.toString(),
       username: 'socketuser',

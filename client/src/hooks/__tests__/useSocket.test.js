@@ -16,7 +16,7 @@ vi.mock('socket.io-client', () => ({
 }));
 
 // Helper: get the handler registered for a specific event
-const getHandler = (event) => {
+const getHandler = event => {
   const call = mockSocket.on.mock.calls.find(([e]) => e === event);
   return call?.[1];
 };
@@ -27,7 +27,9 @@ describe('useSocket', () => {
     // Reset mock socket state
     mockSocket.connected = false;
     // Mock localStorage to return a valid token by default
-    vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue('mock-jwt-token');
+    vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(
+      'mock-jwt-token'
+    );
   });
 
   afterEach(() => {
@@ -70,7 +72,9 @@ describe('useSocket', () => {
       const connectHandler = getHandler('connect');
       act(() => connectHandler?.());
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('board:join', { boardId: 'board123' });
+      expect(mockSocket.emit).toHaveBeenCalledWith('board:join', {
+        boardId: 'board123',
+      });
     });
 
     it('should set isConnected to true on connect', () => {
@@ -98,7 +102,9 @@ describe('useSocket', () => {
 
       unmount();
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('board:leave', { boardId: 'board123' });
+      expect(mockSocket.emit).toHaveBeenCalledWith('board:leave', {
+        boardId: 'board123',
+      });
       expect(mockSocket.disconnect).toHaveBeenCalled();
     });
   });
@@ -111,7 +117,10 @@ describe('useSocket', () => {
       act(() => userJoinedHandler?.({ userId: 'u1', username: 'Alice' }));
 
       expect(result.current.onlineUsers).toHaveLength(1);
-      expect(result.current.onlineUsers[0]).toEqual({ userId: 'u1', username: 'Alice' });
+      expect(result.current.onlineUsers[0]).toEqual({
+        userId: 'u1',
+        username: 'Alice',
+      });
     });
 
     it('should not duplicate users on repeated user:joined for same userId', () => {
@@ -145,7 +154,11 @@ describe('useSocket', () => {
       renderHook(() => useSocket('board123', { onCardCreated }));
 
       const handler = getHandler('card:created');
-      const data = { card: { _id: 'c1', title: 'New Card' }, listId: 'l1', boardId: 'b1' };
+      const data = {
+        card: { _id: 'c1', title: 'New Card' },
+        listId: 'l1',
+        boardId: 'b1',
+      };
       act(() => handler?.(data));
 
       expect(onCardCreated).toHaveBeenCalledWith(data);
@@ -167,7 +180,12 @@ describe('useSocket', () => {
       renderHook(() => useSocket('board123', { onCardMoved }));
 
       const handler = getHandler('card:moved');
-      const data = { card: { _id: 'c1' }, fromListId: 'l1', toListId: 'l2', boardId: 'b1' };
+      const data = {
+        card: { _id: 'c1' },
+        fromListId: 'l1',
+        toListId: 'l2',
+        boardId: 'b1',
+      };
       act(() => handler?.(data));
 
       expect(onCardMoved).toHaveBeenCalledWith(data);
@@ -249,10 +267,9 @@ describe('useSocket', () => {
 
   describe('BoardId Changes', () => {
     it('should reconnect when boardId changes', () => {
-      const { rerender } = renderHook(
-        ({ boardId }) => useSocket(boardId, {}),
-        { initialProps: { boardId: 'board123' } }
-      );
+      const { rerender } = renderHook(({ boardId }) => useSocket(boardId, {}), {
+        initialProps: { boardId: 'board123' },
+      });
 
       vi.clearAllMocks();
 
@@ -260,7 +277,9 @@ describe('useSocket', () => {
 
       // After boardId change, board:leave should have been emitted for old board
       // and a new connection should have been created
-      expect(mockSocket.emit).toHaveBeenCalledWith('board:leave', { boardId: 'board123' });
+      expect(mockSocket.emit).toHaveBeenCalledWith('board:leave', {
+        boardId: 'board123',
+      });
       expect(mockSocket.disconnect).toHaveBeenCalled();
     });
   });

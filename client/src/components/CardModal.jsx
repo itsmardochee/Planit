@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from '@mui/material';
+
 import { cardAPI } from '../utils/api';
 import MemberSelector from './MemberSelector';
 import LabelPicker from './LabelPicker';

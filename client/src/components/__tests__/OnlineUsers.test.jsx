@@ -5,7 +5,9 @@ import OnlineUsers from '../OnlineUsers';
 describe('OnlineUsers', () => {
   describe('Empty state', () => {
     it('should render nothing when users is empty and not connected', () => {
-      const { container } = render(<OnlineUsers users={[]} isConnected={false} />);
+      const { container } = render(
+        <OnlineUsers users={[]} isConnected={false} />
+      );
       expect(container.firstChild).toBeNull();
     });
 
@@ -31,14 +33,21 @@ describe('OnlineUsers', () => {
     });
 
     it('should render N avatars for N users', () => {
-      const { container } = render(<OnlineUsers users={users} isConnected={true} />);
+      const { container } = render(
+        <OnlineUsers users={users} isConnected={true} />
+      );
       // MUI Avatar elements
       const avatars = container.querySelectorAll('.MuiAvatar-root');
       expect(avatars.length).toBe(users.length);
     });
 
     it('should render user initials as avatar content', () => {
-      render(<OnlineUsers users={[{ userId: 'u1', username: 'Xavier' }]} isConnected={false} />);
+      render(
+        <OnlineUsers
+          users={[{ userId: 'u1', username: 'Xavier' }]}
+          isConnected={false}
+        />
+      );
       expect(screen.getByText('X')).toBeInTheDocument();
     });
   });
@@ -50,12 +59,19 @@ describe('OnlineUsers', () => {
     });
 
     it('should not show the online badge when isConnected is false and no users', () => {
-      const { container } = render(<OnlineUsers users={[]} isConnected={false} />);
+      const { container } = render(
+        <OnlineUsers users={[]} isConnected={false} />
+      );
       expect(container.firstChild).toBeNull();
     });
 
     it('should show avatars even when isConnected is false if there are users', () => {
-      render(<OnlineUsers users={[{ userId: 'u1', username: 'Alice' }]} isConnected={false} />);
+      render(
+        <OnlineUsers
+          users={[{ userId: 'u1', username: 'Alice' }]}
+          isConnected={false}
+        />
+      );
       expect(screen.getByText('A')).toBeInTheDocument();
     });
   });

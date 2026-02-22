@@ -2,7 +2,15 @@
  * Socket.IO emission tests for commentController.
  * Uses jest.unstable_mockModule + dynamic imports (required for ESM mocking).
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { jest } from '@jest/globals';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -21,9 +29,11 @@ jest.unstable_mockModule('../../socket/index.js', () => ({
 }));
 
 // ─── Dynamic imports (after mock is registered) ───────────────────────────────
-const { cardCommentRouter, commentRouter } = await import('../../routes/commentRoutes.js');
+const { cardCommentRouter, commentRouter } =
+  await import('../../routes/commentRoutes.js');
 const { default: auth } = await import('../../middlewares/auth.js');
-const { default: errorHandler } = await import('../../middlewares/errorHandler.js');
+const { default: errorHandler } =
+  await import('../../middlewares/errorHandler.js');
 const { default: User } = await import('../../models/User.js');
 const { default: Workspace } = await import('../../models/Workspace.js');
 const { default: Board } = await import('../../models/Board.js');

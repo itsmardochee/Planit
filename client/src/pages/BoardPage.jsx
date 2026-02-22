@@ -57,62 +57,80 @@ const BoardPage = () => {
   const { can } = usePermissions(board?.workspaceId);
 
   // ─── Real-time socket handlers ───────────────────────────────────────────
-  const handleCardCreated = useCallback(({ card, listId }) => {
-    setLists((prev) =>
-      prev.map((l) => {
-        if (l._id !== listId) return l;
-        // Deduplicate: card may already be present if refetch() ran first
-        if ((l.cards || []).some((c) => c._id === card._id)) return l;
-        return { ...l, cards: [...(l.cards || []), card] };
-      })
-    );
-  }, []);
+  const handleCardCreated = useCallback(
+    ({ card, listId }) => {
+      setLists(prev =>
+        prev.map(l => {
+          if (l._id !== listId) return l;
+          // Deduplicate: card may already be present if refetch() ran first
+          if ((l.cards || []).some(c => c._id === card._id)) return l;
+          return { ...l, cards: [...(l.cards || []), card] };
+        })
+      );
+    },
+    [setLists]
+  );
 
-  const handleCardUpdated = useCallback(({ card }) => {
-    setLists((prev) =>
-      prev.map((l) => ({
-        ...l,
-        cards: (l.cards || []).map((c) => (c._id === card._id ? card : c)),
-      }))
-    );
-  }, []);
+  const handleCardUpdated = useCallback(
+    ({ card }) => {
+      setLists(prev =>
+        prev.map(l => ({
+          ...l,
+          cards: (l.cards || []).map(c => (c._id === card._id ? card : c)),
+        }))
+      );
+    },
+    [setLists]
+  );
 
   const handleCardMoved = useCallback(() => {
     refetch();
   }, [refetch]);
 
-  const handleCardDeleted = useCallback(({ cardId, listId }) => {
-    setLists((prev) =>
-      prev.map((l) =>
-        l._id === listId
-          ? { ...l, cards: (l.cards || []).filter((c) => c._id !== cardId) }
-          : l
-      )
-    );
-  }, []);
+  const handleCardDeleted = useCallback(
+    ({ cardId, listId }) => {
+      setLists(prev =>
+        prev.map(l =>
+          l._id === listId
+            ? { ...l, cards: (l.cards || []).filter(c => c._id !== cardId) }
+            : l
+        )
+      );
+    },
+    [setLists]
+  );
 
-  const handleListCreated = useCallback(({ list }) => {
-    setLists((prev) => {
-      // Deduplicate: list may already be present if refetch() ran first
-      if (prev.some((l) => l._id === list._id)) return prev;
-      return [...prev, { ...list, cards: [] }];
-    });
-  }, []);
+  const handleListCreated = useCallback(
+    ({ list }) => {
+      setLists(prev => {
+        // Deduplicate: list may already be present if refetch() ran first
+        if (prev.some(l => l._id === list._id)) return prev;
+        return [...prev, { ...list, cards: [] }];
+      });
+    },
+    [setLists]
+  );
 
   const handleListReordered = useCallback(() => {
     // Reorder affects multiple lists' positions — safest to refetch the full state
     refetch();
   }, [refetch]);
 
-  const handleListUpdated = useCallback(({ list }) => {
-    setLists((prev) =>
-      prev.map((l) => (l._id === list._id ? { ...l, ...list } : l))
-    );
-  }, []);
+  const handleListUpdated = useCallback(
+    ({ list }) => {
+      setLists(prev =>
+        prev.map(l => (l._id === list._id ? { ...l, ...list } : l))
+      );
+    },
+    [setLists]
+  );
 
-  const handleListDeleted = useCallback(({ listId }) => {
-    setLists((prev) => prev.filter((l) => l._id !== listId));
-  }, []);
+  const handleListDeleted = useCallback(
+    ({ listId }) => {
+      setLists(prev => prev.filter(l => l._id !== listId));
+    },
+    [setLists]
+  );
 
   const { onlineUsers, isConnected } = useSocket(boardId, {
     onCardCreated: handleCardCreated,

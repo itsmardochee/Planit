@@ -19,7 +19,11 @@ vi.mock('../../hooks/useSocket', () => ({
 // ─── Mock OnlineUsers ────────────────────────────────────────────────────────
 vi.mock('../../components/OnlineUsers', () => ({
   default: ({ users, isConnected }) => (
-    <div data-testid="online-users" data-count={users.length} data-connected={isConnected} />
+    <div
+      data-testid="online-users"
+      data-count={users.length}
+      data-connected={isConnected}
+    />
   ),
 }));
 
@@ -41,7 +45,12 @@ vi.mock('../../utils/api', async () => {
   return {
     ...actual,
     boardAPI: { getById: vi.fn() },
-    listAPI: { getByBoard: vi.fn(), create: vi.fn(), update: vi.fn(), reorder: vi.fn() },
+    listAPI: {
+      getByBoard: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      reorder: vi.fn(),
+    },
     cardAPI: { getByList: vi.fn(), reorder: vi.fn() },
     memberAPI: { getByWorkspace: vi.fn() },
     labelAPI: { getByBoard: vi.fn() },
@@ -61,7 +70,9 @@ vi.mock('react-router-dom', async () => {
 // ─── Mock @dnd-kit ───────────────────────────────────────────────────────────
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }) => <div data-testid="dnd-context">{children}</div>,
-  DragOverlay: ({ children }) => <div data-testid="drag-overlay">{children}</div>,
+  DragOverlay: ({ children }) => (
+    <div data-testid="drag-overlay">{children}</div>
+  ),
   pointerWithin: vi.fn(),
   rectIntersection: vi.fn(),
   useSensor: vi.fn(),
@@ -72,7 +83,9 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }) => <div data-testid="sortable-context">{children}</div>,
+  SortableContext: ({ children }) => (
+    <div data-testid="sortable-context">{children}</div>
+  ),
   horizontalListSortingStrategy: {},
   useSortable: () => ({
     attributes: {},
@@ -86,7 +99,11 @@ vi.mock('@dnd-kit/sortable', () => ({
 
 // ─── Mock child components ────────────────────────────────────────────────────
 vi.mock('../../components/KanbanList', () => ({
-  default: ({ list }) => <div data-testid={`list-${list._id}`}><h3>{list.name}</h3></div>,
+  default: ({ list }) => (
+    <div data-testid={`list-${list._id}`}>
+      <h3>{list.name}</h3>
+    </div>
+  ),
 }));
 
 vi.mock('../../components/CardModal', () => ({
@@ -122,18 +139,42 @@ const mockLists = [
     name: 'To Do',
     position: 0,
     boardId: 'board123',
-    cards: [{ _id: 'card1', title: 'Card 1', listId: 'list1', position: 0, assignedTo: [], dueDate: null }],
+    cards: [
+      {
+        _id: 'card1',
+        title: 'Card 1',
+        listId: 'list1',
+        position: 0,
+        assignedTo: [],
+        dueDate: null,
+      },
+    ],
   },
 ];
 
 const setupDefaultMocks = () => {
-  api.boardAPI.getById.mockResolvedValue({ data: { success: true, data: mockBoard } });
-  api.memberAPI.getByWorkspace.mockResolvedValue({ data: { success: true, data: [] } });
-  api.listAPI.getByBoard.mockResolvedValue({ data: { success: true, data: mockLists } });
+  api.boardAPI.getById.mockResolvedValue({
+    data: { success: true, data: mockBoard },
+  });
+  api.memberAPI.getByWorkspace.mockResolvedValue({
+    data: { success: true, data: [] },
+  });
+  api.listAPI.getByBoard.mockResolvedValue({
+    data: { success: true, data: mockLists },
+  });
   api.cardAPI.getByList.mockResolvedValue({
     data: {
       success: true,
-      data: [{ _id: 'card1', title: 'Card 1', listId: 'list1', position: 0, assignedTo: [], dueDate: null }],
+      data: [
+        {
+          _id: 'card1',
+          title: 'Card 1',
+          listId: 'list1',
+          position: 0,
+          assignedTo: [],
+          dueDate: null,
+        },
+      ],
     },
   });
 };
@@ -191,10 +232,19 @@ describe('BoardPage — Real-time (useSocket integration)', () => {
         expect(screen.getByTestId('list-list1')).toBeInTheDocument();
       });
 
-      const newCard = { _id: 'card2', title: 'Real-time Card', listId: 'list1', position: 1 };
+      const newCard = {
+        _id: 'card2',
+        title: 'Real-time Card',
+        listId: 'list1',
+        position: 1,
+      };
 
       act(() => {
-        capturedHandlers.onCardCreated?.({ card: newCard, listId: 'list1', boardId: 'board123' });
+        capturedHandlers.onCardCreated?.({
+          card: newCard,
+          listId: 'list1',
+          boardId: 'board123',
+        });
       });
 
       // The KanbanList mock renders list name - the list should still be there
@@ -212,7 +262,11 @@ describe('BoardPage — Real-time (useSocket integration)', () => {
 
       // This should not throw even if the card isn't visually rendered in mock
       act(() => {
-        capturedHandlers.onCardDeleted?.({ cardId: 'card1', listId: 'list1', boardId: 'board123' });
+        capturedHandlers.onCardDeleted?.({
+          cardId: 'card1',
+          listId: 'list1',
+          boardId: 'board123',
+        });
       });
 
       expect(screen.getByTestId('list-list1')).toBeInTheDocument();
@@ -240,7 +294,9 @@ describe('BoardPage — Real-time (useSocket integration)', () => {
 
       // refetch should trigger a new API call
       await waitFor(() => {
-        expect(api.boardAPI.getById.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(api.boardAPI.getById.mock.calls.length).toBeGreaterThan(
+          initialCallCount
+        );
       });
     });
   });

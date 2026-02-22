@@ -1,5 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
@@ -161,8 +160,6 @@ describe('MemberList Component - Role Display & Management', () => {
 
   describe('RoleSelector Integration - Admin/Owner View', () => {
     it('should show RoleSelector for non-owner members when user is admin', async () => {
-      const user = userEvent.setup();
-
       render(
         <I18nextProvider i18n={i18n}>
           <MemberList
@@ -235,8 +232,6 @@ describe('MemberList Component - Role Display & Management', () => {
 
   describe('Role Change Handling', () => {
     it('should call API when role is changed via RoleSelector', async () => {
-      const user = userEvent.setup();
-
       mockMemberAPI.updateRole.mockResolvedValue({
         success: true,
         data: { ...mockMembers[1], role: 'admin' },

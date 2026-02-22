@@ -28,6 +28,7 @@ const CommentSection = ({ cardId, workspaceId }) => {
 
     // Fetch comments
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardId]);
 
   const fetchComments = async () => {

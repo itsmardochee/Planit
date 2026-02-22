@@ -21,7 +21,7 @@ const OnlineUsers = ({ users = [], isConnected = false }) => {
       )}
       {users.length > 0 && (
         <AvatarGroup max={5}>
-          {users.map((user) => (
+          {users.map(user => (
             <Tooltip key={user.userId} title={user.username} arrow>
               <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
                 {user.username?.[0]?.toUpperCase()}
