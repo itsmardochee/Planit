@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from '@mui/material';
+
 import { cardAPI } from '../utils/api';
 import MemberSelector from './MemberSelector';
 import LabelPicker from './LabelPicker';
@@ -16,13 +16,15 @@ const CardModal = ({
   members,
   onClose,
   onCardUpdate,
+  commentEvent,
 }) => {
   const { t } = useTranslation(['cards', 'common']);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [isSaving, setIsSaving] = useState(false);
   const [assignedMembers, setAssignedMembers] = useState(card.assignedTo || []);
-  const [currentCard, setCurrentCard] = useState(card);
+  const [pendingStatus, setPendingStatus] = useState(card.status ?? null);
+  const [pendingLabels, setPendingLabels] = useState(card.labels || []);
   const [dueDate, setDueDate] = useState(
     card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
   );
@@ -66,6 +68,27 @@ const CardModal = ({
       // Execute unassignment API calls
       for (const userId of toRemove) {
         await cardAPI.unassign(card._id, userId);
+      }
+
+      // Status change (only if different from original)
+      if (pendingStatus !== (card.status ?? null)) {
+        await cardAPI.updateStatus(card._id, pendingStatus);
+      }
+
+      // Label changes
+      const initialLabelIds = (card.labels || []).map(l => l._id || l);
+      const pendingLabelIds = pendingLabels.map(l => l._id || l);
+      const labelsToAdd = pendingLabelIds.filter(
+        id => !initialLabelIds.includes(id)
+      );
+      const labelsToRemove = initialLabelIds.filter(
+        id => !pendingLabelIds.includes(id)
+      );
+      for (const labelId of labelsToAdd) {
+        await cardAPI.assignLabel(card._id, labelId);
+      }
+      for (const labelId of labelsToRemove) {
+        await cardAPI.removeLabel(card._id, labelId);
       }
 
       onCardUpdate();
@@ -114,22 +137,18 @@ const CardModal = ({
     setAssignedMembers(prev => prev.filter(m => m._id !== userId));
   };
 
-  const handleCardChange = updatedCard => {
-    // Update local card state when labels or status change
-    setCurrentCard(updatedCard);
-  };
-
   const handleDueDateChange = e => {
     const newDate = e.target.value;
     setDueDate(newDate);
   };
 
-  // Sync currentCard when prop card changes
+  // Sync pending state when prop card changes (e.g. real-time update)
   useEffect(() => {
-    setCurrentCard(card);
     setDueDate(
       card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : ''
     );
+    setPendingStatus(card.status ?? null);
+    setPendingLabels(card.labels || []);
   }, [card]);
 
   return (
@@ -340,8 +359,9 @@ const CardModal = ({
                       {t('cards:status', 'Status')}
                     </label>
                     <StatusSelector
-                      card={currentCard}
-                      onUpdate={handleCardChange}
+                      value={pendingStatus}
+                      onChange={setPendingStatus}
+                      disabled={!can('card:update')}
                     />
                   </div>
                 </div>
@@ -395,8 +415,8 @@ const CardModal = ({
                     </label>
                     <LabelPicker
                       boardId={boardId}
-                      card={currentCard}
-                      onUpdate={handleCardChange}
+                      assignedLabels={pendingLabels}
+                      onChange={setPendingLabels}
                       readOnly={!can('label:assign')}
                     />
                   </div>
@@ -407,7 +427,11 @@ const CardModal = ({
             {/* Tab Panel: Comments */}
             {activeTab === 'comments' && (
               <div className="animate-fadeIn">
-                <CommentSection cardId={card._id} />
+                <CommentSection
+                  cardId={card._id}
+                  workspaceId={workspaceId}
+                  commentEvent={commentEvent}
+                />
               </div>
             )}
 

@@ -1,217 +1,115 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import StatusSelector from '../StatusSelector';
-import { cardAPI } from '../../utils/api';
-
-// Mock the API
-vi.mock('../../utils/api', () => ({
-  cardAPI: {
-    updateStatus: vi.fn(),
-  },
-}));
 
 describe('StatusSelector', () => {
-  const mockCard = {
-    _id: 'card123',
-    title: 'Test Card',
-    status: 'todo',
-  };
+  const onChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('Display status options', () => {
-    it('should display all status options', async () => {
-      const user = userEvent.setup();
-      render(<StatusSelector card={mockCard} />);
+    it('should display all status options', () => {
+      render(<StatusSelector value={null} onChange={onChange} />);
 
-      // Click to open the select dropdown
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('option', { name: /to do/i })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('option', { name: /in progress/i })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('option', { name: /done/i })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('option', { name: /blocked/i })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('option', { name: /none/i })
-        ).toBeInTheDocument();
-      });
+      expect(screen.getByRole('option', { name: /none/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: /to do/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: /in progress/i })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /done/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: /blocked/i })
+      ).toBeInTheDocument();
     });
 
     it('should show current status as selected', () => {
-      render(<StatusSelector card={mockCard} />);
+      render(<StatusSelector value="todo" onChange={onChange} />);
 
-      const selectButton = screen.getByRole('combobox');
-      expect(selectButton).toHaveTextContent(/to do/i);
+      const select = screen.getByRole('combobox');
+      expect(select).toHaveValue('todo');
     });
 
-    it('should show "None" when status is null', () => {
-      const cardWithNoStatus = { ...mockCard, status: null };
-      render(<StatusSelector card={cardWithNoStatus} />);
+    it('should show "None" when value is null', () => {
+      render(<StatusSelector value={null} onChange={onChange} />);
 
-      const selectButton = screen.getByRole('combobox');
-      expect(selectButton).toHaveTextContent(/none/i);
+      const select = screen.getByRole('combobox');
+      expect(select).toHaveValue('');
     });
   });
 
   describe('Change status', () => {
-    it('should update status to "in-progress"', async () => {
-      const updatedCard = { ...mockCard, status: 'in-progress' };
-      cardAPI.updateStatus.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
-
-      const onUpdate = vi.fn();
+    it('should call onChange with "in-progress" when selected', async () => {
       const user = userEvent.setup();
+      render(<StatusSelector value="todo" onChange={onChange} />);
 
-      render(<StatusSelector card={mockCard} onUpdate={onUpdate} />);
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: /in progress/i })
+      );
 
-      // Open dropdown
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      // Select "In Progress"
-      const inProgressOption = screen.getByRole('option', {
-        name: /in progress/i,
-      });
-      await user.click(inProgressOption);
-
-      await waitFor(() => {
-        expect(cardAPI.updateStatus).toHaveBeenCalledWith(
-          'card123',
-          'in-progress'
-        );
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      expect(onChange).toHaveBeenCalledWith('in-progress');
     });
 
-    it('should update status to "done"', async () => {
-      const updatedCard = { ...mockCard, status: 'done' };
-      cardAPI.updateStatus.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
-
-      const onUpdate = vi.fn();
+    it('should call onChange with "done" when selected', async () => {
       const user = userEvent.setup();
+      render(<StatusSelector value={null} onChange={onChange} />);
 
-      render(<StatusSelector card={mockCard} onUpdate={onUpdate} />);
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: /done/i })
+      );
 
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      const doneOption = screen.getByRole('option', { name: /done/i });
-      await user.click(doneOption);
-
-      await waitFor(() => {
-        expect(cardAPI.updateStatus).toHaveBeenCalledWith('card123', 'done');
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      expect(onChange).toHaveBeenCalledWith('done');
     });
 
-    it('should update status to "blocked"', async () => {
-      const updatedCard = { ...mockCard, status: 'blocked' };
-      cardAPI.updateStatus.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
-
-      const onUpdate = vi.fn();
+    it('should call onChange with "blocked" when selected', async () => {
       const user = userEvent.setup();
+      render(<StatusSelector value="todo" onChange={onChange} />);
 
-      render(<StatusSelector card={mockCard} onUpdate={onUpdate} />);
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: /blocked/i })
+      );
 
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      const blockedOption = screen.getByRole('option', { name: /blocked/i });
-      await user.click(blockedOption);
-
-      await waitFor(() => {
-        expect(cardAPI.updateStatus).toHaveBeenCalledWith('card123', 'blocked');
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      expect(onChange).toHaveBeenCalledWith('blocked');
     });
 
-    it('should clear status when "None" is selected', async () => {
-      const updatedCard = { ...mockCard, status: null };
-      cardAPI.updateStatus.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
-
-      const onUpdate = vi.fn();
+    it('should call onChange with null when "None" is selected', async () => {
       const user = userEvent.setup();
+      render(<StatusSelector value="todo" onChange={onChange} />);
 
-      render(<StatusSelector card={mockCard} onUpdate={onUpdate} />);
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: /none/i })
+      );
 
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      const noneOption = screen.getByRole('option', { name: /none/i });
-      await user.click(noneOption);
-
-      await waitFor(() => {
-        expect(cardAPI.updateStatus).toHaveBeenCalledWith('card123', null);
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      expect(onChange).toHaveBeenCalledWith(null);
     });
-  });
 
-  describe('Error handling', () => {
-    it('should show error message if update fails', async () => {
-      cardAPI.updateStatus.mockRejectedValue({
-        response: { data: { message: 'Failed to update status' } },
-      });
+    it('should not call onChange when disabled', () => {
+      render(<StatusSelector value="todo" onChange={onChange} disabled />);
 
-      const user = userEvent.setup();
-      render(<StatusSelector card={mockCard} />);
-
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      const doneOption = screen.getByRole('option', { name: /done/i });
-      await user.click(doneOption);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/failed to update status/i)
-        ).toBeInTheDocument();
-      });
+      const select = screen.getByRole('combobox');
+      expect(select).toBeDisabled();
     });
   });
 
   describe('Visual styling', () => {
-    it('should display status with appropriate color coding', async () => {
-      const user = userEvent.setup();
-      render(<StatusSelector card={mockCard} />);
+    it('should have data-testid on each option', () => {
+      render(<StatusSelector value={null} onChange={onChange} />);
 
-      const selectButton = screen.getByRole('combobox');
-      await user.click(selectButton);
-
-      await waitFor(() => {
-        // Verify all options are present with data-testid containing status value
-        expect(screen.getByTestId('status-option-todo')).toBeInTheDocument();
-        expect(
-          screen.getByTestId('status-option-in-progress')
-        ).toBeInTheDocument();
-        expect(screen.getByTestId('status-option-done')).toBeInTheDocument();
-        expect(screen.getByTestId('status-option-blocked')).toBeInTheDocument();
-        expect(screen.getByTestId('status-option-none')).toBeInTheDocument();
-      });
+      expect(screen.getByTestId('status-option-none')).toBeInTheDocument();
+      expect(screen.getByTestId('status-option-todo')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('status-option-in-progress')
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('status-option-done')).toBeInTheDocument();
+      expect(screen.getByTestId('status-option-blocked')).toBeInTheDocument();
     });
   });
 });

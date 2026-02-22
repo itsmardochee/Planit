@@ -6,6 +6,7 @@ import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import logActivity from '../utils/logActivity.js';
+import { getIO } from '../socket/index.js';
 
 /**
  * @swagger
@@ -135,6 +136,7 @@ export const createList = async (req, res, next) => {
     });
 
     logger.info(`List created: ${list._id} by user ${req.user._id}`);
+    getIO()?.to(`board:${boardId}`).emit('list:created', { list, boardId });
     res.status(201).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -393,6 +395,7 @@ export const updateList = async (req, res, next) => {
     }
 
     logger.info(`List updated: ${id}`);
+    getIO()?.to(`board:${list.boardId}`).emit('list:updated', { list });
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -528,6 +531,11 @@ export const reorderList = async (req, res, next) => {
     }
 
     logger.info(`List reordered: ${id} to position ${newPosition}`);
+    getIO()?.to(`board:${list.boardId}`).emit('list:reordered', {
+      list,
+      boardId: list.boardId,
+      senderId: req.user._id,
+    });
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);
@@ -622,6 +630,9 @@ export const deleteList = async (req, res, next) => {
     });
 
     logger.info(`List deleted: ${id}`);
+    getIO()
+      ?.to(`board:${boardId}`)
+      .emit('list:deleted', { listId: id, boardId });
     res
       .status(200)
       .json({ success: true, message: 'List deleted successfully' });

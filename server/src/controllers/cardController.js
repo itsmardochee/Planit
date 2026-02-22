@@ -8,6 +8,7 @@ import Comment from '../models/Comment.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import logActivity from '../utils/logActivity.js';
+import { getIO } from '../socket/index.js';
 
 /**
  * @swagger
@@ -138,6 +139,11 @@ export const createCard = async (req, res, next) => {
     });
 
     logger.info(`Card created: ${card._id} by user ${req.user._id}`);
+    getIO()?.to(`board:${list.boardId}`).emit('card:created', {
+      card,
+      listId,
+      boardId: list.boardId,
+    });
     res.status(201).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -407,7 +413,12 @@ export const updateCard = async (req, res, next) => {
       });
     }
 
+    // Populate so all clients receive consistent data
+    await card.populate('assignedTo', 'username email');
+    await card.populate('labels', 'name color');
+
     logger.info(`Card updated: ${id}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -503,6 +514,11 @@ export const deleteCard = async (req, res, next) => {
     );
 
     logger.info(`Card deleted: ${id}`);
+    getIO()?.to(`board:${boardId}`).emit('card:deleted', {
+      cardId: id,
+      listId,
+      boardId,
+    });
     res
       .status(200)
       .json({ success: true, message: 'Card deleted successfully' });
@@ -656,6 +672,13 @@ export const reorderCard = async (req, res, next) => {
         },
       });
 
+      getIO()?.to(`board:${card.boardId}`).emit('card:moved', {
+        card,
+        fromListId: oldListId,
+        toListId: targetListId,
+        boardId: card.boardId,
+        senderId: req.user._id,
+      });
       return res.status(200).json({ success: true, data: card });
     }
 
@@ -711,6 +734,13 @@ export const reorderCard = async (req, res, next) => {
     });
 
     logger.info(`Card reordered: ${id} to position ${position}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:moved', {
+      card,
+      fromListId: oldListId,
+      toListId: oldListId,
+      boardId: card.boardId,
+      senderId: req.user._id,
+    });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -838,6 +868,7 @@ export const assignMember = async (req, res, next) => {
     });
 
     logger.info(`User ${userId} assigned to card ${id}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -931,6 +962,7 @@ export const unassignMember = async (req, res, next) => {
     });
 
     logger.info(`User ${userId} unassigned from card ${id}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -1026,6 +1058,7 @@ export const assignLabel = async (req, res, next) => {
     });
 
     logger.info(`Label ${labelId} assigned to card ${id}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -1110,6 +1143,7 @@ export const removeLabel = async (req, res, next) => {
     });
 
     logger.info(`Label ${labelId} removed from card ${id}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -1198,7 +1232,12 @@ export const updateCardStatus = async (req, res, next) => {
       },
     });
 
+    // Populate so all clients receive consistent data
+    await card.populate('assignedTo', 'username email');
+    await card.populate('labels', 'name color');
+
     logger.info(`Card ${id} status updated to ${status}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);
@@ -1299,7 +1338,12 @@ export const updateDueDate = async (req, res, next) => {
 
     await card.save();
 
+    // Populate so all clients receive consistent data
+    await card.populate('assignedTo', 'username email');
+    await card.populate('labels', 'name color');
+
     logger.info(`Card ${id} due date updated to ${card.dueDate}`);
+    getIO()?.to(`board:${card.boardId}`).emit('card:updated', { card });
     res.status(200).json({ success: true, data: card });
   } catch (error) {
     next(error);

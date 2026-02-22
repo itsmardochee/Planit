@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';

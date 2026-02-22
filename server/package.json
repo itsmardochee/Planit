@@ -10,7 +10,7 @@
     "lint": "npx eslint src/ && npx prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "npx eslint src/ --fix && npx prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll --verbose",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --maxWorkers=50%",
     "precommit": "npm run lint && npm test -- --watchAll=false --passWithNoTests"
   },
   "keywords": [
@@ -31,6 +31,7 @@
     "express-validator": "^7.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
+    "socket.io": "^4.8.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
@@ -39,6 +40,7 @@
     "jest": "^30.2.0",
     "mongodb-memory-server": "^10.2.3",
     "nodemon": "^3.1.10",
+    "socket.io-client": "^4.8.3",
     "supertest": "^7.1.4"
   }
 }

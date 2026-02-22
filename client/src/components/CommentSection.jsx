@@ -5,7 +5,7 @@ import AddComment from './AddComment';
 import { commentAPI } from '../utils/api';
 import usePermissions from '../hooks/usePermissions';
 
-const CommentSection = ({ cardId, workspaceId }) => {
+const CommentSection = ({ cardId, workspaceId, commentEvent }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +28,28 @@ const CommentSection = ({ cardId, workspaceId }) => {
 
     // Fetch comments
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardId]);
+
+  // Apply real-time comment events from socket (forwarded via BoardPage → CardModal)
+  useEffect(() => {
+    if (!commentEvent) return;
+    const { type, data } = commentEvent;
+    if (data.cardId !== cardId) return;
+
+    if (type === 'created') {
+      setComments(prev => {
+        if (prev.some(c => c._id === data.comment._id)) return prev;
+        return [...prev, data.comment];
+      });
+    } else if (type === 'updated') {
+      setComments(prev =>
+        prev.map(c => (c._id === data.comment._id ? data.comment : c))
+      );
+    } else if (type === 'deleted') {
+      setComments(prev => prev.filter(c => c._id !== data.commentId));
+    }
+  }, [commentEvent, cardId]);
 
   const fetchComments = async () => {
     try {
@@ -126,6 +147,10 @@ const CommentSection = ({ cardId, workspaceId }) => {
 CommentSection.propTypes = {
   cardId: PropTypes.string.isRequired,
   workspaceId: PropTypes.string,
+  commentEvent: PropTypes.shape({
+    type: PropTypes.oneOf(['created', 'updated', 'deleted']).isRequired,
+    data: PropTypes.object.isRequired,
+  }),
 };
 
 export default CommentSection;

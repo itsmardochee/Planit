@@ -8,7 +8,6 @@ import {
   Divider,
 } from '@mui/material';
 import { Timeline as TimelineIcon } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 import ActivityItem from './ActivityItem';
 import { activityAPI } from '../utils/api';
 
@@ -22,7 +21,6 @@ import { activityAPI } from '../utils/api';
  * @returns {JSX.Element}
  */
 const ActivityFeed = ({ scope, scopeId, limit = 20, filters = {} }) => {
-  const { t } = useTranslation();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,6 +64,7 @@ const ActivityFeed = ({ scope, scopeId, limit = 20, filters = {} }) => {
     };
 
     fetchActivities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope, scopeId, limit, JSON.stringify(filters)]);
 
   // Loading state

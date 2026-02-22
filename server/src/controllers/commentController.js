@@ -9,6 +9,7 @@ import {
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import logActivity from '../utils/logActivity.js';
+import { getIO } from '../socket/index.js';
 
 /**
  * @swagger
@@ -103,7 +104,10 @@ export const createComment = async (req, res, next) => {
     }
 
     logger.info(`Comment created on card ${cardId} by user ${req.user._id}`);
-
+    getIO()?.to(`board:${card.boardId}`).emit('comment:created', {
+      comment: populated,
+      cardId,
+    });
     res.status(201).json({
       success: true,
       data: populated,
@@ -160,7 +164,7 @@ export const getComments = async (req, res, next) => {
 
     const comments = await Comment.find({ cardId })
       .populate('userId', 'username email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 });
 
     res.status(200).json({
       success: true,
@@ -248,7 +252,13 @@ export const updateComment = async (req, res, next) => {
     );
 
     logger.info(`Comment ${id} updated by user ${req.user._id}`);
-
+    const card = await Card.findById(comment.cardId);
+    if (card) {
+      getIO()?.to(`board:${card.boardId}`).emit('comment:updated', {
+        comment: populated,
+        cardId: comment.cardId,
+      });
+    }
     res.status(200).json({
       success: true,
       data: populated,
@@ -330,7 +340,12 @@ export const deleteComment = async (req, res, next) => {
     }
 
     logger.info(`Comment ${id} deleted by user ${req.user._id}`);
-
+    if (card) {
+      getIO()?.to(`board:${card.boardId}`).emit('comment:deleted', {
+        commentId: id,
+        cardId,
+      });
+    }
     res.status(200).json({
       success: true,
       message: 'Comment deleted successfully',

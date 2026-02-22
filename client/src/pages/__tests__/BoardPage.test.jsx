@@ -115,6 +115,11 @@ vi.mock('../../components/ListEditModal', () => ({
   default: () => null,
 }));
 
+vi.mock('react-redux', () => ({
+  useSelector: selector =>
+    selector({ auth: { user: { _id: 'current-user-id' } } }),
+}));
+
 describe('BoardPage Integration Tests', () => {
   const mockBoard = {
     _id: 'board123',

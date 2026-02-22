@@ -1,136 +1,94 @@
 import { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { Box, Chip, CircularProgress, Typography, Alert } from '@mui/material';
-import { Check as CheckIcon } from '@mui/icons-material';
-import { labelAPI, cardAPI } from '../utils/api';
+import { labelAPI } from '../utils/api';
 
-const LabelPicker = ({ boardId, card, onUpdate, readOnly = false }) => {
-  const [labels, setLabels] = useState([]);
+const LabelPicker = ({
+  boardId,
+  assignedLabels = [],
+  onChange,
+  readOnly = false,
+}) => {
+  const [allLabels, setAllLabels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (boardId) {
-      fetchLabels();
-    }
+    if (!boardId) return;
+    setLoading(true);
+    labelAPI
+      .getByBoard(boardId)
+      .then(res => setAllLabels(res.data?.data || []))
+      .catch(() => setError('Failed to load labels'))
+      .finally(() => setLoading(false));
   }, [boardId]);
 
-  const fetchLabels = async () => {
-    try {
-      setLoading(true);
-      const response = await labelAPI.getByBoard(boardId);
-      setLabels(response.data?.data || []);
-    } catch (err) {
-      console.error('Error fetching labels:', err);
-      setError('Failed to load labels');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isAssigned = labelId =>
+    assignedLabels.some(l => (l._id || l) === labelId);
 
-  const isLabelAssigned = labelId => {
-    return card.labels?.some(
-      l => (typeof l === 'string' ? l : l._id) === labelId
-    );
-  };
-
-  const handleLabelClick = async label => {
+  const handleToggle = label => {
     if (readOnly) return;
-    try {
-      setError('');
-
-      if (isLabelAssigned(label._id)) {
-        // Remove label
-        const response = await cardAPI.removeLabel(card._id, label._id);
-        onUpdate?.(response.data?.data);
-      } else {
-        // Assign label
-        const response = await cardAPI.assignLabel(card._id, label._id);
-        onUpdate?.(response.data?.data);
-      }
-    } catch (err) {
-      console.error('Error toggling label:', err);
-      const message =
-        err.response?.data?.message ||
-        `Failed to ${isLabelAssigned(label._id) ? 'remove' : 'assign'} label`;
-      setError(message);
+    if (isAssigned(label._id)) {
+      onChange(assignedLabels.filter(l => (l._id || l) !== label._id));
+    } else {
+      onChange([...assignedLabels, label]);
     }
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" p={2}>
-        <CircularProgress size={24} />
-      </Box>
+      <div role="status" className="text-sm text-gray-500 dark:text-gray-400">
+        Loading...
+      </div>
     );
   }
 
-  if (labels.length === 0) {
+  if (error) {
+    return <p className="text-sm text-red-500">{error}</p>;
+  }
+
+  if (allLabels.length === 0) {
     return (
-      <Box p={2}>
-        <Typography variant="body2" color="text.secondary">
-          No labels available. Create labels in board settings.
-        </Typography>
-      </Box>
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        No labels available. Create labels in board settings.
+      </p>
     );
   }
 
   return (
-    <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
-
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        {labels.map(label => {
-          const assigned = isLabelAssigned(label._id);
-          return (
-            <Chip
-              key={label._id}
-              data-testid={`label-${label._id}`}
-              label={label.name}
-              onClick={readOnly ? undefined : () => handleLabelClick(label)}
-              icon={assigned ? <CheckIcon /> : undefined}
-              sx={{
-                backgroundColor: label.color,
-                color: '#fff',
-                fontWeight: 'bold',
-                cursor: readOnly ? 'default' : 'pointer',
-                '&:hover': {
-                  opacity: readOnly ? 1 : 0.8,
-                },
-                ...(assigned && {
-                  border: '2px solid #fff',
-                  boxShadow: '0 0 0 2px ' + label.color,
-                }),
-              }}
-            />
-          );
-        })}
-      </Box>
-    </Box>
+    <div className="flex flex-wrap gap-2">
+      {allLabels.map(label => {
+        const assigned = isAssigned(label._id);
+        return (
+          <button
+            key={label._id}
+            type="button"
+            data-testid={`label-${label._id}`}
+            onClick={() => handleToggle(label)}
+            disabled={readOnly}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-white transition-all${readOnly ? ' cursor-default' : ' cursor-pointer hover:opacity-80'}${assigned ? ' ring-2 ring-offset-1 ring-white shadow-md' : ' opacity-60'}`}
+            style={{ backgroundColor: label.color }}
+          >
+            {assigned && (
+              <svg
+                data-testid="check-icon"
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+            {label.name}
+          </button>
+        );
+      })}
+    </div>
   );
-};
-
-LabelPicker.propTypes = {
-  boardId: PropTypes.string.isRequired,
-  readOnly: PropTypes.bool,
-  card: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    labels: PropTypes.arrayOf(
-      PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.shape({
-          _id: PropTypes.string,
-          name: PropTypes.string,
-          color: PropTypes.string,
-        }),
-      ])
-    ),
-  }).isRequired,
-  onUpdate: PropTypes.func,
 };
 
 export default LabelPicker;

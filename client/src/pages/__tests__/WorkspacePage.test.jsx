@@ -966,4 +966,30 @@ describe('WorkspacePage', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
+
+  it('shows no description fallback for boards without description', async () => {
+    const boardWithNoDesc = {
+      _id: 'board-no-desc',
+      name: 'No Desc Board',
+      workspaceId: 'ws1',
+      createdAt: new Date().toISOString(),
+    };
+    vi.spyOn(apiModule.workspaceAPI, 'getById').mockResolvedValue({
+      data: { data: mockWorkspace },
+    });
+    vi.spyOn(apiModule.boardAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [boardWithNoDesc] },
+    });
+    vi.spyOn(apiModule.memberAPI, 'getByWorkspace').mockResolvedValue({
+      data: { data: [] },
+    });
+
+    renderWithProviders(<WorkspacePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No Desc Board')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('No description')).toBeInTheDocument();
+  });
 });

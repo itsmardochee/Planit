@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CardModal from '../CardModal';
-import { cardAPI } from '../../utils/api';
 
 // Mock the API
 vi.mock('../../utils/api', () => ({

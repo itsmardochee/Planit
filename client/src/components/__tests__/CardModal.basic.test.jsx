@@ -1,20 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CardModal from '../CardModal';
+import usePermissions from '../../hooks/usePermissions';
 import { cardAPI, labelAPI, commentAPI } from '../../utils/api';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 
-// Mock usePermissions to grant all card permissions by default
+// Mock usePermissions as a spy so we can assert the arguments it receives
 vi.mock('../../hooks/usePermissions', () => ({
-  default: () => ({
+  default: vi.fn(() => ({
     can: () => true,
     role: 'owner',
     loading: false,
     error: null,
     isAtLeast: () => true,
     canModifyUserRole: () => true,
-  }),
+  })),
 }));
 
 // Mock API
@@ -365,5 +366,16 @@ describe('CardModal - Basic Fields', () => {
     await waitFor(() => {
       expect(deleteButton).not.toBeDisabled();
     });
+  });
+
+  // Regression test: workspaceId must be forwarded to usePermissions so that
+  // the comment form is not incorrectly disabled for all users.
+  it('passes workspaceId to usePermissions (regression: comment form disabled for all)', () => {
+    renderCardModal({ workspaceId: 'workspace-abc' });
+
+    // usePermissions must have been called with the workspaceId received by CardModal
+    const calls = vi.mocked(usePermissions).mock.calls;
+    const calledWithWorkspaceId = calls.some(([id]) => id === 'workspace-abc');
+    expect(calledWithWorkspaceId).toBe(true);
   });
 });

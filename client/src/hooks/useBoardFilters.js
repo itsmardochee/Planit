@@ -7,7 +7,7 @@ import { applyFilters, getOverdueCount } from '../utils/boardHelpers';
  * @param {Array} members - Array of workspace members
  * @returns {Object} Filtering state and handlers
  */
-const useBoardFilters = (lists, members) => {
+const useBoardFilters = (lists, _members) => {
   const [selectedMemberFilter, setSelectedMemberFilter] = useState(null);
   const [showOverdueFilter, setShowOverdueFilter] = useState(false);
 
