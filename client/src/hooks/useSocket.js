@@ -11,6 +11,7 @@ const EVENT_HANDLER_MAP = {
   'list:deleted': 'onListDeleted',
   'list:reordered': 'onListReordered',
   'comment:created': 'onCommentCreated',
+  'comment:updated': 'onCommentUpdated',
   'comment:deleted': 'onCommentDeleted',
   'member:typing': 'onMemberTyping',
 };

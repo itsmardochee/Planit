@@ -132,6 +132,23 @@ const BoardPage = () => {
     [setLists]
   );
 
+  // ─── Comment socket events ────────────────────────────────────────────────
+  // Stored as a single state object and forwarded to the open CardModal so
+  // CommentSection can update its local list without re-fetching.
+  const [lastCommentEvent, setLastCommentEvent] = useState(null);
+
+  const handleCommentCreated = useCallback(data => {
+    setLastCommentEvent({ type: 'created', data });
+  }, []);
+
+  const handleCommentUpdated = useCallback(data => {
+    setLastCommentEvent({ type: 'updated', data });
+  }, []);
+
+  const handleCommentDeleted = useCallback(data => {
+    setLastCommentEvent({ type: 'deleted', data });
+  }, []);
+
   const { onlineUsers, isConnected } = useSocket(boardId, {
     onCardCreated: handleCardCreated,
     onCardUpdated: handleCardUpdated,
@@ -141,6 +158,9 @@ const BoardPage = () => {
     onListUpdated: handleListUpdated,
     onListDeleted: handleListDeleted,
     onListReordered: handleListReordered,
+    onCommentCreated: handleCommentCreated,
+    onCommentUpdated: handleCommentUpdated,
+    onCommentDeleted: handleCommentDeleted,
   });
 
   // Disable drag & drop for users without card:move permission (e.g. viewers)
@@ -526,6 +546,7 @@ const BoardPage = () => {
             members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}
+            commentEvent={lastCommentEvent}
           />
         )}
       </div>

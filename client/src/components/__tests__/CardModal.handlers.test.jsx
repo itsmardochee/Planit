@@ -72,27 +72,30 @@ vi.mock('../MemberSelector', () => ({
   ),
 }));
 
-// Mock LabelPicker with an onUpdate trigger
+// Mock LabelPicker using the new controlled interface
 vi.mock('../LabelPicker', () => ({
-  default: ({ card, onUpdate }) => (
+  default: ({ assignedLabels, onChange }) => (
     <div data-testid="label-picker">
       <button
-        data-testid="trigger-card-update"
+        data-testid="trigger-label-add"
         onClick={() =>
-          onUpdate({ ...card, labels: [{ _id: 'l1', name: 'Bug' }] })
+          onChange([...assignedLabels, { _id: 'l1', name: 'Bug' }])
         }
       >
-        Update Card
+        Add Label
       </button>
     </div>
   ),
 }));
 
-// Mock StatusSelector to show current card status
+// Mock StatusSelector using the new controlled interface
 vi.mock('../StatusSelector', () => ({
-  default: ({ card }) => (
+  default: ({ value, onChange }) => (
     <div data-testid="status-selector">
-      <span data-testid="current-status">{card.status}</span>
+      <span data-testid="current-status">{value ?? ''}</span>
+      <button data-testid="set-status-done" onClick={() => onChange('done')}>
+        Set Done
+      </button>
     </div>
   ),
 }));
@@ -299,21 +302,49 @@ describe('CardModal - Handlers', () => {
     });
   });
 
-  describe('handleCardChange', () => {
-    it('updates currentCard state when LabelPicker triggers onUpdate', async () => {
+  describe('pending label and status changes', () => {
+    it('calls cardAPI.assignLabel on Save after adding a label via LabelPicker', async () => {
+      cardAPI.assignLabel.mockResolvedValue({ data: { success: true } });
+
       renderCardModal();
 
-      // Initially status is null
-      expect(screen.getByTestId('current-status').textContent).toBe('');
+      // Add a label via the mock button
+      fireEvent.click(screen.getByTestId('trigger-label-add'));
 
-      // Trigger card update via mock LabelPicker button
-      fireEvent.click(screen.getByTestId('trigger-card-update'));
+      // Press Save
+      fireEvent.click(screen.getByRole('button', { name: /cards:save/i }));
 
-      // StatusSelector now receives the updated card
-      // The mock shows card.status - it remains null since our update only changes labels
       await waitFor(() => {
-        expect(screen.getByTestId('current-status')).toBeInTheDocument();
+        expect(cardAPI.assignLabel).toHaveBeenCalledWith('card-123', 'l1');
       });
+    });
+
+    it('calls cardAPI.updateStatus on Save after changing status via StatusSelector', async () => {
+      cardAPI.updateStatus.mockResolvedValue({ data: { success: true } });
+
+      renderCardModal();
+
+      // Change status via the mock button
+      fireEvent.click(screen.getByTestId('set-status-done'));
+
+      // Press Save
+      fireEvent.click(screen.getByRole('button', { name: /cards:save/i }));
+
+      await waitFor(() => {
+        expect(cardAPI.updateStatus).toHaveBeenCalledWith('card-123', 'done');
+      });
+    });
+
+    it('does not call cardAPI.updateStatus if status is unchanged', async () => {
+      renderCardModal();
+
+      fireEvent.click(screen.getByRole('button', { name: /cards:save/i }));
+
+      await waitFor(() => {
+        expect(cardAPI.update).toHaveBeenCalled();
+      });
+
+      expect(cardAPI.updateStatus).not.toHaveBeenCalled();
     });
   });
 });

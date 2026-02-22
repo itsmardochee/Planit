@@ -164,7 +164,7 @@ export const getComments = async (req, res, next) => {
 
     const comments = await Comment.find({ cardId })
       .populate('userId', 'username email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 });
 
     res.status(200).json({
       success: true,
@@ -252,7 +252,13 @@ export const updateComment = async (req, res, next) => {
     );
 
     logger.info(`Comment ${id} updated by user ${req.user._id}`);
-
+    const card = await Card.findById(comment.cardId);
+    if (card) {
+      getIO()?.to(`board:${card.boardId}`).emit('comment:updated', {
+        comment: populated,
+        cardId: comment.cardId,
+      });
+    }
     res.status(200).json({
       success: true,
       data: populated,
