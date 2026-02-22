@@ -397,6 +397,7 @@ const CardModal = ({
                       boardId={boardId}
                       card={currentCard}
                       onUpdate={handleCardChange}
+                      readOnly={!can('label:assign')}
                     />
                   </div>
                 )}
