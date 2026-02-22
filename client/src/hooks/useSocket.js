@@ -38,9 +38,10 @@ const useSocket = (boardId, handlers = {}) => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const serverUrl =
-      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
-      'http://localhost:5000';
+    // Strip the /api suffix so the socket connects to the base server URL,
+    // not the REST API path (e.g. http://localhost:5000 not http://localhost:5000/api)
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
+    const serverUrl = apiUrl.replace(/\/api\/?$/, '');
 
     const socket = io(serverUrl, {
       auth: { token },

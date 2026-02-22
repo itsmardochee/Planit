@@ -59,9 +59,12 @@ const BoardPage = () => {
   // ─── Real-time socket handlers ───────────────────────────────────────────
   const handleCardCreated = useCallback(({ card, listId }) => {
     setLists((prev) =>
-      prev.map((l) =>
-        l._id === listId ? { ...l, cards: [...(l.cards || []), card] } : l
-      )
+      prev.map((l) => {
+        if (l._id !== listId) return l;
+        // Deduplicate: card may already be present if refetch() ran first
+        if ((l.cards || []).some((c) => c._id === card._id)) return l;
+        return { ...l, cards: [...(l.cards || []), card] };
+      })
     );
   }, []);
 
@@ -89,8 +92,17 @@ const BoardPage = () => {
   }, []);
 
   const handleListCreated = useCallback(({ list }) => {
-    setLists((prev) => [...prev, { ...list, cards: [] }]);
+    setLists((prev) => {
+      // Deduplicate: list may already be present if refetch() ran first
+      if (prev.some((l) => l._id === list._id)) return prev;
+      return [...prev, { ...list, cards: [] }];
+    });
   }, []);
+
+  const handleListReordered = useCallback(() => {
+    // Reorder affects multiple lists' positions — safest to refetch the full state
+    refetch();
+  }, [refetch]);
 
   const handleListUpdated = useCallback(({ list }) => {
     setLists((prev) =>
@@ -110,6 +122,7 @@ const BoardPage = () => {
     onListCreated: handleListCreated,
     onListUpdated: handleListUpdated,
     onListDeleted: handleListDeleted,
+    onListReordered: handleListReordered,
   });
 
   // Disable drag & drop for users without card:move permission (e.g. viewers)
