@@ -112,16 +112,17 @@ const BoardPage = () => {
   );
 
   const handleListCreated = useCallback(
-    ({ list }) => {
+    ({ list, senderId }) => {
+      // Skip for the creator — their local state was already updated
+      // optimistically in handleCreateList (avoids duplicate)
+      if (senderId && String(senderId) === String(currentUserId)) return;
       setLists(prev => {
-        // Always deduplicate — handles both orderings of HTTP vs socket:
-        // - HTTP first → socket deduplicates here
-        // - Socket first → HTTP response deduplicates in handleCreateList
+        // Deduplicate: list may already be present for other reasons
         if (prev.some(l => l._id === list._id)) return prev;
         return [...prev, { ...list, cards: [] }];
       });
     },
-    [setLists]
+    [setLists, currentUserId]
   );
 
   const handleListReordered = useCallback(
@@ -197,13 +198,7 @@ const BoardPage = () => {
       });
       if (response.data.success) {
         const newList = { ...response.data.data, cards: [] };
-        setLists(prev => {
-          // Deduplicate: socket may have already added this list
-          // if list:created arrived before the HTTP response
-          const current = prev || [];
-          if (current.some(l => l._id === newList._id)) return current;
-          return [...current, newList];
-        });
+        setLists(prev => [...(prev || []), newList]);
         setNewListName('');
         setShowNewListForm(false);
       }
