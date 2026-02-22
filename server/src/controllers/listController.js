@@ -136,7 +136,9 @@ export const createList = async (req, res, next) => {
     });
 
     logger.info(`List created: ${list._id} by user ${req.user._id}`);
-    getIO()?.to(`board:${boardId}`).emit('list:created', { list, boardId });
+    getIO()
+      ?.to(`board:${boardId}`)
+      .emit('list:created', { list, boardId, senderId: req.user._id });
     res.status(201).json({ success: true, data: list });
   } catch (error) {
     next(error);
