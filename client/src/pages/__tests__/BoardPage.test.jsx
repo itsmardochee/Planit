@@ -27,12 +27,6 @@ vi.mock('../../hooks/usePermissions', () => ({
   }),
 }));
 
-// Mock react-redux so BoardPage can call useSelector without a Provider
-vi.mock('react-redux', () => ({
-  useSelector: selector =>
-    selector({ auth: { user: { _id: 'current-user-id' } } }),
-}));
-
 // Mock the API modules
 vi.mock('../../utils/api', async () => {
   const actual = await vi.importActual('../../utils/api');

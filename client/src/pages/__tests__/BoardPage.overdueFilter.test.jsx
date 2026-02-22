@@ -39,12 +39,6 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-// Mock react-redux so BoardPage can call useSelector without a Provider
-vi.mock('react-redux', () => ({
-  useSelector: selector =>
-    selector({ auth: { user: { _id: 'current-user-id' } } }),
-}));
-
 const Wrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>;
 
 describe('BoardPage - Overdue Filter', () => {
