@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -15,6 +16,7 @@ import notificationRouter from './routes/notificationRoutes.js';
 import activityRoutes from './routes/activityRoutes.js';
 import auth from './middlewares/auth.js';
 import errorHandler from './middlewares/errorHandler.js';
+import { initSocket } from './socket/index.js';
 
 // Load environment variables
 dotenv.config();
@@ -93,7 +95,10 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const httpServer = createServer(app);
+initSocket(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

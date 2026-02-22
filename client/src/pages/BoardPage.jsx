@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { listAPI } from '../utils/api';
@@ -9,9 +9,11 @@ import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
 import LabelManager from '../components/LabelManager';
 import ActivityFeed from '../components/ActivityFeed';
+import OnlineUsers from '../components/OnlineUsers';
 import useBoardData from '../hooks/useBoardData';
 import useBoardFilters from '../hooks/useBoardFilters';
 import useBoardDrag from '../hooks/useBoardDrag';
+import useSocket from '../hooks/useSocket';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { Tooltip } from '@mui/material';
 import {
@@ -53,6 +55,62 @@ const BoardPage = () => {
 
   // Get permissions
   const { can } = usePermissions(board?.workspaceId);
+
+  // ─── Real-time socket handlers ───────────────────────────────────────────
+  const handleCardCreated = useCallback(({ card, listId }) => {
+    setLists((prev) =>
+      prev.map((l) =>
+        l._id === listId ? { ...l, cards: [...(l.cards || []), card] } : l
+      )
+    );
+  }, []);
+
+  const handleCardUpdated = useCallback(({ card }) => {
+    setLists((prev) =>
+      prev.map((l) => ({
+        ...l,
+        cards: (l.cards || []).map((c) => (c._id === card._id ? card : c)),
+      }))
+    );
+  }, []);
+
+  const handleCardMoved = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  const handleCardDeleted = useCallback(({ cardId, listId }) => {
+    setLists((prev) =>
+      prev.map((l) =>
+        l._id === listId
+          ? { ...l, cards: (l.cards || []).filter((c) => c._id !== cardId) }
+          : l
+      )
+    );
+  }, []);
+
+  const handleListCreated = useCallback(({ list }) => {
+    setLists((prev) => [...prev, { ...list, cards: [] }]);
+  }, []);
+
+  const handleListUpdated = useCallback(({ list }) => {
+    setLists((prev) =>
+      prev.map((l) => (l._id === list._id ? { ...l, ...list } : l))
+    );
+  }, []);
+
+  const handleListDeleted = useCallback(({ listId }) => {
+    setLists((prev) => prev.filter((l) => l._id !== listId));
+  }, []);
+
+  const { onlineUsers, isConnected } = useSocket(boardId, {
+    onCardCreated: handleCardCreated,
+    onCardUpdated: handleCardUpdated,
+    onCardMoved: handleCardMoved,
+    onCardDeleted: handleCardDeleted,
+    onListCreated: handleListCreated,
+    onListUpdated: handleListUpdated,
+    onListDeleted: handleListDeleted,
+  });
 
   // Disable drag & drop for users without card:move permission (e.g. viewers)
   const effectiveSensors = can && can('card:move') ? sensors : [];
@@ -153,6 +211,8 @@ const BoardPage = () => {
 
               {/* Filters and Actions */}
               <div className="flex items-center gap-3">
+                {/* Online users */}
+                <OnlineUsers users={onlineUsers} isConnected={isConnected} />
                 {/* Overdue Filter Button */}
                 <button
                   onClick={() => setShowOverdueFilter(!showOverdueFilter)}

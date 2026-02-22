@@ -9,6 +9,7 @@ import {
 } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import logActivity from '../utils/logActivity.js';
+import { getIO } from '../socket/index.js';
 
 /**
  * @swagger
@@ -103,7 +104,10 @@ export const createComment = async (req, res, next) => {
     }
 
     logger.info(`Comment created on card ${cardId} by user ${req.user._id}`);
-
+    getIO()?.to(`board:${card.boardId}`).emit('comment:created', {
+      comment: populated,
+      cardId,
+    });
     res.status(201).json({
       success: true,
       data: populated,
@@ -330,7 +334,12 @@ export const deleteComment = async (req, res, next) => {
     }
 
     logger.info(`Comment ${id} deleted by user ${req.user._id}`);
-
+    if (card) {
+      getIO()?.to(`board:${card.boardId}`).emit('comment:deleted', {
+        commentId: id,
+        cardId,
+      });
+    }
     res.status(200).json({
       success: true,
       message: 'Comment deleted successfully',
