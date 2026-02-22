@@ -1,0 +1,54 @@
+{
+  "title": "Activity",
+  "emptyState": {
+    "noActivity": "No activity yet",
+    "description": "Activity will appear here as changes are made"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load activities"
+  },
+  "actions": {
+    "created": "created",
+    "updated": "updated",
+    "deleted": "deleted",
+    "moved": "moved",
+    "commented": "commented on",
+    "assigned": "assigned",
+    "unassigned": "unassigned"
+  },
+  "entities": {
+    "card": "card",
+    "list": "list",
+    "board": "board",
+    "comment": "comment"
+  },
+  "messages": {
+    "cardCreated": "{{username}} created card {{cardTitle}}",
+    "cardUpdated": "{{username}} updated card {{cardTitle}}",
+    "cardDeleted": "{{username}} deleted card {{cardTitle}}",
+    "cardMoved": "{{username}} moved card {{cardTitle}} from {{fromList}} to {{toList}}",
+    "cardAssigned": "{{username}} assigned {{assignedUser}} to {{cardTitle}}",
+    "cardUnassigned": "{{username}} unassigned {{unassignedUser}} from {{cardTitle}}",
+    "listCreated": "{{username}} created list {{listName}}",
+    "listUpdated": "{{username}} updated list {{listName}}",
+    "listDeleted": "{{username}} deleted list {{listName}}",
+    "boardCreated": "{{username}} created board {{boardName}}",
+    "boardUpdated": "{{username}} updated board {{boardName}}",
+    "boardDeleted": "{{username}} deleted board {{boardName}}",
+    "commented": "{{username}} commented on {{cardTitle}}"
+  },
+  "time": {
+    "justNow": "just now",
+    "secondsAgo": "{{count}} seconds ago",
+    "minuteAgo": "{{count}} minute ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "hourAgo": "{{count}} hour ago",
+    "hoursAgo": "{{count}} hours ago",
+    "dayAgo": "{{count}} day ago",
+    "daysAgo": "{{count}} days ago",
+    "monthAgo": "{{count}} month ago",
+    "monthsAgo": "{{count}} months ago",
+    "yearAgo": "{{count}} year ago",
+    "yearsAgo": "{{count}} years ago"
+  }
+}

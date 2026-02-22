@@ -11,5 +11,12 @@
   "cancel": "Annuler",
   "save": "Enregistrer",
   "saving": "Enregistrement...",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette carte ?"
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette carte ?",
+  "assignMembers": "Assigner des membres",
+  "selectMember": "Sélectionner un membre",
+  "noMembersAvailable": "Aucun membre disponible",
+  "assignedTo": "Assigné à",
+  "labels": "Étiquettes",
+  "status": "Statut",
+  "dueDate": "Date d'échéance"
 }

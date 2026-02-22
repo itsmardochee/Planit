@@ -11,5 +11,12 @@
   "cancel": "Cancel",
   "save": "Save",
   "saving": "Saving...",
-  "confirmDelete": "Are you sure you want to delete this card?"
+  "confirmDelete": "Are you sure you want to delete this card?",
+  "assignMembers": "Assign Members",
+  "selectMember": "Select a member",
+  "noMembersAvailable": "No members available",
+  "assignedTo": "Assigned To",
+  "labels": "Labels",
+  "status": "Status",
+  "dueDate": "Due Date"
 }

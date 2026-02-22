@@ -351,6 +351,71 @@ const options = {
             },
           },
         },
+        Label: {
+          type: 'object',
+          required: ['name', 'color', 'boardId'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Label ID (auto-generated)',
+              example: '507f1f77bcf86cd799439011',
+            },
+            name: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Label name',
+              example: 'Bug',
+            },
+            color: {
+              type: 'string',
+              pattern: '^#[0-9A-Fa-f]{6}$',
+              description: 'Hex color code',
+              example: '#FF0000',
+            },
+            boardId: {
+              type: 'string',
+              description: 'ID of the board this label belongs to',
+              example: '507f1f77bcf86cd799439011',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Label creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+          },
+        },
+        LabelResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              $ref: '#/components/schemas/Label',
+            },
+          },
+        },
+        LabelsResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Label',
+              },
+            },
+          },
+        },
         Card: {
           type: 'object',
           required: ['title', 'listId', 'boardId', 'userId'],
@@ -392,6 +457,20 @@ const options = {
               type: 'string',
               description: 'ID of the user who owns this card',
               example: '507f1f77bcf86cd799439011',
+            },
+            labels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Array of label IDs assigned to this card',
+            },
+            status: {
+              type: 'string',
+              enum: ['todo', 'in-progress', 'done', 'blocked'],
+              nullable: true,
+              description: 'Card status',
+              example: 'todo',
             },
             createdAt: {
               type: 'string',
@@ -444,6 +523,10 @@ const options = {
         description: 'Workspace management endpoints',
       },
       {
+        name: 'Workspace Members',
+        description: 'Workspace membership and collaboration endpoints',
+      },
+      {
         name: 'Boards',
         description: 'Board management endpoints',
       },
@@ -454,6 +537,10 @@ const options = {
       {
         name: 'Cards',
         description: 'Card management endpoints',
+      },
+      {
+        name: 'Labels',
+        description: 'Label management endpoints',
       },
     ],
   },

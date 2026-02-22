@@ -37,11 +37,47 @@ const cardSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'User ID is required'],
     },
+    assignedTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    labels: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Label',
+      },
+    ],
+    status: {
+      type: String,
+      enum: {
+        values: ['todo', 'in-progress', 'done', 'blocked'],
+        message: 'Status must be one of: todo, in-progress, done, blocked',
+      },
+      default: null,
+    },
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+    reminderDate: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Virtual field: true if dueDate exists and is in the past
+cardSchema.virtual('isOverdue').get(function () {
+  if (!this.dueDate) return false;
+  return new Date() > this.dueDate;
+});
 
 // Useful indexes for query performance
 cardSchema.index({ listId: 1, userId: 1 });

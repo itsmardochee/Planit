@@ -9,6 +9,10 @@ import workspaceRoutes from './routes/workspaceRoutes.js';
 import { workspaceBoardRouter, boardRouter } from './routes/boardRoutes.js';
 import { boardListRouter, listRouter } from './routes/listRoutes.js';
 import { listCardRouter, cardRouter } from './routes/cardRoutes.js';
+import { boardLabelRouter, labelRouter } from './routes/labelRoutes.js';
+import { cardCommentRouter, commentRouter } from './routes/commentRoutes.js';
+import notificationRouter from './routes/notificationRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
 import auth from './middlewares/auth.js';
 import errorHandler from './middlewares/errorHandler.js';
 
@@ -69,6 +73,12 @@ app.use('/api/boards/:boardId/lists', auth, boardListRouter);
 app.use('/api/lists', auth, listRouter);
 app.use('/api/lists/:listId/cards', auth, listCardRouter);
 app.use('/api/cards', auth, cardRouter);
+app.use('/api/boards/:boardId/labels', auth, boardLabelRouter);
+app.use('/api/labels', auth, labelRouter);
+app.use('/api/cards/:cardId/comments', auth, cardCommentRouter);
+app.use('/api/comments', auth, commentRouter);
+app.use('/api/notifications', auth, notificationRouter);
+app.use('/api', auth, activityRoutes);
 
 // 404 handler - must be before error handler
 app.use((req, res) => {

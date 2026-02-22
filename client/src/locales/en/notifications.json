@@ -1,0 +1,10 @@
+{
+  "bell": "Notifications",
+  "title": "Notifications",
+  "noNotifications": "No notifications",
+  "markAsRead": "Mark as read",
+  "markAllAsRead": "Mark all as read",
+  "delete": "Delete",
+  "cardOverdue": "Card \"{{cardTitle}}\" is overdue",
+  "cardDueSoon": "Card \"{{cardTitle}}\" is due soon"
+}

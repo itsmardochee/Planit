@@ -6,6 +6,8 @@
   "boardName": "Nom du board",
   "boardNamePlaceholder": "Mon nouveau board",
   "noBoards": "Aucun board pour le moment",
+  "members": "Membres",
+  "inviteMembers": "Inviter des membres",
   "errors": {
     "loadingWorkspace": "Erreur lors du chargement du workspace",
     "creatingBoard": "Erreur lors de la création du board",

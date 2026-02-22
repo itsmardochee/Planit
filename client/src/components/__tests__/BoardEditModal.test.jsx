@@ -14,11 +14,12 @@ describe('BoardEditModal', () => {
     description: 'Test Description',
   };
 
-  const mockOnClose = vi.fn();
-  const mockOnSave = vi.fn();
+  let mockOnClose;
+  let mockOnSave;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockOnClose = vi.fn();
+    mockOnSave = vi.fn();
   });
 
   it('renders nothing when board is null', () => {

@@ -1,14 +1,11 @@
 import mongoose from 'mongoose';
 import Board from '../models/Board.js';
-import Workspace from '../models/Workspace.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
-import {
-  ValidationError,
-  NotFoundError,
-  ForbiddenError,
-} from '../utils/errors.js';
+import Comment from '../models/Comment.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -63,28 +60,13 @@ import logger from '../utils/logger.js';
 /**
  * @desc    Create new board
  * @route   POST /api/workspaces/:workspaceId/boards
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const createBoard = async (req, res, next) => {
   try {
-    const { workspaceId } = req.params;
     const { name, description } = req.body;
 
-    // Validate workspace ID format
-    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
-      throw new ValidationError('Invalid workspace ID format');
-    }
-
-    // Check if workspace exists and belongs to user
-    const workspace = await Workspace.findById(workspaceId);
-
-    if (!workspace) {
-      throw new NotFoundError('Workspace not found');
-    }
-
-    if (workspace.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this workspace');
-    }
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     // Trim and validate name
     const trimmedName = name?.trim();
@@ -106,15 +88,25 @@ export const createBoard = async (req, res, next) => {
     const board = await Board.create({
       name: trimmedName,
       description: trimmedDescription,
-      workspaceId,
+      workspaceId: req.workspace._id,
       userId: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      workspaceId: req.workspace._id,
+      boardId: board._id,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'board',
+      details: { boardName: board.name },
     });
 
     logger.info('Board created', {
       requestId: req.id,
       userId: req.user._id,
       boardId: board._id,
-      workspaceId,
+      workspaceId: req.workspace._id,
     });
 
     res.status(201).json({
@@ -162,31 +154,15 @@ export const createBoard = async (req, res, next) => {
 /**
  * @desc    Get all boards for a workspace
  * @route   GET /api/workspaces/:workspaceId/boards
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getBoards = async (req, res, next) => {
   try {
-    const { workspaceId } = req.params;
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
-    // Validate workspace ID format
-    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
-      throw new ValidationError('Invalid workspace ID format');
-    }
-
-    // Check if workspace exists and belongs to user
-    const workspace = await Workspace.findById(workspaceId);
-
-    if (!workspace) {
-      throw new NotFoundError('Workspace not found');
-    }
-
-    if (workspace.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this workspace');
-    }
-
+    // Get all boards in the workspace (not just user's boards)
     const boards = await Board.find({
-      workspaceId,
-      userId: req.user._id,
+      workspaceId: req.workspace._id,
     });
 
     res.status(200).json({
@@ -234,11 +210,14 @@ export const getBoards = async (req, res, next) => {
 /**
  * @desc    Get single board by ID
  * @route   GET /api/boards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const getBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from boardId)
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -252,9 +231,7 @@ export const getBoard = async (req, res, next) => {
       throw new NotFoundError('Board not found');
     }
 
-    if (board.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to access this board');
-    }
+    // No need to check board.userId - workspace access is already verified by middleware
 
     res.status(200).json({
       success: true,
@@ -267,12 +244,14 @@ export const getBoard = async (req, res, next) => {
 /**
  * @desc    Update board
  * @route   PUT /api/boards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const updateBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -303,22 +282,33 @@ export const updateBoard = async (req, res, next) => {
       updateData.description = trimmedDescription;
     }
 
-    // Find board first to check authorization
+    // Check if board exists (workspace access already verified)
     const existingBoard = await Board.findById(id);
 
     if (!existingBoard) {
       throw new NotFoundError('Board not found');
     }
 
-    if (existingBoard.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to update this board');
-    }
+    // No need to check board.userId - workspace access is already verified by middleware
 
     // Update board
     const board = await Board.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
+
+    // Log activity if there were updates
+    const updatedFields = Object.keys(updateData);
+    if (updatedFields.length > 0) {
+      await logActivity({
+        workspaceId: req.workspace._id,
+        boardId: board._id,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'board',
+        details: { boardName: board.name, fields: updatedFields },
+      });
+    }
 
     logger.info('Board updated', {
       requestId: req.id,
@@ -378,27 +368,37 @@ export const updateBoard = async (req, res, next) => {
 /**
  * @desc    Delete board
  * @route   DELETE /api/boards/:id
- * @access  Private
+ * @access  Private (workspace owner or member)
  */
 export const deleteBoard = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
+    // (middleware resolved workspace from boardId)
 
     // Validate board ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ValidationError('Invalid board ID format');
     }
 
-    // Find board first to check authorization
+    // Find board first to verify it exists
     const board = await Board.findById(id);
 
     if (!board) {
       throw new NotFoundError('Board not found');
     }
 
-    if (board.userId.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError('Not authorized to delete this board');
-    }
+    // No need to check board.userId - workspace access is already verified by middleware
+
+    const boardName = board.name;
+    const workspaceId = board.workspaceId;
+
+    // Cascade delete: Delete all comments on cards in this board
+    const cardIds = (await Card.find({ boardId: id }).select('_id')).map(
+      c => c._id
+    );
+    await Comment.deleteMany({ cardId: { $in: cardIds } });
 
     // Cascade delete: Delete all cards associated with this board
     await Card.deleteMany({ boardId: id });
@@ -408,6 +408,16 @@ export const deleteBoard = async (req, res, next) => {
 
     // Finally, delete the board itself
     await Board.findByIdAndDelete(id);
+
+    // Log activity
+    await logActivity({
+      workspaceId,
+      boardId: id,
+      userId: req.user._id,
+      action: 'deleted',
+      entityType: 'board',
+      details: { boardName },
+    });
 
     logger.info('Board deleted', {
       requestId: req.id,

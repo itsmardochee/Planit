@@ -7,9 +7,11 @@ import { workspaceBoardRouter, boardRouter } from '../../routes/boardRoutes.js';
 import auth from '../../middlewares/auth.js';
 import User from '../../models/User.js';
 import Workspace from '../../models/Workspace.js';
+import WorkspaceMember from '../../models/WorkspaceMember.js';
 import Board from '../../models/Board.js';
 import List from '../../models/List.js';
 import Card from '../../models/Card.js';
+import Comment from '../../models/Comment.js';
 import errorHandler from '../../middlewares/errorHandler.js';
 
 const app = express();
@@ -316,6 +318,7 @@ describe('GET /api/workspaces/:workspaceId/boards', () => {
 
   afterEach(async () => {
     await Board.deleteMany({});
+    await WorkspaceMember.deleteMany({});
     await Workspace.deleteMany({});
     await User.deleteMany({});
   });
@@ -426,6 +429,53 @@ describe('GET /api/workspaces/:workspaceId/boards', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
+    });
+
+    it('should allow workspace member to view boards', async () => {
+      // Create invited member
+      const memberUser = await User.create({
+        username: 'member',
+        email: 'member@example.com',
+        password: 'password123',
+      });
+
+      // Add member to workspace
+      await WorkspaceMember.create({
+        workspaceId: testWorkspace._id,
+        userId: memberUser._id,
+        role: 'member',
+        invitedBy: testUser._id,
+      });
+
+      // Owner creates boards
+      await Board.create({
+        name: 'Board 1',
+        workspaceId: testWorkspace._id,
+        userId: testUser._id,
+      });
+      await Board.create({
+        name: 'Board 2',
+        workspaceId: testWorkspace._id,
+        userId: testUser._id,
+      });
+
+      // Member token
+      const memberToken = jwt.sign(
+        { id: memberUser._id.toString() },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      // Member should see all boards in workspace
+      const response = await request(app)
+        .get(`/api/workspaces/${testWorkspace._id}/boards`)
+        .set('Authorization', `Bearer ${memberToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data[0].name).toBe('Board 1');
+      expect(response.body.data[1].name).toBe('Board 2');
     });
   });
 });
@@ -920,6 +970,21 @@ describe('DELETE /api/boards/:id', () => {
         position: 0,
       });
 
+      // Create comments on cards
+      const cards = await Card.find({ boardId: testBoard._id });
+      await Comment.create([
+        {
+          content: 'Comment on card 1',
+          cardId: cards[0]._id,
+          userId: testUser._id,
+        },
+        {
+          content: 'Comment on card 2',
+          cardId: cards[1]._id,
+          userId: testUser._id,
+        },
+      ]);
+
       // Delete the board
       const response = await request(app)
         .delete(`/api/boards/${testBoard._id}`)
@@ -939,6 +1004,12 @@ describe('DELETE /api/boards/:id', () => {
       // Verify cards are deleted
       const deletedCards = await Card.find({ boardId: testBoard._id });
       expect(deletedCards).toHaveLength(0);
+
+      // Verify comments are deleted
+      const deletedComments = await Comment.find({
+        cardId: { $in: cards.map(c => c._id) },
+      });
+      expect(deletedComments).toHaveLength(0);
     });
   });
 });

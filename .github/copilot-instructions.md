@@ -254,6 +254,257 @@ const WorkspaceCard = ({ workspace, onDelete }) => {
 };
 ```
 
+### Modular Component Architecture (Testability-First)
+
+**CRITICAL: Design components for testability from the start by extracting logic into separate, testable units.**
+
+#### Architecture Layers
+
+Components should be organized into three testable layers:
+
+1. **Pure Functions (Helpers)** → `utils/` directory
+   - Business logic without side effects
+   - Data transformations, filtering, calculations
+   - 100% unit testable with simple input/output tests
+   - Zero dependencies on React or external APIs
+
+2. **Custom Hooks** → `hooks/` directory
+   - Stateful logic and side effects
+   - API calls, state management, computed values
+   - Testable with `@testing-library/react-hooks`
+   - Reusable across components
+
+3. **Presentational Components** → `components/`, `pages/`
+   - Primarily JSX and UI logic
+   - Minimal state (UI-only: modals, forms)
+   - Uses helpers and hooks for all business logic
+   - Simple integration tests
+
+#### When to Extract Logic
+
+**Extract to helpers when:**
+
+- Logic is deterministic (same input → same output)
+- No React state or hooks needed
+- Examples: filtering, sorting, validation, date calculations
+
+**Extract to custom hooks when:**
+
+- Logic uses React hooks (useState, useEffect, etc.)
+- Managing component lifecycle or side effects
+- API calls, subscriptions, event listeners
+- Examples: data fetching, form handling, drag & drop
+
+**Keep in component when:**
+
+- Simple event handlers (e.g., `onClick={() => setOpen(true)}`)
+- Direct JSX rendering logic
+- UI-only state (modal visibility, form inputs)
+
+#### Example: Complex Component Refactoring
+
+**❌ Before: Monolithic Component (Hard to Test)**
+
+```jsx
+const BoardPage = () => {
+  const [board, setBoard] = useState(null);
+  const [lists, setLists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState(null);
+
+  // 50+ lines of data fetching logic
+  useEffect(() => {
+    const fetchData = async () => {
+      const boardRes = await boardAPI.getById(id);
+      const listsRes = await listAPI.getByBoard(id);
+      // ... complex logic
+    };
+    fetchData();
+  }, [id]);
+
+  // Complex filtering logic (untestable)
+  const filteredLists = lists.map(list => ({
+    ...list,
+    cards: list.cards.filter(card => {
+      if (!selectedMember) return true;
+      return card.assignedTo?.some(m => m._id === selectedMember);
+    }),
+  }));
+
+  // 100+ lines of drag & drop handlers
+  const handleDragEnd = event => {
+    // Complex reordering logic
+  };
+
+  return (
+    <DndContext onDragEnd={handleDragEnd}>{/* 200+ lines of JSX */}</DndContext>
+  );
+};
+```
+
+**✅ After: Modular Architecture (100% Testable)**
+
+```javascript
+// utils/boardHelpers.js - Pure Functions (100% coverage)
+export const filterCardsByMember = (cards, memberId) => {
+  if (!memberId) return cards;
+  return cards.filter(card => card.assignedTo?.some(m => m._id === memberId));
+};
+
+export const applyFilters = (lists, filters) => {
+  return lists.map(list => ({
+    ...list,
+    cards: filterCardsByMember(list.cards, filters.memberId),
+  }));
+};
+
+// hooks/useBoardData.js - Data Fetching Hook
+export const useBoardData = boardId => {
+  const [board, setBoard] = useState(null);
+  const [lists, setLists] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const boardRes = await boardAPI.getById(boardId);
+      const listsRes = await listAPI.getByBoard(boardId);
+      setBoard(boardRes.data);
+      setLists(listsRes.data);
+      setLoading(false);
+    };
+    fetchData();
+  }, [boardId]);
+
+  return { board, lists, loading, setLists };
+};
+
+// hooks/useBoardFilters.js - Filtering Logic Hook
+export const useBoardFilters = lists => {
+  const [selectedMember, setSelectedMember] = useState(null);
+
+  const filteredLists = useMemo(
+    () => applyFilters(lists, { memberId: selectedMember }),
+    [lists, selectedMember]
+  );
+
+  return { filteredLists, selectedMember, setSelectedMember };
+};
+
+// hooks/useBoardDrag.js - Drag & Drop Hook
+export const useBoardDrag = (lists, setLists) => {
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+  const handleDragEnd = useCallback(
+    event => {
+      // Drag & drop logic
+    },
+    [lists, setLists]
+  );
+
+  return { sensors, handleDragEnd };
+};
+
+// pages/BoardPage.jsx - Clean Component (Mostly JSX)
+const BoardPage = () => {
+  const { boardId } = useParams();
+  const { board, lists, loading, setLists } = useBoardData(boardId);
+  const { filteredLists, selectedMember, setSelectedMember } =
+    useBoardFilters(lists);
+  const { sensors, handleDragEnd } = useBoardDrag(lists, setLists);
+
+  if (loading) return <Loading />;
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <h1>{board.name}</h1>
+      <MemberFilter value={selectedMember} onChange={setSelectedMember} />
+      {filteredLists.map(list => (
+        <KanbanList key={list._id} list={list} />
+      ))}
+    </DndContext>
+  );
+};
+```
+
+#### Testing Strategy
+
+**Helpers (Unit Tests):**
+
+```javascript
+// utils/__tests__/boardHelpers.test.js
+describe('filterCardsByMember', () => {
+  it('should filter cards by member ID', () => {
+    const cards = [
+      { _id: '1', assignedTo: [{ _id: 'user1' }] },
+      { _id: '2', assignedTo: [{ _id: 'user2' }] },
+    ];
+    const result = filterCardsByMember(cards, 'user1');
+    expect(result).toHaveLength(1);
+    expect(result[0]._id).toBe('1');
+  });
+});
+```
+
+**Hooks (Hook Tests):**
+
+```javascript
+// hooks/__tests__/useBoardData.test.js
+import { renderHook, waitFor } from '@testing-library/react';
+import { useBoardData } from '../useBoardData';
+
+describe('useBoardData', () => {
+  it('should fetch board data', async () => {
+    const { result } = renderHook(() => useBoardData('board123'));
+
+    expect(result.current.loading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.board).toBeDefined();
+    });
+  });
+});
+```
+
+**Components (Integration Tests):**
+
+```javascript
+// pages/__tests__/BoardPage.test.jsx
+describe('BoardPage', () => {
+  it('should render board with filtered cards', async () => {
+    render(<BoardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('My Board')).toBeInTheDocument();
+    });
+
+    // Select member filter
+    userEvent.selectOptions(screen.getByRole('combobox'), 'user1');
+
+    // Verify only filtered cards are visible
+    expect(screen.getByText('Card 1')).toBeInTheDocument();
+    expect(screen.queryByText('Card 2')).not.toBeInTheDocument();
+  });
+});
+```
+
+#### Refactoring Existing Components
+
+When inheriting large, untestable components:
+
+1. **Identify logic types**: pure functions, stateful hooks, UI-only
+2. **Extract helpers first**:Move pure logic to `utils/`
+3. **Extract hooks**: Move stateful logic to `hooks/`
+4. **Simplify component**: Keep only JSX and simple handlers
+5. **Write tests progressively**: Start with helpers (easiest), then hooks, then integration
+
+**Metrics:**
+
+- Target: 80%+ branch coverage
+- Helpers should achieve 100% coverage
+- Hooks should achieve 85%+ coverage
+- Components need only integration tests (not full unit coverage)
+
 ### Drag & Drop Implementation
 
 - Use **dnd-kit** or **Pragmatic Drag and Drop** (not react-beautiful-dnd)

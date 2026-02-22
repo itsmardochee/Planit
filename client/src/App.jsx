@@ -3,6 +3,7 @@ import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import WorkspacePage from './pages/WorkspacePage.jsx';
+import WorkspaceSettings from './pages/WorkspaceSettings.jsx';
 import BoardPage from './pages/BoardPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
@@ -17,6 +18,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace/:workspaceId/settings"
+          element={
+            <ProtectedRoute>
+              <WorkspaceSettings />
             </ProtectedRoute>
           }
         />

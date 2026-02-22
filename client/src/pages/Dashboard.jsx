@@ -6,6 +6,7 @@ import { logout, setWorkspaces } from '../store/index';
 import { useAuth } from '../hooks/useAuth';
 import { workspaceAPI } from '../utils/api';
 import WorkspaceEditModal from '../components/WorkspaceEditModal';
+import ConfirmModal from '../components/ConfirmModal';
 import DarkModeToggle from '../components/DarkModeToggle';
 import LanguageSelector from '../components/LanguageSelector';
 
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [editingWorkspace, setEditingWorkspace] = useState(null);
+  const [confirmDeleteTarget, setConfirmDeleteTarget] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -86,25 +88,24 @@ const Dashboard = () => {
     setError('');
   };
 
-  const handleDeleteWorkspace = async (e, workspaceId, workspaceName) => {
+  const handleDeleteWorkspace = (e, workspaceId, workspaceName) => {
     e.stopPropagation();
+    setConfirmDeleteTarget({ id: workspaceId, name: workspaceName });
+  };
 
-    if (
-      !window.confirm(
-        t('common:messages.confirmDeleteWorkspace', { name: workspaceName })
-      )
-    ) {
-      return;
-    }
-
+  const handleConfirmDeleteWorkspace = async () => {
     try {
-      await workspaceAPI.delete(workspaceId);
-      const updatedWorkspaces = workspaces.filter(w => w._id !== workspaceId);
+      await workspaceAPI.delete(confirmDeleteTarget.id);
+      const updatedWorkspaces = workspaces.filter(
+        w => w._id !== confirmDeleteTarget.id
+      );
       dispatch(setWorkspaces(updatedWorkspaces));
       setError('');
     } catch (err) {
       setError(t('dashboard:errors.deletingWorkspace'));
       console.error(err);
+    } finally {
+      setConfirmDeleteTarget(null);
     }
   };
 
@@ -218,26 +219,41 @@ const Dashboard = () => {
                   className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg cursor-pointer transition transform hover:scale-105 p-6 relative"
                 >
                   <div className="absolute top-4 right-4 flex gap-1">
-                    <button
-                      onClick={e => handleEditWorkspace(e, workspace)}
-                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
-                      title="Edit workspace"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={e =>
-                        handleDeleteWorkspace(e, workspace._id, workspace.name)
-                      }
-                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
-                      title="Delete workspace"
-                    >
-                      🗑️
-                    </button>
+                    {(workspace.userRole === 'owner' ||
+                      workspace.userRole === 'admin') && (
+                      <button
+                        onClick={e => handleEditWorkspace(e, workspace)}
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition"
+                        title="Edit workspace"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    {workspace.userRole === 'owner' && (
+                      <button
+                        onClick={e =>
+                          handleDeleteWorkspace(
+                            e,
+                            workspace._id,
+                            workspace.name
+                          )
+                        }
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-lg transition"
+                        title="Delete workspace"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 pr-8">
                     {workspace.name}
                   </h3>
+                  {/* Shared workspace indicator */}
+                  {workspace.userId !== user?._id && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 mb-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                      👥 {t('dashboard:sharedWorkspace', 'Shared')}
+                    </span>
+                  )}
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {workspace.description ||
                       t('common:messages.noDescription')}
@@ -258,6 +274,20 @@ const Dashboard = () => {
         workspace={editingWorkspace}
         onClose={() => setEditingWorkspace(null)}
         onSave={handleSaveWorkspace}
+      />
+
+      {/* Delete Workspace Confirm Modal */}
+      <ConfirmModal
+        open={!!confirmDeleteTarget}
+        title={t('common:messages.confirmDeleteTitle', {
+          defaultValue: 'Delete Workspace',
+        })}
+        message={t('common:messages.confirmDeleteWorkspace', {
+          name: confirmDeleteTarget?.name,
+          defaultValue: `Delete workspace "${confirmDeleteTarget?.name}"?`,
+        })}
+        onConfirm={handleConfirmDeleteWorkspace}
+        onCancel={() => setConfirmDeleteTarget(null)}
       />
     </div>
   );

@@ -79,4 +79,61 @@ export const cardAPI = {
   update: (cardId, data) => api.put(`/cards/${cardId}`, data),
   reorder: (cardId, data) => api.put(`/cards/${cardId}/reorder`, data),
   delete: cardId => api.delete(`/cards/${cardId}`),
+  assign: (cardId, userId) => api.post(`/cards/${cardId}/assign`, { userId }),
+  unassign: (cardId, userId) =>
+    api.delete(`/cards/${cardId}/unassign/${userId}`),
+  assignLabel: (cardId, labelId) =>
+    api.post(`/cards/${cardId}/labels/${labelId}`),
+  removeLabel: (cardId, labelId) =>
+    api.delete(`/cards/${cardId}/labels/${labelId}`),
+  updateStatus: (cardId, status) =>
+    api.patch(`/cards/${cardId}/status`, { status }),
+  updateDueDate: (cardId, dueDate) =>
+    api.patch(`/cards/${cardId}/due-date`, { dueDate }),
+};
+
+// Label API calls
+export const labelAPI = {
+  getByBoard: boardId => api.get(`/boards/${boardId}/labels`),
+  create: (boardId, data) => api.post(`/boards/${boardId}/labels`, data),
+  update: (labelId, data) => api.put(`/labels/${labelId}`, data),
+  delete: labelId => api.delete(`/labels/${labelId}`),
+};
+
+// Member API calls (Workspace Members)
+export const memberAPI = {
+  getByWorkspace: workspaceId => api.get(`/workspaces/${workspaceId}/members`),
+  invite: (workspaceId, data) =>
+    api.post(`/workspaces/${workspaceId}/invite`, data),
+  remove: (workspaceId, userId) =>
+    api.delete(`/workspaces/${workspaceId}/members/${userId}`),
+  updateRole: (workspaceId, userId, role) =>
+    api.patch(`/workspaces/${workspaceId}/members/${userId}/role`, { role }),
+};
+
+// Comment API calls
+export const commentAPI = {
+  getByCard: cardId => api.get(`/cards/${cardId}/comments`),
+  create: (cardId, data) => api.post(`/cards/${cardId}/comments`, data),
+  update: (commentId, data) => api.put(`/comments/${commentId}`, data),
+  delete: commentId => api.delete(`/comments/${commentId}`),
+};
+
+// Notification API calls
+export const notificationAPI = {
+  getAll: () => api.get('/notifications'),
+  markAsRead: notificationId =>
+    api.patch(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  delete: notificationId => api.delete(`/notifications/${notificationId}`),
+};
+
+// Activity API calls
+export const activityAPI = {
+  getByWorkspace: (workspaceId, params = {}) =>
+    api.get(`/workspaces/${workspaceId}/activity`, { params }),
+  getByBoard: (boardId, params = {}) =>
+    api.get(`/boards/${boardId}/activity`, { params }),
+  getByCard: (cardId, params = {}) =>
+    api.get(`/cards/${cardId}/activity`, { params }),
 };

@@ -1,25 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { boardAPI, listAPI, cardAPI } from '../utils/api';
+import { listAPI } from '../utils/api';
 import KanbanList from '../components/KanbanList';
+import usePermissions from '../hooks/usePermissions';
 import CardModal from '../components/CardModal';
 import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
-import {
-  DndContext,
-  PointerSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-  pointerWithin,
-  rectIntersection,
-} from '@dnd-kit/core';
+import LabelManager from '../components/LabelManager';
+import ActivityFeed from '../components/ActivityFeed';
+import useBoardData from '../hooks/useBoardData';
+import useBoardFilters from '../hooks/useBoardFilters';
+import useBoardDrag from '../hooks/useBoardDrag';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { Tooltip } from '@mui/material';
 import {
   SortableContext,
-  arrayMove,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
@@ -28,277 +24,40 @@ const BoardPage = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
 
-  const [board, setBoard] = useState(null);
-  const [lists, setLists] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Data fetching
+  const { board, lists, members, loading, setLists, refetch } =
+    useBoardData(boardId);
+
+  // Filtering
+  const {
+    filteredLists,
+    overdueCount,
+    selectedMemberFilter,
+    setSelectedMemberFilter,
+    showOverdueFilter,
+    setShowOverdueFilter,
+  } = useBoardFilters(lists, members);
+
+  // Drag & drop
+  const { sensors, collisionDetection, dragHandlers, activeCard } =
+    useBoardDrag(lists, setLists, refetch);
+
+  // UI state (modals, forms)
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardModal, setShowCardModal] = useState(false);
-  const [activeCard, setActiveCard] = useState(null);
-  const [activeSourceListId, setActiveSourceListId] = useState(null);
   const [editingList, setEditingList] = useState(null);
+  const [showLabelManager, setShowLabelManager] = useState(false);
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
 
-  const fetchBoardData = useCallback(async () => {
-    try {
-      setLoading(true);
+  // Get permissions
+  const { can } = usePermissions(board?.workspaceId);
 
-      const boardResponse = await boardAPI.getById(boardId);
-      setBoard(boardResponse.data.data);
-      const listsResponse = await listAPI.getByBoard(boardId);
-      const listsData = listsResponse.data.data || [];
-      const listsWithCards = await Promise.all(
-        listsData.map(async list => {
-          const cardsResponse = await cardAPI.getByList(list._id);
-          return { ...list, cards: cardsResponse.data.data || [] };
-        })
-      );
-      setLists(listsWithCards);
-    } catch (err) {
-      console.error('Error loading board', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [boardId]);
+  // Disable drag & drop for users without card:move permission (e.g. viewers)
+  const effectiveSensors = can && can('card:move') ? sensors : [];
 
-  useEffect(() => {
-    fetchBoardData();
-  }, [fetchBoardData]);
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    }),
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  );
-
-  // Custom collision detection for better cross-list dragging
-  const customCollisionDetection = args => {
-    // First, try pointer-based collision detection
-    const pointerCollisions = pointerWithin(args);
-
-    if (pointerCollisions.length > 0) {
-      // Separate list and card collisions
-      const listCollisions = pointerCollisions.filter(collision =>
-        collision.id.toString().startsWith('list-')
-      );
-      const cardCollisions = pointerCollisions.filter(
-        collision => !collision.id.toString().startsWith('list-')
-      );
-
-      // If we have card collisions, prioritize those
-      if (cardCollisions.length > 0) {
-        return cardCollisions;
-      }
-
-      // If only list collisions, return them (entering list area)
-      if (listCollisions.length > 0) {
-        return listCollisions;
-      }
-
-      return pointerCollisions;
-    }
-
-    // Fallback to rect intersection
-    const rectCollisions = rectIntersection(args);
-    return rectCollisions;
-  };
-
-  const handleDragStart = event => {
-    const { active } = event;
-
-    // Check if dragging a list
-    if (active.data?.current?.type === 'list') {
-      setActiveCard(null);
-      setActiveSourceListId(null);
-      return;
-    }
-
-    // Dragging a card
-    const activeList = lists.find(l => l.cards.some(c => c._id === active.id));
-    const card = activeList?.cards.find(c => c._id === active.id);
-    setActiveCard(card);
-    setActiveSourceListId(activeList?._id || null);
-  };
-
-  const handleDragOver = event => {
-    const { over } = event;
-    if (!over) return;
-  };
-
-  const handleDragCancel = () => {
-    setActiveCard(null);
-    setActiveSourceListId(null);
-  };
-
-  const handleDragEnd = async event => {
-    const { active, over } = event;
-
-    setActiveCard(null);
-    const sourceListId = activeSourceListId;
-    setActiveSourceListId(null);
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    // Handle list reordering
-    if (
-      active.data?.current?.type === 'list' &&
-      over.data?.current?.type === 'list'
-    ) {
-      const oldIndex = lists.findIndex(l => l._id === active.id);
-      const newIndex = lists.findIndex(l => l._id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const newLists = arrayMove(lists, oldIndex, newIndex);
-        setLists(newLists);
-
-        try {
-          await listAPI.reorder(active.id, { position: newIndex });
-        } catch (err) {
-          console.error('Error reordering list', err);
-          await fetchBoardData();
-        }
-      }
-      return;
-    }
-
-    // Find source list
-    const sourceListIndex = lists.findIndex(l => l._id === sourceListId);
-    if (sourceListIndex === -1) {
-      await fetchBoardData();
-      return;
-    }
-
-    const sourceList = lists[sourceListIndex];
-    const movedCard = sourceList.cards.find(c => c._id === active.id);
-    if (!movedCard) {
-      await fetchBoardData();
-      return;
-    }
-
-    // Determine destination list
-    let destListIndex = -1;
-    let destList = null;
-
-    // Check if dropping on a list container
-    if (over.data?.current?.type === 'list') {
-      // Can be either listId (from droppable) or list object (from sortable)
-      const listId =
-        over.data.current.listId || over.data.current.list?._id || over.id;
-      destListIndex = lists.findIndex(l => l._id === listId);
-      destList = lists[destListIndex];
-    } else if (over.id.toString().startsWith('list-')) {
-      // Handle case where over.id is the droppable ID (list-xxx)
-      const listId = over.id.toString().replace('list-', '');
-      destListIndex = lists.findIndex(l => l._id === listId);
-      destList = lists[destListIndex];
-    } else {
-      // Dropping on a card
-      destListIndex = lists.findIndex(l =>
-        l.cards.some(c => c._id === over.id)
-      );
-      destList = lists[destListIndex];
-    }
-
-    if (destListIndex === -1 || !destList) {
-      await fetchBoardData();
-      return;
-    }
-
-    // Reorder within same list
-    if (sourceList._id === destList._id) {
-      const oldIndex = sourceList.cards.findIndex(c => c._id === active.id);
-      const newIndex = sourceList.cards.findIndex(c => c._id === over.id);
-
-      // If dropping on list container (not a card), place at end
-      if (newIndex === -1) {
-        const reorderedCards = sourceList.cards.filter(
-          c => c._id !== active.id
-        );
-        reorderedCards.push(movedCard);
-        const newLists = lists.map((l, idx) =>
-          idx === sourceListIndex ? { ...l, cards: reorderedCards } : l
-        );
-        setLists(newLists);
-
-        try {
-          await cardAPI.reorder(active.id, {
-            position: reorderedCards.length - 1,
-          });
-        } catch (err) {
-          console.error('Error during reordering', err);
-          await fetchBoardData();
-        }
-        return;
-      }
-
-      const newCards = arrayMove(sourceList.cards, oldIndex, newIndex);
-      const newLists = lists.map((l, idx) =>
-        idx === sourceListIndex ? { ...l, cards: newCards } : l
-      );
-      setLists(newLists);
-
-      try {
-        await cardAPI.reorder(active.id, {
-          position: newIndex,
-        });
-      } catch (err) {
-        console.error('Error during reordering', err);
-        await fetchBoardData();
-      }
-      return;
-    }
-
-    // Move between lists
-    const newCardIndex = destList.cards.findIndex(c => c._id === over.id);
-
-    // Determine insert position
-    let insertIndex;
-    if (newCardIndex === -1) {
-      // Dropping on empty list or list container - place at end
-      insertIndex = destList.cards.length;
-    } else {
-      // Dropping on a card - insert at its position (before it)
-      insertIndex = newCardIndex;
-    }
-
-    const newSourceCards = sourceList.cards.filter(c => c._id !== active.id);
-    const newDestCards = [...destList.cards];
-    newDestCards.splice(insertIndex, 0, movedCard);
-
-    const newLists = lists.map((l, idx) => {
-      if (idx === sourceListIndex) return { ...l, cards: newSourceCards };
-      if (idx === destListIndex) return { ...l, cards: newDestCards };
-      return l;
-    });
-
-    setLists(newLists);
-
-    try {
-      await cardAPI.reorder(active.id, {
-        listId: destList._id,
-        position: insertIndex,
-      });
-    } catch (err) {
-      console.error('Error moving card', err);
-      await fetchBoardData();
-    }
-  };
-
+  // Simple UI handlers
   const handleCreateList = async e => {
     e.preventDefault();
     if (!newListName.trim()) return;
@@ -331,7 +90,7 @@ const BoardPage = () => {
   };
 
   const handleCardUpdate = async () => {
-    await fetchBoardData();
+    await refetch();
   };
 
   const handleEditList = list => {
@@ -341,7 +100,7 @@ const BoardPage = () => {
   const handleSaveList = async updatedData => {
     const response = await listAPI.update(editingList._id, updatedData);
     if (response.data.success) {
-      await fetchBoardData();
+      await refetch();
     }
   };
 
@@ -355,12 +114,9 @@ const BoardPage = () => {
 
   return (
     <DndContext
-      sensors={sensors}
-      collisionDetection={customCollisionDetection}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
+      sensors={effectiveSensors}
+      collisionDetection={collisionDetection}
+      {...dragHandlers}
     >
       <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 transition-colors">
         {/* Header */}
@@ -368,18 +124,183 @@ const BoardPage = () => {
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <button
               onClick={() => navigate(-1)}
-              className="text-white hover:opacity-80 text-sm mb-2 inline-block"
+              className="text-white hover:bg-blue-700 dark:hover:bg-blue-900 px-3 py-1.5 rounded-lg text-sm font-medium transition-all mb-2 inline-flex items-center gap-2"
             >
-              ← {t('board:back')}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              {t('board:back')}
             </button>
-            <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
-            {board?.description && (
-              <p className="text-blue-100 dark:text-blue-200 mt-1">
-                {board.description}
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">{board?.name}</h1>
+                {board?.description && (
+                  <p className="text-blue-100 dark:text-blue-200 mt-1">
+                    {board.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Filters and Actions */}
+              <div className="flex items-center gap-3">
+                {/* Overdue Filter Button */}
+                <button
+                  onClick={() => setShowOverdueFilter(!showOverdueFilter)}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2 ${
+                    showOverdueFilter
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label={`Overdue ${overdueCount}`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {t('board:overdue', 'Overdue')} ({overdueCount})
+                </button>
+
+                {/* Member Filter */}
+                {members.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-white text-sm font-medium">
+                      {t('board:filterByMember', 'Filter by:')}
+                    </label>
+                    <select
+                      value={selectedMemberFilter || ''}
+                      onChange={e =>
+                        setSelectedMemberFilter(e.target.value || null)
+                      }
+                      className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-sm"
+                    >
+                      <option value="">
+                        {t('board:allMembers', 'All members')}
+                      </option>
+                      <option value="unassigned">
+                        {t('board:unassigned', 'Unassigned')}
+                      </option>
+                      {members.map(member => (
+                        <option
+                          key={member.userId._id}
+                          value={member.userId._id}
+                        >
+                          {member.userId.username}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Manage Labels Button - admin+ only */}
+                {can && can('label:create') && (
+                  <button
+                    onClick={() => setShowLabelManager(true)}
+                    className="bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    {t('board:manageLabels', 'Manage Labels')}
+                  </button>
+                )}
+
+                {/* Activity Button */}
+                <button
+                  onClick={() => setShowActivityDrawer(!showActivityDrawer)}
+                  className="bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                  {t('board:activity', 'Activity')}
+                </button>
+              </div>
+            </div>
           </div>
         </header>
+
+        {/* Activity Drawer */}
+        {showActivityDrawer && (
+          <div className="fixed top-0 right-0 h-full w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t('board:activity', 'Activity')}
+              </h2>
+              <button
+                onClick={() => setShowActivityDrawer(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-all"
+                aria-label="Close drawer"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Activity Feed */}
+            <div className="flex-1 overflow-y-auto">
+              <ActivityFeed scope="board" scopeId={boardId} limit={50} />
+            </div>
+          </div>
+        )}
+
+        {/* Overlay to close drawer */}
+        {showActivityDrawer && (
+          <div
+            onClick={() => setShowActivityDrawer(false)}
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          />
+        )}
 
         {/* Kanban Board */}
         <main className="py-6 px-4">
@@ -388,13 +309,14 @@ const BoardPage = () => {
               items={lists.map(l => l._id)}
               strategy={horizontalListSortingStrategy}
             >
-              {lists.map(list => (
+              {filteredLists.map(list => (
                 <KanbanList
                   key={list._id}
                   list={list}
                   boardId={boardId}
+                  workspaceId={board?.workspaceId}
                   onCardClick={card => handleOpenCardModal(card, list)}
-                  onListUpdate={fetchBoardData}
+                  onListUpdate={refetch}
                   onEditList={handleEditList}
                 />
               ))}
@@ -402,43 +324,85 @@ const BoardPage = () => {
 
             <div className="flex-shrink-0 w-80">
               {showNewListForm ? (
-                <div className="bg-gray-700 dark:bg-gray-800 rounded-lg p-4">
+                <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700">
                   <h3 className="text-white font-semibold mb-3">
                     {t('board:addNewList')}
                   </h3>
-                  <form onSubmit={handleCreateList} className="space-y-2">
+                  <form onSubmit={handleCreateList} className="space-y-3">
                     <input
                       type="text"
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
                       placeholder={t('board:listTitlePlaceholder')}
-                      className="w-full px-3 py-2 bg-gray-600 dark:bg-gray-900 text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-trello-blue outline-none"
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
                       autoFocus
                     />
                     <div className="flex gap-2">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-trello-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
+                        className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                       >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
                         {t('board:add')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowNewListForm(false)}
-                        className="px-4 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-500 dark:hover:bg-gray-600 text-white rounded-lg text-sm transition"
+                        className="px-4 py-2.5 bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
                       >
                         {t('board:cancel')}
                       </button>
                     </div>
                   </form>
                 </div>
-              ) : (
+              ) : can && can('list:create') ? (
                 <button
                   onClick={() => setShowNewListForm(true)}
-                  className="w-80 bg-gray-700 dark:bg-gray-800 hover:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg p-4 font-semibold transition flex items-center gap-2"
+                  className="w-80 bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 backdrop-blur-sm text-white rounded-lg p-4 font-semibold transition-all border border-white/20 dark:border-gray-700 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                 >
-                  + {t('board:addAnotherList')}
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  {t('board:addAnotherList')}
                 </button>
+              ) : (
+                <Tooltip
+                  title={t(
+                    'board:noPermission',
+                    'You do not have permission to create lists'
+                  )}
+                >
+                  <span>
+                    <button
+                      disabled
+                      className="w-80 bg-gray-500 dark:bg-gray-700 text-gray-300 dark:text-gray-500 rounded-lg p-4 font-semibold cursor-not-allowed flex items-center gap-2"
+                    >
+                      + {t('board:addAnotherList')}
+                    </button>
+                  </span>
+                </Tooltip>
               )}
             </div>
           </div>
@@ -451,11 +415,24 @@ const BoardPage = () => {
           onSave={handleSaveList}
         />
 
+        {/* Label Manager */}
+        <LabelManager
+          boardId={boardId}
+          open={showLabelManager}
+          onClose={() => {
+            setShowLabelManager(false);
+            // Optionally refresh board data to update labels on cards
+            refetch();
+          }}
+        />
+
         {/* Card Modal */}
         {showCardModal && selectedCard && (
           <CardModal
             card={selectedCard}
             boardId={boardId}
+            workspaceId={board?.workspaceId}
+            members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}
           />

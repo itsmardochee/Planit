@@ -1,8 +1,11 @@
 import mongoose from 'mongoose';
 import Workspace from '../models/Workspace.js';
+import WorkspaceMember from '../models/WorkspaceMember.js';
 import Board from '../models/Board.js';
 import List from '../models/List.js';
 import Card from '../models/Card.js';
+import Comment from '../models/Comment.js';
+import logActivity from '../utils/logActivity.js';
 
 /**
  * @swagger
@@ -96,6 +99,15 @@ export const createWorkspace = async (req, res) => {
       userId: req.user._id,
     });
 
+    // Log activity
+    await logActivity({
+      workspaceId: workspace._id,
+      userId: req.user._id,
+      action: 'created',
+      entityType: 'workspace',
+      details: { workspaceName: workspace.name },
+    });
+
     res.status(201).json({
       success: true,
       data: workspace,
@@ -113,12 +125,13 @@ export const createWorkspace = async (req, res) => {
  * /api/workspaces:
  *   get:
  *     summary: Get all workspaces for authenticated user
+ *     description: Returns all workspaces owned by the user or where the user is a member
  *     tags: [Workspaces]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of workspaces
+ *         description: List of workspaces (owned and member workspaces combined)
  *         content:
  *           application/json:
  *             schema:
@@ -137,13 +150,51 @@ export const createWorkspace = async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 /**
- * @desc    Get all workspaces for authenticated user
+ * @desc    Get all workspaces for authenticated user (owned + member workspaces)
  * @route   GET /api/workspaces
  * @access  Private
  */
 export const getWorkspaces = async (req, res) => {
   try {
-    const workspaces = await Workspace.find({ userId: req.user._id });
+    // Get workspaces owned by user
+    const ownedWorkspaces = await Workspace.find({ userId: req.user._id });
+
+    // Get workspaces where user is a member
+    const memberships = await WorkspaceMember.find({ userId: req.user._id });
+    const membershipMap = new Map(
+      memberships.map(m => [m.workspaceId.toString(), m.role])
+    );
+    const memberWorkspaceIds = memberships.map(m => m.workspaceId);
+
+    // Get workspace details for member workspaces
+    const memberWorkspaces = await Workspace.find({
+      _id: { $in: memberWorkspaceIds },
+    });
+
+    // Combine and deduplicate workspaces, enriching with userRole
+    const workspaceMap = new Map();
+
+    // Add owned workspaces first (userRole = 'owner')
+    ownedWorkspaces.forEach(ws => {
+      workspaceMap.set(ws._id.toString(), {
+        ...ws.toObject(),
+        userRole: 'owner',
+      });
+    });
+
+    // Add member workspaces (won't overwrite if already owner)
+    memberWorkspaces.forEach(ws => {
+      const id = ws._id.toString();
+      if (!workspaceMap.has(id)) {
+        workspaceMap.set(id, {
+          ...ws.toObject(),
+          userRole: membershipMap.get(id) || 'member',
+        });
+      }
+    });
+
+    // Convert map to array
+    const workspaces = Array.from(workspaceMap.values());
 
     res.status(200).json({
       success: true,
@@ -211,31 +262,10 @@ export const getWorkspaces = async (req, res) => {
  */
 export const getWorkspaceById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
-    }
-
-    const workspace = await Workspace.findOne({
-      _id: id,
-      userId: req.user._id,
-    });
-
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
-    }
-
+    // req.workspace is already validated and attached by checkWorkspaceAccess middleware
     res.status(200).json({
       success: true,
-      data: workspace,
+      data: req.workspace,
     });
   } catch (error) {
     res.status(500).json({
@@ -314,16 +344,10 @@ export const getWorkspaceById = async (req, res) => {
  */
 export const updateWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, description } = req.body;
+    // req.workspace is already validated by checkWorkspaceAccess middleware
+    // Permission check (workspace:update) is enforced by checkPermission middleware in route
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid workspace ID format',
-      });
-    }
+    const { name, description } = req.body;
 
     // Prepare update data with trimmed values
     const updateData = {};
@@ -358,17 +382,22 @@ export const updateWorkspace = async (req, res) => {
       updateData.description = trimmedDescription;
     }
 
-    // Find and update workspace
-    const workspace = await Workspace.findOneAndUpdate(
-      { _id: id, userId: req.user._id },
+    // Find and update workspace (already validated by middleware)
+    const workspace = await Workspace.findByIdAndUpdate(
+      req.workspace._id,
       { $set: updateData },
       { new: true, runValidators: true }
     );
 
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
+    // Log activity if there were updates
+    const updatedFields = Object.keys(updateData);
+    if (updatedFields.length > 0) {
+      await logActivity({
+        workspaceId: workspace._id,
+        userId: req.user._id,
+        action: 'updated',
+        entityType: 'workspace',
+        details: { workspaceName: workspace.name, fields: updatedFields },
       });
     }
 
@@ -445,32 +474,27 @@ export const updateWorkspace = async (req, res) => {
  */
 export const deleteWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
+    // req.workspace is already validated by checkWorkspaceAccess middleware
+    // Only workspace owner can delete
+    if (!req.isWorkspaceOwner) {
+      return res.status(403).json({
         success: false,
-        message: 'Invalid workspace ID format',
+        message: 'Only workspace owner can delete workspace',
       });
     }
 
-    // Find workspace first to verify ownership
-    const workspace = await Workspace.findOne({
-      _id: id,
-      userId: req.user._id,
-    });
-
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workspace not found',
-      });
-    }
+    const workspaceId = req.workspace._id;
+    const workspaceName = req.workspace.name;
 
     // Cascade delete: Get all boards in this workspace
-    const boards = await Board.find({ workspaceId: id });
+    const boards = await Board.find({ workspaceId });
     const boardIds = boards.map(board => board._id);
+
+    // Delete all comments on cards in those boards
+    const cardIds = (
+      await Card.find({ boardId: { $in: boardIds } }).select('_id')
+    ).map(c => c._id);
+    await Comment.deleteMany({ cardId: { $in: cardIds } });
 
     // Delete all cards associated with those boards
     await Card.deleteMany({ boardId: { $in: boardIds } });
@@ -479,10 +503,22 @@ export const deleteWorkspace = async (req, res) => {
     await List.deleteMany({ boardId: { $in: boardIds } });
 
     // Delete all boards in this workspace
-    await Board.deleteMany({ workspaceId: id });
+    await Board.deleteMany({ workspaceId });
+
+    // Delete all workspace members
+    await WorkspaceMember.deleteMany({ workspaceId });
 
     // Finally, delete the workspace itself
-    await Workspace.findByIdAndDelete(id);
+    await Workspace.findByIdAndDelete(workspaceId);
+
+    // Log activity
+    await logActivity({
+      workspaceId,
+      userId: req.user._id,
+      action: 'deleted',
+      entityType: 'workspace',
+      details: { workspaceName },
+    });
 
     res.status(200).json({
       success: true,
