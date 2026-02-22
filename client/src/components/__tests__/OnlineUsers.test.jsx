@@ -26,7 +26,6 @@ describe('OnlineUsers', () => {
 
     it('should render an avatar for each online user', () => {
       render(<OnlineUsers users={users} isConnected={true} />);
-      // Each avatar shows the first letter of the username
       expect(screen.getByText('A')).toBeInTheDocument();
       expect(screen.getByText('B')).toBeInTheDocument();
       expect(screen.getByText('C')).toBeInTheDocument();
@@ -36,8 +35,9 @@ describe('OnlineUsers', () => {
       const { container } = render(
         <OnlineUsers users={users} isConnected={true} />
       );
-      // MUI Avatar elements
-      const avatars = container.querySelectorAll('.MuiAvatar-root');
+      const avatars = container.querySelectorAll(
+        '[data-testid="online-avatar"]'
+      );
       expect(avatars.length).toBe(users.length);
     });
 
@@ -49,6 +49,26 @@ describe('OnlineUsers', () => {
         />
       );
       expect(screen.getByText('X')).toBeInTheDocument();
+    });
+
+    it('should show a +N overflow avatar when there are more than 5 users', () => {
+      const manyUsers = Array.from({ length: 7 }, (_, i) => ({
+        userId: `u${i}`,
+        username: `User${i}`,
+      }));
+      render(<OnlineUsers users={manyUsers} isConnected={true} />);
+      expect(screen.getByText('+2')).toBeInTheDocument();
+    });
+
+    it('should use the native title attribute for the username tooltip', () => {
+      const { container } = render(
+        <OnlineUsers
+          users={[{ userId: 'u1', username: 'Alice' }]}
+          isConnected={true}
+        />
+      );
+      const avatar = container.querySelector('[data-testid="online-avatar"]');
+      expect(avatar).toHaveAttribute('title', 'Alice');
     });
   });
 
