@@ -677,6 +677,7 @@ export const reorderCard = async (req, res, next) => {
         fromListId: oldListId,
         toListId: targetListId,
         boardId: card.boardId,
+        senderId: req.user._id,
       });
       return res.status(200).json({ success: true, data: card });
     }
@@ -738,6 +739,7 @@ export const reorderCard = async (req, res, next) => {
       fromListId: oldListId,
       toListId: oldListId,
       boardId: card.boardId,
+      senderId: req.user._id,
     });
     res.status(200).json({ success: true, data: card });
   } catch (error) {

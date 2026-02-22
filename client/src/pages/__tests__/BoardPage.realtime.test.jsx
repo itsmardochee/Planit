@@ -122,6 +122,11 @@ vi.mock('../../components/ActivityFeed', () => ({
   default: () => null,
 }));
 
+vi.mock('react-redux', () => ({
+  useSelector: selector =>
+    selector({ auth: { user: { _id: 'current-user-id' } } }),
+}));
+
 // ─── Import mocked API after mocking ─────────────────────────────────────────
 import * as api from '../../utils/api';
 

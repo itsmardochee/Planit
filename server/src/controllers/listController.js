@@ -531,9 +531,11 @@ export const reorderList = async (req, res, next) => {
     }
 
     logger.info(`List reordered: ${id} to position ${newPosition}`);
-    getIO()
-      ?.to(`board:${list.boardId}`)
-      .emit('list:reordered', { list, boardId: list.boardId });
+    getIO()?.to(`board:${list.boardId}`).emit('list:reordered', {
+      list,
+      boardId: list.boardId,
+      senderId: req.user._id,
+    });
     res.status(200).json({ success: true, data: list });
   } catch (error) {
     next(error);

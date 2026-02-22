@@ -39,6 +39,11 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+vi.mock('react-redux', () => ({
+  useSelector: selector =>
+    selector({ auth: { user: { _id: 'current-user-id' } } }),
+}));
+
 const Wrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>;
 
 describe('BoardPage - Overdue Filter', () => {

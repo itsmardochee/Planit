@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { listAPI } from '../utils/api';
@@ -29,6 +30,9 @@ const BoardPage = () => {
   // Data fetching
   const { board, lists, members, loading, setLists, refetch } =
     useBoardData(boardId);
+
+  // Current user — used to skip socket events emitted by ourselves
+  const currentUserId = useSelector(state => state.auth.user?._id);
 
   // Filtering
   const {
@@ -83,9 +87,16 @@ const BoardPage = () => {
     [setLists]
   );
 
-  const handleCardMoved = useCallback(() => {
-    refetch();
-  }, [refetch]);
+  const handleCardMoved = useCallback(
+    data => {
+      // Skip refetch when we are the one who moved the card — local state
+      // is already correct from the optimistic drag & drop update.
+      if (data?.senderId && String(data.senderId) === String(currentUserId))
+        return;
+      refetch();
+    },
+    [refetch, currentUserId]
+  );
 
   const handleCardDeleted = useCallback(
     ({ cardId, listId }) => {
@@ -111,10 +122,16 @@ const BoardPage = () => {
     [setLists]
   );
 
-  const handleListReordered = useCallback(() => {
-    // Reorder affects multiple lists' positions — safest to refetch the full state
-    refetch();
-  }, [refetch]);
+  const handleListReordered = useCallback(
+    data => {
+      // Skip refetch when we are the one who reordered — local state
+      // is already correct from the optimistic drag & drop update.
+      if (data?.senderId && String(data.senderId) === String(currentUserId))
+        return;
+      refetch();
+    },
+    [refetch, currentUserId]
+  );
 
   const handleListUpdated = useCallback(
     ({ list }) => {
