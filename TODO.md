@@ -11,7 +11,7 @@
 - ✅ Feature 4: Comments (Backend + Frontend) - PR #145
 - ✅ Feature 5: Due Dates & Notifications (Backend) - PR #146
 - ✅ Feature 6: RBAC Backend - PR #148
-- ✅ Feature 6: RBAC Frontend (90%) - PR #148
+- ✅ Feature 6: RBAC Frontend (95%) - PR #148
 - ✅ Feature 7: Activity Log (Backend + Frontend) - PR #147
 
 ---
@@ -229,15 +229,23 @@
   - [x] Board: `list:create` (bouton "Add List" avec Tooltip pour non-autorisés)
   - [x] Board: `card:create` (bouton "Add Card" dans KanbanList masqué selon le rôle)
   - [x] Board: drag & drop désactivé pour viewers (sensors vides si !can('card:move'))
+  - [x] Board: bouton "Manage Labels" masqué si !can('label:create') (admin+ seulement)
   - [x] Cards: boutons edit/delete dans CardModal conditionnels (can('card:update'), can('card:delete'))
-  - [x] Cards: assignation désactivée pour viewers dans CardModal (can('card:assign'))
+  - [x] Cards: title/description/due-date en readOnly si !can('card:update')
+  - [x] Cards: assignation désactivée si !can('card:assign')
+  - [x] Cards: LabelPicker en readOnly si !can('label:assign')
 - [x] `CommentSection`: champ de commentaire désactivé si `!can('comment:create')`
 - [x] Afficher tooltips pour actions non autorisées (`board:create`, `list:create`)
 - [x] Créer page `WorkspaceSettings` avec tableau des permissions par rôle (lecture seule)
 - [x] Route `/workspace/:workspaceId/settings` et bouton ⚙️ Permissions dans WorkspacePage
 - [x] Tests pour composants RBAC (RoleSelector, usePermissions, permissions, MemberList-role-management)
+- [x] `RoleChangeModal`: modale dédiée pour changer les rôles (Admin+), avec Save explicite et feedback erreur
+- [x] Fix backend: `updateMemberRole` utilise `req.userRole` (rétro-compatibilité owner sans WorkspaceMember)
+- [x] Alignement matrice permissions client/serveur:
+  - [x] VIEWER: retrait `comment:create` et `label:assign` (serveur ne les accorde pas)
+  - [x] ADMIN: retrait `workspace:create` (hors contexte workspace)
 
-**Status:** ✅ Frontend 90% complet — permissions sur boards/listes/cartes (create/edit/delete) ✅ ; invite membres ✅ ; drag & drop viewers ✅ ; workspace edit/delete restants
+**Status:** ✅ Frontend 95% complet — toutes les permissions UI implémentées sauf `workspace:update` / `workspace:delete` (hors scope MVP)
 
 **Feature Status:** 🚧 **EN COURS** - Backend 100% + Frontend partiel - PR #148
 
@@ -380,13 +388,9 @@
 
 🚧 **PROCHAINES PRIORITÉS:**
 
-1. **Frontend Feature 6 (suite)**: finaliser le RBAC UI manquant:
-   - `member:invite` conditionnel dans WorkspacePage
-   - `workspace:update` / `workspace:delete` conditionnels
-   - Card edit/delete gating dans CardModal (le hook `usePermissions` est déjà importé)
-   - Drag & drop désactivé pour viewers
-2. **Frontend Feature 3**: Filtres par label et statut dans la vue board (seul item manquant)
-3. **Frontend Feature 5**: NotificationBell dans navbar + intégration NotificationList API
+1. **Frontend Feature 3**: Filtres par label et statut dans la vue board (seul item manquant)
+2. **Frontend Feature 5**: NotificationBell dans navbar + intégration NotificationList API
+3. **Frontend Feature 6 (reste)**: `workspace:update` / `workspace:delete` conditionnels (faible impact, owner only)
 4. **Feature 8 (Bonus)**: Temps réel (Socket.IO) - Expérience utilisateur ultime
 
 ---
