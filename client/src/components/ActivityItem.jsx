@@ -9,7 +9,6 @@ import {
   PersonAdd as AssignIcon,
   PersonRemove as UnassignIcon,
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 /**
  * Format relative time from timestamp
@@ -277,11 +276,9 @@ const formatActivityMessage = activity => {
  * @returns {JSX.Element}
  */
 const ActivityItem = ({ activity }) => {
-  const { t } = useTranslation();
-
   if (!activity) return null;
 
-  const { action, createdAt, userId } = activity;
+  const { action, createdAt } = activity;
   const relativeTime = formatRelativeTime(createdAt);
   const actionIcon = getActionIcon(action);
   const message = formatActivityMessage(activity);

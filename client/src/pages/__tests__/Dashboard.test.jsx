@@ -468,4 +468,22 @@ describe('Dashboard Page', () => {
     expect(screen.getByTitle(/edit workspace/i)).toBeInTheDocument();
     expect(screen.getByTitle(/delete workspace/i)).toBeInTheDocument();
   });
+
+  it('redirects to login when not authenticated', () => {
+    const unauthAuthSlice = createSlice({
+      name: 'auth',
+      initialState: { user: null, token: null },
+      reducers: {},
+    });
+    const unauthStore = configureStore({
+      reducer: {
+        workspaces: workspacesSlice.reducer,
+        auth: unauthAuthSlice.reducer,
+      },
+    });
+
+    renderWithProviders(<Dashboard />, { store: unauthStore });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
 });

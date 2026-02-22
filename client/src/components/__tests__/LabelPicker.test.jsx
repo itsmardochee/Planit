@@ -2,30 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LabelPicker from '../LabelPicker';
-import { labelAPI, cardAPI } from '../../utils/api';
+import { labelAPI } from '../../utils/api';
 
-// Mock the API
 vi.mock('../../utils/api', () => ({
   labelAPI: {
     getByBoard: vi.fn(),
-  },
-  cardAPI: {
-    assignLabel: vi.fn(),
-    removeLabel: vi.fn(),
   },
 }));
 
 describe('LabelPicker', () => {
   const mockBoardId = 'board123';
-  const mockCardId = 'card456';
   const mockLabels = [
     { _id: 'label1', name: 'Bug', color: '#FF0000', boardId: mockBoardId },
-    {
-      _id: 'label2',
-      name: 'Feature',
-      color: '#00FF00',
-      boardId: mockBoardId,
-    },
+    { _id: 'label2', name: 'Feature', color: '#00FF00', boardId: mockBoardId },
     {
       _id: 'label3',
       name: 'Documentation',
@@ -33,11 +22,8 @@ describe('LabelPicker', () => {
       boardId: mockBoardId,
     },
   ];
-  const mockCard = {
-    _id: mockCardId,
-    title: 'Test Card',
-    labels: [mockLabels[0], mockLabels[2]], // Bug and Documentation
-  };
+  // Bug and Documentation are assigned initially
+  const assignedLabels = [mockLabels[0], mockLabels[2]];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,7 +35,13 @@ describe('LabelPicker', () => {
         data: { success: true, data: mockLabels },
       });
 
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
+      render(
+        <LabelPicker
+          boardId={mockBoardId}
+          assignedLabels={assignedLabels}
+          onChange={vi.fn()}
+        />
+      );
 
       await waitFor(() => {
         expect(labelAPI.getByBoard).toHaveBeenCalledWith(mockBoardId);
@@ -60,57 +52,51 @@ describe('LabelPicker', () => {
       expect(screen.getByText('Documentation')).toBeInTheDocument();
     });
 
-    it('should visually distinguish assigned labels from unassigned ones', async () => {
+    it('should show a check icon on assigned labels', async () => {
       labelAPI.getByBoard.mockResolvedValue({
         data: { success: true, data: mockLabels },
       });
 
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
+      render(
+        <LabelPicker
+          boardId={mockBoardId}
+          assignedLabels={assignedLabels}
+          onChange={vi.fn()}
+        />
+      );
 
       await waitFor(() => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      // Check that assigned labels have a checkmark icon
-      const bugLabel = screen
-        .getByText('Bug')
-        .closest('[data-testid*="label"]');
-      const featureLabel = screen
-        .getByText('Feature')
-        .closest('[data-testid*="label"]');
+      const bugBtn = screen.getByTestId('label-label1');
+      const featureBtn = screen.getByTestId('label-label2');
 
-      // Bug and Documentation should show as assigned (have check icon)
+      // Bug is assigned → has check icon
       expect(
-        bugLabel?.querySelector('[data-testid="CheckIcon"]')
+        bugBtn.querySelector('[data-testid="check-icon"]')
       ).toBeInTheDocument();
-      // Feature should not have check icon (unassigned)
+      // Feature is not assigned → no check icon
       expect(
-        featureLabel?.querySelector('[data-testid="CheckIcon"]')
+        featureBtn.querySelector('[data-testid="check-icon"]')
       ).not.toBeInTheDocument();
     });
   });
 
-  describe('Assign label', () => {
-    it('should assign a label when clicking on unassigned label', async () => {
+  describe('Toggle label', () => {
+    it('should call onChange with label added when clicking an unassigned label', async () => {
       labelAPI.getByBoard.mockResolvedValue({
         data: { success: true, data: mockLabels },
       });
-      const updatedCard = {
-        ...mockCard,
-        labels: [...mockCard.labels, mockLabels[1]], // Add Feature
-      };
-      cardAPI.assignLabel.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
 
-      const onUpdate = vi.fn();
+      const onChange = vi.fn();
       const user = userEvent.setup();
 
       render(
         <LabelPicker
           boardId={mockBoardId}
-          card={mockCard}
-          onUpdate={onUpdate}
+          assignedLabels={assignedLabels}
+          onChange={onChange}
         />
       );
 
@@ -118,62 +104,24 @@ describe('LabelPicker', () => {
         expect(screen.getByText('Feature')).toBeInTheDocument();
       });
 
-      // Click on Feature label (not currently assigned)
-      const featureLabel = screen.getByText('Feature');
-      await user.click(featureLabel);
+      await user.click(screen.getByText('Feature'));
 
-      await waitFor(() => {
-        expect(cardAPI.assignLabel).toHaveBeenCalledWith(mockCardId, 'label2');
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      expect(onChange).toHaveBeenCalledWith([...assignedLabels, mockLabels[1]]);
     });
 
-    it('should show error message if assign fails', async () => {
+    it('should call onChange with label removed when clicking an assigned label', async () => {
       labelAPI.getByBoard.mockResolvedValue({
         data: { success: true, data: mockLabels },
       });
-      cardAPI.assignLabel.mockRejectedValue({
-        response: { data: { message: 'Failed to assign label' } },
-      });
 
-      const user = userEvent.setup();
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Feature')).toBeInTheDocument();
-      });
-
-      const featureLabel = screen.getByText('Feature');
-      await user.click(featureLabel);
-
-      await waitFor(() => {
-        expect(screen.getByText(/failed to assign label/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Remove label', () => {
-    it('should remove a label when clicking on assigned label', async () => {
-      labelAPI.getByBoard.mockResolvedValue({
-        data: { success: true, data: mockLabels },
-      });
-      const updatedCard = {
-        ...mockCard,
-        labels: [mockLabels[2]], // Only Documentation, Bug removed
-      };
-      cardAPI.removeLabel.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
-
-      const onUpdate = vi.fn();
+      const onChange = vi.fn();
       const user = userEvent.setup();
 
       render(
         <LabelPicker
           boardId={mockBoardId}
-          card={mockCard}
-          onUpdate={onUpdate}
+          assignedLabels={assignedLabels}
+          onChange={onChange}
         />
       );
 
@@ -181,38 +129,36 @@ describe('LabelPicker', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      // Click on Bug label (currently assigned)
-      const bugLabel = screen.getByText('Bug');
-      await user.click(bugLabel);
+      await user.click(screen.getByText('Bug'));
 
-      await waitFor(() => {
-        expect(cardAPI.removeLabel).toHaveBeenCalledWith(mockCardId, 'label1');
-      });
-
-      expect(onUpdate).toHaveBeenCalledWith(updatedCard);
+      // Bug (label1) should be removed
+      expect(onChange).toHaveBeenCalledWith([mockLabels[2]]);
     });
 
-    it('should show error message if remove fails', async () => {
+    it('should not call onChange when readOnly', async () => {
       labelAPI.getByBoard.mockResolvedValue({
         data: { success: true, data: mockLabels },
       });
-      cardAPI.removeLabel.mockRejectedValue({
-        response: { data: { message: 'Failed to remove label' } },
-      });
 
+      const onChange = vi.fn();
       const user = userEvent.setup();
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
+
+      render(
+        <LabelPicker
+          boardId={mockBoardId}
+          assignedLabels={assignedLabels}
+          onChange={onChange}
+          readOnly
+        />
+      );
 
       await waitFor(() => {
-        expect(screen.getByText('Bug')).toBeInTheDocument();
+        expect(screen.getByText('Feature')).toBeInTheDocument();
       });
 
-      const bugLabel = screen.getByText('Bug');
-      await user.click(bugLabel);
+      await user.click(screen.getByText('Feature'));
 
-      await waitFor(() => {
-        expect(screen.getByText(/failed to remove label/i)).toBeInTheDocument();
-      });
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 
@@ -222,7 +168,13 @@ describe('LabelPicker', () => {
         data: { success: true, data: [] },
       });
 
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
+      render(
+        <LabelPicker
+          boardId={mockBoardId}
+          assignedLabels={[]}
+          onChange={vi.fn()}
+        />
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/no labels available/i)).toBeInTheDocument();
@@ -232,13 +184,17 @@ describe('LabelPicker', () => {
 
   describe('Loading state', () => {
     it('should show loading indicator while fetching labels', () => {
-      labelAPI.getByBoard.mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+      labelAPI.getByBoard.mockImplementation(() => new Promise(() => {}));
+
+      render(
+        <LabelPicker
+          boardId={mockBoardId}
+          assignedLabels={[]}
+          onChange={vi.fn()}
+        />
       );
 
-      render(<LabelPicker boardId={mockBoardId} card={mockCard} />);
-
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
   });
 });

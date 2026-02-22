@@ -28,7 +28,7 @@ const MemberList = ({
   members,
   workspaceId,
   currentUserId,
-  currentUserRole,
+  _currentUserRole,
   onMemberRemoved,
   onRoleUpdated,
 }) => {

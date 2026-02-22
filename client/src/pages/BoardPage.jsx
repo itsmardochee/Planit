@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { listAPI } from '../utils/api';
@@ -9,9 +10,11 @@ import KanbanCard from '../components/KanbanCard';
 import ListEditModal from '../components/ListEditModal';
 import LabelManager from '../components/LabelManager';
 import ActivityFeed from '../components/ActivityFeed';
+import OnlineUsers from '../components/OnlineUsers';
 import useBoardData from '../hooks/useBoardData';
 import useBoardFilters from '../hooks/useBoardFilters';
 import useBoardDrag from '../hooks/useBoardDrag';
+import useSocket from '../hooks/useSocket';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { Tooltip } from '@mui/material';
 import {
@@ -27,6 +30,9 @@ const BoardPage = () => {
   // Data fetching
   const { board, lists, members, loading, setLists, refetch } =
     useBoardData(boardId);
+
+  // Current user — used to skip socket events emitted by ourselves
+  const currentUserId = useSelector(state => state.auth.user?._id);
 
   // Filtering
   const {
@@ -53,6 +59,126 @@ const BoardPage = () => {
 
   // Get permissions
   const { can } = usePermissions(board?.workspaceId);
+
+  // ─── Real-time socket handlers ───────────────────────────────────────────
+  const handleCardCreated = useCallback(
+    ({ card, listId }) => {
+      setLists(prev =>
+        prev.map(l => {
+          if (l._id !== listId) return l;
+          // Deduplicate: card may already be present if refetch() ran first
+          if ((l.cards || []).some(c => c._id === card._id)) return l;
+          return { ...l, cards: [...(l.cards || []), card] };
+        })
+      );
+    },
+    [setLists]
+  );
+
+  const handleCardUpdated = useCallback(
+    ({ card }) => {
+      setLists(prev =>
+        prev.map(l => ({
+          ...l,
+          cards: (l.cards || []).map(c => (c._id === card._id ? card : c)),
+        }))
+      );
+    },
+    [setLists]
+  );
+
+  const handleCardMoved = useCallback(
+    data => {
+      // Skip refetch when we are the one who moved the card — local state
+      // is already correct from the optimistic drag & drop update.
+      if (data?.senderId && String(data.senderId) === String(currentUserId))
+        return;
+      refetch();
+    },
+    [refetch, currentUserId]
+  );
+
+  const handleCardDeleted = useCallback(
+    ({ cardId, listId }) => {
+      setLists(prev =>
+        prev.map(l =>
+          l._id === listId
+            ? { ...l, cards: (l.cards || []).filter(c => c._id !== cardId) }
+            : l
+        )
+      );
+    },
+    [setLists]
+  );
+
+  const handleListCreated = useCallback(
+    ({ list }) => {
+      setLists(prev => {
+        // Deduplicate: list may already be present if refetch() ran first
+        if (prev.some(l => l._id === list._id)) return prev;
+        return [...prev, { ...list, cards: [] }];
+      });
+    },
+    [setLists]
+  );
+
+  const handleListReordered = useCallback(
+    data => {
+      // Skip refetch when we are the one who reordered — local state
+      // is already correct from the optimistic drag & drop update.
+      if (data?.senderId && String(data.senderId) === String(currentUserId))
+        return;
+      refetch();
+    },
+    [refetch, currentUserId]
+  );
+
+  const handleListUpdated = useCallback(
+    ({ list }) => {
+      setLists(prev =>
+        prev.map(l => (l._id === list._id ? { ...l, ...list } : l))
+      );
+    },
+    [setLists]
+  );
+
+  const handleListDeleted = useCallback(
+    ({ listId }) => {
+      setLists(prev => prev.filter(l => l._id !== listId));
+    },
+    [setLists]
+  );
+
+  // ─── Comment socket events ────────────────────────────────────────────────
+  // Stored as a single state object and forwarded to the open CardModal so
+  // CommentSection can update its local list without re-fetching.
+  const [lastCommentEvent, setLastCommentEvent] = useState(null);
+
+  const handleCommentCreated = useCallback(data => {
+    setLastCommentEvent({ type: 'created', data });
+  }, []);
+
+  const handleCommentUpdated = useCallback(data => {
+    setLastCommentEvent({ type: 'updated', data });
+  }, []);
+
+  const handleCommentDeleted = useCallback(data => {
+    setLastCommentEvent({ type: 'deleted', data });
+  }, []);
+
+  const { onlineUsers, isConnected } = useSocket(boardId, {
+    onCardCreated: handleCardCreated,
+    onCardUpdated: handleCardUpdated,
+    onCardMoved: handleCardMoved,
+    onCardDeleted: handleCardDeleted,
+    onListCreated: handleListCreated,
+    onListUpdated: handleListUpdated,
+    onListDeleted: handleListDeleted,
+    onListReordered: handleListReordered,
+    onCommentCreated: handleCommentCreated,
+    onCommentUpdated: handleCommentUpdated,
+    onCommentDeleted: handleCommentDeleted,
+  });
 
   // Disable drag & drop for users without card:move permission (e.g. viewers)
   const effectiveSensors = can && can('card:move') ? sensors : [];
@@ -153,6 +279,8 @@ const BoardPage = () => {
 
               {/* Filters and Actions */}
               <div className="flex items-center gap-3">
+                {/* Online users */}
+                <OnlineUsers users={onlineUsers} isConnected={isConnected} />
                 {/* Overdue Filter Button */}
                 <button
                   onClick={() => setShowOverdueFilter(!showOverdueFilter)}
@@ -316,7 +444,39 @@ const BoardPage = () => {
                   boardId={boardId}
                   workspaceId={board?.workspaceId}
                   onCardClick={card => handleOpenCardModal(card, list)}
-                  onListUpdate={refetch}
+                  onCardCreated={newCard =>
+                    setLists(prev =>
+                      prev.map(l =>
+                        l._id === newCard.listId
+                          ? {
+                              ...l,
+                              cards: (l.cards || []).some(
+                                c => c._id === newCard._id
+                              )
+                                ? l.cards
+                                : [...(l.cards || []), newCard],
+                            }
+                          : l
+                      )
+                    )
+                  }
+                  onCardDeleted={(cardId, listId) =>
+                    setLists(prev =>
+                      prev.map(l =>
+                        l._id === listId
+                          ? {
+                              ...l,
+                              cards: (l.cards || []).filter(
+                                c => c._id !== cardId
+                              ),
+                            }
+                          : l
+                      )
+                    )
+                  }
+                  onListDeleted={listId =>
+                    setLists(prev => prev.filter(l => l._id !== listId))
+                  }
                   onEditList={handleEditList}
                 />
               ))}
@@ -435,6 +595,7 @@ const BoardPage = () => {
             members={members}
             onClose={handleCloseCardModal}
             onCardUpdate={handleCardUpdate}
+            commentEvent={lastCommentEvent}
           />
         )}
       </div>

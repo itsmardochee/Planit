@@ -18,7 +18,9 @@ const KanbanList = ({
   boardId,
   workspaceId,
   onCardClick,
-  onListUpdate,
+  onCardCreated,
+  onCardDeleted,
+  onListDeleted,
   onEditList,
 }) => {
   const { t } = useTranslation(['lists', 'common']);
@@ -72,7 +74,7 @@ const KanbanList = ({
     if (!newCardTitle.trim()) return;
 
     try {
-      await cardAPI.create(list._id, {
+      const response = await cardAPI.create(list._id, {
         title: newCardTitle,
         description: '',
         position: cards.length,
@@ -81,16 +83,20 @@ const KanbanList = ({
       });
       setNewCardTitle('');
       setShowNewCardForm(false);
-      // ask parent to refresh lists/cards
-      onListUpdate();
+      // Optimistic local update — no need for a full refetch
+      if (response.data?.success && onCardCreated) {
+        onCardCreated(response.data.data);
+      }
     } catch (err) {
       console.error('Error creating card', err);
     }
   };
 
-  const handleDeleteCard = _cardId => {
-    // Notify parent to refresh after deletion
-    onListUpdate();
+  const handleDeleteCard = cardId => {
+    // Optimistic local update — remove the card without refetching the board
+    if (onCardDeleted) {
+      onCardDeleted(cardId, list._id);
+    }
   };
 
   const handleDeleteList = () => {
@@ -100,7 +106,10 @@ const KanbanList = ({
   const handleConfirmDeleteList = async () => {
     try {
       await listAPI.delete(list._id);
-      onListUpdate();
+      // Optimistic local update — remove the list without refetching the board
+      if (onListDeleted) {
+        onListDeleted(list._id);
+      }
     } catch (err) {
       console.error('Error deleting list', err);
     } finally {

@@ -362,6 +362,35 @@ describe('useBoardDrag', () => {
       consoleErrorSpy.mockRestore();
     });
 
+    it('should refetch when cross-list card move API fails', async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      api.cardAPI.reorder.mockRejectedValue(new Error('Network Error'));
+
+      const { result } = renderHook(() =>
+        useBoardDrag(mockLists, setListsMock, refetchMock)
+      );
+
+      // Start dragging card1 from list1
+      act(() => {
+        result.current.dragHandlers.onDragStart({
+          active: { id: 'card1', data: { current: { type: 'card' } } },
+        });
+      });
+
+      // Drop on card3 which is in list2 — cross-list move
+      await act(async () => {
+        await result.current.dragHandlers.onDragEnd({
+          active: { id: 'card1', data: { current: { type: 'card' } } },
+          over: { id: 'card3', data: { current: { type: 'card' } } },
+        });
+      });
+
+      expect(refetchMock).toHaveBeenCalled();
+      consoleErrorSpy.mockRestore();
+    });
+
     it('should refetch when source list not found', async () => {
       const { result } = renderHook(() =>
         useBoardDrag(mockLists, setListsMock, refetchMock)
@@ -434,6 +463,37 @@ describe('useBoardDrag', () => {
       });
 
       expect(setListsMock).not.toHaveBeenCalled();
+    });
+
+    it('should place card at end when dropped on same-list container', async () => {
+      const { result } = renderHook(() =>
+        useBoardDrag(mockLists, setListsMock, refetchMock)
+      );
+
+      // Start dragging card1 from list1
+      act(() => {
+        result.current.dragHandlers.onDragStart({
+          active: { id: 'card1', data: { current: { type: 'card' } } },
+        });
+      });
+
+      // Drop on the list1 container (not a specific card) - over.id is the list id
+      // newIndex will be -1 since no card has id === 'list1'
+      await act(async () => {
+        await result.current.dragHandlers.onDragEnd({
+          active: { id: 'card1', data: { current: { type: 'card' } } },
+          over: {
+            id: 'list1',
+            data: { current: { type: 'list', listId: 'list1' } },
+          },
+        });
+      });
+
+      expect(setListsMock).toHaveBeenCalled();
+      // Card placed at end: position = length - 1
+      expect(api.cardAPI.reorder).toHaveBeenCalledWith('card1', {
+        position: 1,
+      });
     });
   });
 });

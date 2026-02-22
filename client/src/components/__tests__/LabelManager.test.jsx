@@ -51,9 +51,7 @@ describe('LabelManager', () => {
         data: { success: true, data: mockLabels },
       });
 
-      const { container } = render(
-        <LabelManager boardId={mockBoardId} open={true} />
-      );
+      render(<LabelManager boardId={mockBoardId} open={true} />);
 
       await waitFor(() => {
         expect(screen.getByText('Bug')).toBeInTheDocument();

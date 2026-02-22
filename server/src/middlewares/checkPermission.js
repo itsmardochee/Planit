@@ -1,6 +1,5 @@
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import { hasPermission } from '../utils/permissions.js';
-import { ForbiddenError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
 /**

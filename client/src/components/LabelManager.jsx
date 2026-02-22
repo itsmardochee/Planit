@@ -14,6 +14,7 @@ const LabelManager = ({ boardId, open, onClose }) => {
     if (open && boardId) {
       fetchLabels();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, boardId]);
 
   const fetchLabels = async () => {

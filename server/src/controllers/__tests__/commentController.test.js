@@ -16,7 +16,6 @@ import List from '../../models/List.js';
 import Card from '../../models/Card.js';
 import Comment from '../../models/Comment.js';
 import errorHandler from '../../middlewares/errorHandler.js';
-
 const app = express();
 app.use(express.json());
 app.use('/api/cards/:cardId/comments', auth, cardCommentRouter);
@@ -330,7 +329,7 @@ describe('GET /api/cards/:cardId/comments', () => {
     expect(res.body.data).toHaveLength(3);
   });
 
-  it('should return comments sorted by createdAt descending (newest first)', async () => {
+  it('should return comments sorted by createdAt ascending (oldest first)', async () => {
     const c1 = await Comment.create({
       content: 'First',
       cardId: testCard._id,
@@ -347,8 +346,8 @@ describe('GET /api/cards/:cardId/comments', () => {
       .set('Authorization', `Bearer ${authToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data[0]._id).toBe(c2._id.toString());
-    expect(res.body.data[1]._id).toBe(c1._id.toString());
+    expect(res.body.data[0]._id).toBe(c1._id.toString());
+    expect(res.body.data[1]._id).toBe(c2._id.toString());
   });
 
   it('should populate user info (username, email)', async () => {

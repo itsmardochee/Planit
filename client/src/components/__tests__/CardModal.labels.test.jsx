@@ -101,7 +101,7 @@ describe('CardModal - Labels and Status Integration', () => {
       expect(screen.getByText('Feature')).toBeInTheDocument();
     });
 
-    it('should show assigned labels', async () => {
+    it('should show assigned labels with a check icon', async () => {
       const cardWithLabels = {
         ...mockCard,
         labels: [mockLabels[0]],
@@ -126,27 +126,23 @@ describe('CardModal - Labels and Status Integration', () => {
         .getByText('Bug')
         .closest('[data-testid*="label"]');
       expect(
-        bugLabel?.querySelector('[data-testid="CheckIcon"]')
+        bugLabel?.querySelector('[data-testid="check-icon"]')
       ).toBeInTheDocument();
     });
 
-    it('should assign label when clicked', async () => {
-      const updatedCard = {
-        ...mockCard,
-        labels: [mockLabels[0]],
-      };
-      cardAPI.assignLabel.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
+    it('should call cardAPI.assignLabel on Save after clicking an unassigned label', async () => {
+      cardAPI.update.mockResolvedValue({ data: { data: mockCard } });
+      cardAPI.assignLabel.mockResolvedValue({ data: { success: true } });
 
       const user = userEvent.setup();
+      const onCardUpdate = vi.fn();
       render(
         <CardModal
           card={mockCard}
           boardId={mockBoardId}
           members={mockMembers}
           onClose={vi.fn()}
-          onCardUpdate={vi.fn()}
+          onCardUpdate={onCardUpdate}
         />
       );
 
@@ -154,26 +150,22 @@ describe('CardModal - Labels and Status Integration', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      const bugLabel = screen.getByText('Bug');
-      await user.click(bugLabel);
+      // Click the label (pending only — no API call yet)
+      await user.click(screen.getByText('Bug'));
+      expect(cardAPI.assignLabel).not.toHaveBeenCalled();
+
+      // Press Save
+      await user.click(screen.getByRole('button', { name: /cards:save/i }));
 
       await waitFor(() => {
         expect(cardAPI.assignLabel).toHaveBeenCalledWith('card123', 'label1');
       });
     });
 
-    it('should remove label when clicking assigned label', async () => {
-      const cardWithLabels = {
-        ...mockCard,
-        labels: [mockLabels[0]],
-      };
-      const updatedCard = {
-        ...mockCard,
-        labels: [],
-      };
-      cardAPI.removeLabel.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
+    it('should call cardAPI.removeLabel on Save after clicking an assigned label', async () => {
+      const cardWithLabels = { ...mockCard, labels: [mockLabels[0]] };
+      cardAPI.update.mockResolvedValue({ data: { data: cardWithLabels } });
+      cardAPI.removeLabel.mockResolvedValue({ data: { success: true } });
 
       const user = userEvent.setup();
       render(
@@ -190,8 +182,12 @@ describe('CardModal - Labels and Status Integration', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
       });
 
-      const bugLabel = screen.getByText('Bug');
-      await user.click(bugLabel);
+      // Click assigned label (pending only — no API call yet)
+      await user.click(screen.getByText('Bug'));
+      expect(cardAPI.removeLabel).not.toHaveBeenCalled();
+
+      // Press Save
+      await user.click(screen.getByRole('button', { name: /cards:save/i }));
 
       await waitFor(() => {
         expect(cardAPI.removeLabel).toHaveBeenCalledWith('card123', 'label1');
@@ -235,14 +231,9 @@ describe('CardModal - Labels and Status Integration', () => {
       expect(statusSelect).toHaveTextContent(/in progress/i);
     });
 
-    it('should update status when changed', async () => {
-      const updatedCard = {
-        ...mockCard,
-        status: 'done',
-      };
-      cardAPI.updateStatus.mockResolvedValue({
-        data: { success: true, data: updatedCard },
-      });
+    it('should call cardAPI.updateStatus on Save after changing the status', async () => {
+      cardAPI.update.mockResolvedValue({ data: { data: mockCard } });
+      cardAPI.updateStatus.mockResolvedValue({ data: { success: true } });
 
       const user = userEvent.setup();
       render(
@@ -255,11 +246,15 @@ describe('CardModal - Labels and Status Integration', () => {
         />
       );
 
-      const statusSelect = screen.getByRole('combobox');
-      await user.click(statusSelect);
+      // Change status (pending only — no API call yet)
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: /done/i })
+      );
+      expect(cardAPI.updateStatus).not.toHaveBeenCalled();
 
-      const doneOption = screen.getByRole('option', { name: /done/i });
-      await user.click(doneOption);
+      // Press Save
+      await user.click(screen.getByRole('button', { name: /cards:save/i }));
 
       await waitFor(() => {
         expect(cardAPI.updateStatus).toHaveBeenCalledWith('card123', 'done');
